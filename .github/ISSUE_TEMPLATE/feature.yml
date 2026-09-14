@@ -1,0 +1,27 @@
+name: Feature
+description: Proponha uma funcionalidade seguindo o processo SDD.
+title: "feat: "
+labels: [feature]
+body:
+  - type: markdown
+    attributes:
+      value: "Uma feature não é implementada antes de SPEC → PLAN → TASKS. Não inclua segredos ou dados pessoais."
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Resultado esperado
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Critérios de aceitação
+      description: Critérios observáveis que a futura spec deverá detalhar.
+    validations:
+      required: true

@@ -1,0 +1,18 @@
+# Dependencies and build output
+node_modules/
+.next/
+out/
+coverage/
+playwright-report/
+test-results/
+
+# Environment and deployment metadata
+.env
+.env.*
+!.env.example
+.vercel/
+
+# Local tooling
+.DS_Store
+*.log
+*.tsbuildinfo

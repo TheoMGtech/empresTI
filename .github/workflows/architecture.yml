@@ -1,0 +1,39 @@
+name: Architecture checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  foundation:
+    name: Documentation and secret guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Require architectural records
+        shell: bash
+        run: |
+          test -f README.md
+          test -f AGENTS.md
+          test -f docs/PRD.md
+          test -f docs/adr/001-stack.md
+          test -f rules/restrictions.md
+          test -f .env.example
+
+      - name: Reject committed environment files
+        shell: bash
+        run: |
+          if git ls-files | grep -E '(^|/)\.env($|\.)' | grep -vE '(^|/)\.env\.example$'; then
+            echo 'Environment files must not be versioned.' >&2
+            exit 1
+          fi
+
+      - name: Scan for secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
