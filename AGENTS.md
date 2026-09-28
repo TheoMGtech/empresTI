@@ -63,14 +63,17 @@ Regras de processo já definidas para este projeto:
 
 - **Commits:** Conventional Commits (`feat:`, `fix:`, `docs:`, etc.).
 - **Branches:** `feature/<o que está implementando>`.
-- **PRs:** pequenos e verificáveis; sem deploy direto a partir de branches de feature.
+- **Integração:** branches de feature partem de `develop`; PRs pequenos e verificáveis
+  são integrados em `develop` após CI verde. O merge de `develop` em `main` permanece
+  exclusivo do responsável, mediante autorização explícita.
 
 ## Segurança e operação
 
 - Nunca inventar credenciais nem versionar segredos; regras completas em `rules/restrictions.md`.
 - A única representação de variáveis é `.env.example`, sem valores secretos.
 - Migrações de produção: workflow manual, com confirmação literal `APPLY`, somente a partir do Environment protegido `production`.
-- Proteção de `main`: pull request obrigatório, revisão aprovada e status check do workflow de arquitetura ("Architecture checks").
+- Proteção de `main` e `develop`: pull request obrigatório, histórico linear e status
+  check do job `Documentation and secret guard` do workflow `Architecture checks`.
 - Atualização de dependências: semanal via Dependabot quando exista `package.json`.
 
 ## Fim de sessão
