@@ -1,6 +1,6 @@
 ---
-description: Procedimento para qualquer mudança de schema
-globs: ["supabase/migrations/**", "<CAMINHO-DO-ACESSO-A-DADOS>"]
+description: Procedimento para qualquer mudança de schema sob Prisma Migrate
+globs: ["prisma/**"]
 alwaysApply: false
 ---
 
@@ -15,23 +15,24 @@ parecer trivial.
 ## Procedimento
 1. Antes de gerar qualquer coisa: escreva o DDL pretendido na resposta
    e PARE. Eu aprovo ou corrijo.
-2. Gere a migration pela CLI: `supabase migration new <nome>`.
-   Uma migration por tarefa.
+2. Gere a migration com `npx prisma migrate dev --name <nome-curto>`.
+   Prisma Migrate é o único dono do schema. Uma migration por tarefa.
 3. Toda tabela nova nasce com Row Level Security habilitada e pelo
-   menos uma policy explícita na mesma migration. Tabela sem policy
-   não entra no repositório.
+   menos uma policy explícita no SQL da migration gerada. Tabela sem
+   policy não entra no repositório.
 4. Se a tabela já tem dado, diga o que acontece com as linhas
    existentes. Coluna obrigatória nova precisa de default ou de um
    passo de preenchimento.
-5. Aplique com `supabase db reset` local e rode <COMANDO-TESTES>.
+5. Aplique com `npx prisma migrate reset --force` no banco local e
+   rode `npm test`.
 
 ## Verificação
-`supabase db reset` numa máquina limpa aplica todas as migrations do
-zero, sem erro e sem nenhum passo manual.
+`npx prisma migrate reset --force` num banco local limpo aplica todas
+as migrations do zero, sem erro e sem nenhum passo manual.
 
 ## Não faça
-- Não altere schema pelo Studio nem por SQL avulso. O que não está em
-  migration não existe.
+- Não altere schema pelo Studio, pela Supabase CLI nem por SQL avulso.
+  O que não está em migration do Prisma não existe.
 - Não edite migration que já foi para o repositório remoto. Escreva
   a próxima.
 - Não toque no projeto Supabase remoto. Tudo acontece no local.

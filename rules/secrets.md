@@ -1,6 +1,6 @@
 ---
 description: Onde cada variável de ambiente vive e qual chave usar
-globs: ["**/.env*", "<CAMINHO-DO-CLIENT>", "<CAMINHO-DE-CONFIG>"]
+globs: ["**/.env*", "src/**", "prisma/**", "next.config.*"]
 alwaysApply: false
 ---
 

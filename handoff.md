@@ -5,9 +5,9 @@ Não é fonte de verdade sobre requisitos, comportamento ou arquitetura.
 
 ## Estado atual
 
-* O projeto acabou de ser inicializado.
-* Nenhuma implementação foi iniciada.
-* O PRD foi registrado.
-* PostgreSQL é a única decisão de stack já tomada.
-* O restante do ADR-001 está pendente.
-* Specs, planos, tarefas e implementação ainda não começaram.
+* O passo 0 documental está concluído e o andar zero executável foi planejado.
+* Nenhuma funcionalidade de produto, schema, integração ou credencial foi implementada.
+* ADR-001 é vinculante; Prisma Migrate é o único dono de migrations.
+* `develop` é a integração contínua; somente o responsável integra em `main`.
+* A primeira feature ainda depende da escolha do responsável e das respostas às
+  ambiguidades de negócio da respectiva spec.

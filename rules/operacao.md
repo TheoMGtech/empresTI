@@ -10,10 +10,15 @@ alwaysApply: true
 > leitor: agente
 
 - Commit: O agente commita cada tarefa
-- Push: O agente pode fazer push em branch, nunca na produção
+- Push: O agente pode fazer push somente em branch de feature; nunca direto em
+  `develop` ou `main`.
 - A mensagem de commit cita a tarefa e o critério de aceitação.
 - Um commit por tarefa. Nunca junte código e mudança de regra
   no mesmo commit.
+- Branches de trabalho partem de `develop` e seguem `feature/<nome-curto>`.
+- Depois de CI verde, o agente pode abrir e fazer squash merge de PR próprio em
+  `develop`. O merge em `main` continua exclusivo do responsável, mediante
+  autorização explícita nesta conversa.
 
 ## Autorização por tipo de ação
 > leitor: agente
