@@ -25,7 +25,9 @@ Regras de processo já definidas para este projeto:
 - **Regras de negócio já aprovadas** (PRD): máximo de 3 itens por pessoa; prazo padrão de devolução de 14 dias; quem tem item em atraso não pode pegar outro emprestado; equipamento em manutenção não aparece como disponível.
 - **Fora de escopo v1** (PRD): reserva com data futura, notificação por e-mail e importação da planilha atual.
 - **Front-end** (docs/layout.md): design system Nocturne, somente modo escuro, tom de copy seco e operacional, sempre em PT-BR.
-- **Estado atual** (README): o passo 0 está concluído; nenhuma funcionalidade foi implementada ainda.
+- **Estado atual**: o passo 0 documental está concluído e o andar zero
+  executável está em implementação; nenhuma funcionalidade de produto foi
+  implementada.
 
 ## Stack e arquitetura (ADR-001)
 
@@ -75,6 +77,26 @@ Regras de processo já definidas para este projeto:
 - Proteção de `main` e `develop`: pull request obrigatório, histórico linear e status
   check do job `Documentation and secret guard` do workflow `Architecture checks`.
 - Atualização de dependências: semanal via Dependabot quando exista `package.json`.
+
+## Mapa de instruções
+
+- `rules/restrictions.md`: limites permanentes de autoridade, escopo e segredos.
+- `rules/operacao.md`: contrato de commits, push, aprovações e configuração.
+- `rules/checks.md`: verificações obrigatórias antes de declarar trabalho pronto.
+- `rules/migration.md`: procedimento e ponto de parada para mudanças de schema.
+- `rules/secrets.md`: fronteira entre variáveis públicas e exclusivas do servidor.
+- `rules/tests.md`: estratégia e evidências de teste.
+- `rules/handoff.md`: encerramento de sessão com trabalho pendente.
+- `rules/spec-flow.md`: abertura e execução de funcionalidades pelo fluxo SDD.
+
+## Ambiente e capacidades
+
+- Supabase de produção: projeto `InovacaoTecnologia`, ref
+  `wdudlqacomnasnrxgbni`. Mudanças de schema seguem `rules/migration.md`.
+- MCP Supabase (`.mcp.json`): limitado a esse projeto, somente leitura e grupos
+  `database,docs`. Serve para inspecionar o real; não aplica migrations.
+- Skills repo-native ficam em `skills/<nome>/SKILL.md` e não substituem rules,
+  ADRs ou specs.
 
 ## Fim de sessão
 
