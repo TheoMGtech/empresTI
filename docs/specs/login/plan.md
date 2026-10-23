@@ -12,8 +12,8 @@ Rascunho vinculado a `spec.md`; execução condicionada à aprovação do pacote
    sessão e saída, delegando as chamadas a um service de autenticação.
 3. Validar entradas com Zod e manter tokens exclusivamente nos cookies definidos
    pelo servidor.
-4. Implementar `/login` como Client Component usando React Hook Form e
-   `zodResolver`.
+4. Substituir a tela técnica em `/` pelo login como Client Component usando
+   React Hook Form e `zodResolver`, mantendo `/login` apenas como redirecionamento.
 5. Aplicar a composição de login e os tokens Nocturne já aprovados, sem reutilizar
    os usuários fictícios ou o armazenamento local presentes no ZIP de referência.
 6. Cobrir o contrato com testes unitários/de componente e uma prova de navegador
@@ -22,8 +22,11 @@ Rascunho vinculado a `spec.md`; execução condicionada à aprovação do pacote
 
 ## Arquivos previstos
 
-- `src/app/login/page.tsx`: rota e composição da tela.
+- `src/app/page.tsx`: rota inicial e composição da tela de login.
+- `src/app/login/page.tsx`: redirecionamento para `/`.
 - `src/components/login/`: formulário e estado de sessão.
+- `src/components/painel-status.tsx` e seus testes: remoção da interface
+  substituída pelo login.
 - `src/server/api/routers/autenticacao.ts`: procedimentos tRPC.
 - `src/server/services/autenticacao.ts`: integração com Supabase Auth.
 - `src/server/supabase/`: fábrica server-side e contrato de cookies.
@@ -46,7 +49,8 @@ Rascunho vinculado a `spec.md`; execução condicionada à aprovação do pacote
 - Router/service: sucesso e falha com cliente Supabase substituído por contrato
   controlado, sem segredo.
 - Componente: loading, erro, sessão ativa e logout.
-- Playwright: renderização e validação do formulário; autenticação real fica fora
+- Playwright: renderização de `/`, redirecionamento de `/login` e validação do
+  formulário; autenticação real fica fora
   da CI por depender de conta oficial.
 - Verificação de segurança: ausência de token no payload e atributos do cookie.
 
@@ -55,8 +59,9 @@ Rascunho vinculado a `spec.md`; execução condicionada à aprovação do pacote
 - Manipulação incorreta de cookies: centralizar no adaptador server-side e testar
   atributos.
 - Vazamento de detalhe do Supabase: mapear todo erro para copy genérica.
-- Divergência visual: usar tokens existentes e comparar a produção com
-  `docs/layout.md`.
+- Divergência visual: usar tokens existentes, a composição visual do ZIP como
+  referência e comparar a produção com `docs/layout.md`; não reutilizar a
+  autenticação fictícia do ZIP.
 - Usuário sem tenant/role: permanecer na tela autenticada, sem liberar dados ou
   rotas de produto.
 
@@ -65,6 +70,6 @@ Rascunho vinculado a `spec.md`; execução condicionada à aprovação do pacote
 - PR pequeno de `feature/login` para `develop`.
 - CI verde antes da integração.
 - Promoção para `main` somente com aprovação do responsável.
-- Configurar apenas `NEXT_PUBLIC_SUPABASE_URL` e
-  `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` na Vercel; nenhum segredo de banco é
+- Configurar apenas `NEXT_PUBLIC_SUPABASE_URL` e a chave pública/publishable
+  prevista pela versão corrente do SDK na Vercel; nenhum segredo de banco é
   necessário para autenticar.

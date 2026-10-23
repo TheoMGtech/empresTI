@@ -19,20 +19,23 @@ Rascunho vinculado a `spec.md` e `plan.md`; nenhuma tarefa de código iniciada.
   - Evidência: testes do service e `createCaller`.
 
 - [ ] **T-LOGIN-03 — Tela Nocturne de login**
-  - Implementar rota `/login` e formulário com React Hook Form.
+  - Substituir a tela técnica em `/` pelo formulário com React Hook Form.
+  - Remover os componentes públicos da tela de status substituída.
+  - Redirecionar `/login` para `/`.
   - Implementar estados inicial, enviando, erro e sessão ativa.
   - Atende: RF-LOGIN-01, RF-LOGIN-04 a RF-LOGIN-07 e RI-LOGIN-01 a
-    RI-LOGIN-05.
+    RI-LOGIN-05, RF-LOGIN-09.
   - Evidência: testes com Testing Library e inspeção visual responsiva.
 
 - [ ] **T-LOGIN-04 — Provas de aceitação**
-  - Cobrir CA-LOGIN-01 a CA-LOGIN-07.
+  - Cobrir CA-LOGIN-01 a CA-LOGIN-07 e CA-LOGIN-09.
   - Verificar que respostas não carregam tokens e que cookies são `httpOnly`.
   - Adicionar cenário Playwright sem credenciais reais.
 
 - [ ] **T-LOGIN-05 — Qualidade e publicação**
   - Executar lint, typecheck, testes e build.
-  - Publicar preview, validar `/login` em desktop e mobile e registrar HTTP 200.
+  - Publicar preview, validar `/` em desktop e mobile, confirmar o
+    redirecionamento de `/login` e registrar HTTP 200.
   - Atende: CA-LOGIN-08.
 
 ## Ponto obrigatório de parada

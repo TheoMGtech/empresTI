@@ -6,7 +6,7 @@ Rascunho para aprovação do responsável.
 
 ## Objetivo
 
-Disponibilizar uma tela efetiva do EmpresTI em `/login`, aderente ao design system
+Disponibilizar a tela inicial efetiva do EmpresTI em `/`, aderente ao design system
 Nocturne, que autentique usuários previamente convidados por e-mail e senha no
 Supabase Auth. A entrega não libera funcionalidades de catálogo ou operações.
 
@@ -14,14 +14,18 @@ Supabase Auth. A entrega não libera funcionalidades de catálogo ou operações
 
 - Tela responsiva de login em PT-BR, baseada na composição aprovada em
   `docs/layout.md`.
+- Substituição da tela técnica de status atualmente publicada em `/`; seus
+  componentes deixam de fazer parte da interface do produto.
+- Redirecionamento de `/login` para `/`, para preservar um endereço previsível
+  sem manter duas implementações da mesma tela.
 - Autenticação real por e-mail e senha no projeto Supabase
   `wdudlqacomnasnrxgbni`.
 - Sessão mantida por cookies seguros, `httpOnly`, `sameSite=lax` e `secure` em
   produção.
 - Estado de carregamento, erro genérico de credenciais e confirmação de sessão.
 - Encerramento da sessão na própria tela.
-- Usuário já autenticado vê o estado de sessão ativa em `/login`.
-- Permanência em `/login` após a autenticação. O acesso às áreas do produto fica
+- Usuário já autenticado vê o estado de sessão ativa em `/`.
+- Permanência em `/` após a autenticação. O acesso às áreas do produto fica
   fechado até existir uma spec aprovada para o destino autenticado e para
   memberships.
 
@@ -37,7 +41,7 @@ Supabase Auth. A entrega não libera funcionalidades de catálogo ou operações
 
 ## Requisitos funcionais
 
-- **RF-LOGIN-01** — `/login` apresenta campos obrigatórios de e-mail e senha e a
+- **RF-LOGIN-01** — `/` apresenta campos obrigatórios de e-mail e senha e a
   ação `Entrar`.
 - **RF-LOGIN-02** — o formulário valida formato do e-mail e senha não vazia antes
   de chamar o servidor.
@@ -52,6 +56,8 @@ Supabase Auth. A entrega não libera funcionalidades de catálogo ou operações
 - **RF-LOGIN-07** — `Sair` invalida a sessão Supabase e retorna ao formulário.
 - **RF-LOGIN-08** — falhas inesperadas exibem uma mensagem operacional genérica e
   não expõem tokens, chaves, URL de banco ou detalhes internos.
+- **RF-LOGIN-09** — `/login` redireciona para `/`, e a interface inicial não
+  apresenta o painel técnico de status substituído por esta feature.
 
 ## Requisitos de interface e acessibilidade
 
@@ -82,7 +88,7 @@ Supabase Auth. A entrega não libera funcionalidades de catálogo ou operações
 
 ## Critérios de aceitação
 
-- **CA-LOGIN-01** — a URL pública `/login` renderiza a tela Nocturne responsiva e
+- **CA-LOGIN-01** — a URL pública `/` renderiza a tela Nocturne responsiva e
   contém e-mail, senha e `Entrar`.
 - **CA-LOGIN-02** — entradas inválidas são bloqueadas no cliente com mensagem em
   PT-BR e sem requisição de autenticação.
@@ -90,13 +96,15 @@ Supabase Auth. A entrega não libera funcionalidades de catálogo ou operações
   e sem criar cookie de sessão.
 - **CA-LOGIN-04** — uma conta previamente criada no Supabase autentica e resulta
   em cookie `httpOnly`, sem token disponível no corpo da resposta.
-- **CA-LOGIN-05** — ao recarregar `/login`, uma sessão válida continua reconhecida
+- **CA-LOGIN-05** — ao recarregar `/`, uma sessão válida continua reconhecida
   e apresenta `Acesso confirmado`.
 - **CA-LOGIN-06** — `Sair` invalida a sessão e volta a apresentar o formulário.
 - **CA-LOGIN-07** — testes automatizados cobrem validação, sucesso, falha genérica,
   sessão existente e logout sem usar credenciais reais.
 - **CA-LOGIN-08** — lint, typecheck, testes e build passam; a página publicada
   responde HTTP 200.
+- **CA-LOGIN-09** — `/login` redireciona para `/`, e a tela técnica anterior não
+  aparece mais na rota inicial nem possui navegação pública.
 
 ## Rastreabilidade
 
