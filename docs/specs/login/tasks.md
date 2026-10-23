@@ -3,8 +3,8 @@
 ## Estado
 
 Pacote aprovado pelo responsável junto com `spec.md` e `plan.md` (registro em
-2026-10-23). T-LOGIN-01 e T-LOGIN-02 concluídas; T-LOGIN-03 a T-LOGIN-05 não
-iniciadas.
+2026-10-23). T-LOGIN-01 a T-LOGIN-03 concluídas; T-LOGIN-04 iniciada;
+T-LOGIN-05 não iniciada.
 
 ## Tarefas
 
@@ -24,7 +24,7 @@ iniciadas.
   - Progresso: commit `97a9b7c`; testes em
     `src/server/api/routers/autenticacao.test.ts`.
 
-- [ ] **T-LOGIN-03 — Tela Nocturne de login**
+- [x] **T-LOGIN-03 — Tela Nocturne de login**
   - Substituir a tela técnica em `/` pelo formulário com React Hook Form.
   - Remover os componentes públicos da tela de status substituída.
   - Redirecionar `/login` para `/`.
@@ -32,11 +32,19 @@ iniciadas.
   - Atende: RF-LOGIN-01, RF-LOGIN-04 a RF-LOGIN-07 e RI-LOGIN-01 a
     RI-LOGIN-05, RF-LOGIN-09.
   - Evidência: testes com Testing Library e inspeção visual responsiva.
+  - Progresso: componentes em `src/components/login/`; testes em
+    `src/components/login/tela-login.test.tsx` e `src/app/login/page.test.ts`;
+    inspeção em 1024 px e 375 px sem rolagem horizontal. Textos do painel
+    institucional e do subtítulo do formulário aprovados pelo responsável em
+    2026-10-23, sem nota de suporte.
 
 - [ ] **T-LOGIN-04 — Provas de aceitação**
   - Cobrir CA-LOGIN-01 a CA-LOGIN-07 e CA-LOGIN-09.
   - Verificar que respostas não carregam tokens e que cookies são `httpOnly`.
   - Adicionar cenário Playwright sem credenciais reais.
+  - Progresso: cenário inicial em `e2e/login.spec.ts` (CA-LOGIN-01 e
+    CA-LOGIN-09), ainda não executado porque o navegador exigido pelo
+    Playwright 1.56 não está instalado localmente.
 
 - [ ] **T-LOGIN-05 — Qualidade e publicação**
   - Executar lint, typecheck, testes e build.
