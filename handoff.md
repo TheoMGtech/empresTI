@@ -5,14 +5,19 @@ Não é fonte de verdade sobre requisitos, comportamento ou arquitetura.
 
 ## Estado atual
 
-- O andar zero executável está no PR #6, com CI verde e três commits coesos:
-  governança, infraestrutura e tela técnica.
-- A tela Nocturne e o Route Handler tRPC foram validados localmente; nenhuma
-  funcionalidade de produto foi implementada.
-- O MCP global do Supabase está autenticado e limitado ao projeto
-  `wdudlqacomnasnrxgbni`; o conector Supabase do ChatGPT requer reconexão.
-- Nenhuma mudança de schema foi gerada ou aplicada. O DDL da tabela técnica
-  `saude_sistema` aguarda aprovação literal conforme `rules/migration.md`.
-- A CLI da Vercel aguarda a conclusão do login por dispositivo. Ainda não há
-  deploy de produção.
-- O PR #6 não foi integrado: a aprovação e o merge pertencem ao responsável.
+- O andar zero executável foi integrado em `develop` pelo PR #6 e promovido para
+  `main` pelo PR #7; a produção ainda exibe a tela técnica que será substituída.
+- A branch `feature/login` contém o pacote SDD de login em
+  `docs/specs/login/`, atualizado para tornar `/` a tela inicial e redirecionar
+  `/login` para a raiz.
+- A composição visual do ZIP fornecido é apenas referência de layout. Usuários
+  fictícios, credenciais demonstrativas e autenticação por `localStorage` não
+  serão reutilizados.
+- O MCP global do Supabase está autenticado, limitado ao projeto
+  `wdudlqacomnasnrxgbni` e configurado com `storage`; o `.mcp.json` do repositório
+  permanece somente leitura, com `database,docs`.
+- As skills repo-native `supabase` e `supabase-postgres-best-practices` foram
+  instaladas em `.agents/skills/` e registradas em `skills-lock.json`.
+- Nenhuma implementação de login ou mudança de schema foi iniciada. O próximo
+  passo depende da aprovação do responsável para `spec.md`, `plan.md` e
+  `tasks.md`, conforme o fluxo SDD vinculante.
