@@ -2,7 +2,8 @@
 
 ## Estado
 
-Rascunho vinculado a `spec.md`; execução condicionada à aprovação do pacote.
+Aprovado pelo responsável junto com `spec.md` e `tasks.md` (registro em
+2026-10-23).
 
 ## Abordagem
 

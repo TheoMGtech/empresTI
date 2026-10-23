@@ -2,7 +2,9 @@
 
 ## Estado
 
-Rascunho vinculado a `spec.md` e `plan.md`; nenhuma tarefa de código iniciada.
+Pacote aprovado pelo responsável junto com `spec.md` e `plan.md` (registro em
+2026-10-23). T-LOGIN-02 concluída; T-LOGIN-01 implementada com evidência
+pendente; T-LOGIN-03 a T-LOGIN-05 não iniciadas.
 
 ## Tarefas
 
@@ -11,12 +13,16 @@ Rascunho vinculado a `spec.md` e `plan.md`; nenhuma tarefa de código iniciada.
   - Preparar fábrica SSR e adaptador de cookies.
   - Atende: RF-LOGIN-03, RS-LOGIN-01, RS-LOGIN-02.
   - Evidência: testes de configuração e atributos de cookie.
+  - Progresso: código no commit `e7479f1`; faltam os testes de configuração e
+    de atributos de cookie exigidos como evidência.
 
-- [ ] **T-LOGIN-02 — Service e router de autenticação**
+- [x] **T-LOGIN-02 — Service e router de autenticação**
   - Implementar entrada, leitura de usuário autenticado e saída.
   - Validar inputs com Zod e normalizar erros.
   - Atende: RF-LOGIN-02 a RF-LOGIN-08, RS-LOGIN-03 a RS-LOGIN-05.
   - Evidência: testes do service e `createCaller`.
+  - Progresso: commit `97a9b7c`; testes em
+    `src/server/api/routers/autenticacao.test.ts`.
 
 - [ ] **T-LOGIN-03 — Tela Nocturne de login**
   - Substituir a tela técnica em `/` pelo formulário com React Hook Form.
@@ -42,3 +48,5 @@ Rascunho vinculado a `spec.md` e `plan.md`; nenhuma tarefa de código iniciada.
 
 O responsável deve aprovar `spec.md`, `plan.md` e `tasks.md` antes de qualquer
 alteração em código, configuração da Vercel ou autenticação no Supabase.
+
+Cumprido: aprovação registrada em 2026-10-23.

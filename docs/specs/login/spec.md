@@ -2,7 +2,8 @@
 
 ## Estado
 
-Rascunho para aprovação do responsável.
+Aprovada pelo responsável junto com `plan.md` e `tasks.md` (registro em
+2026-10-23). Implementação em andamento; progresso em `tasks.md`.
 
 ## Objetivo
 
