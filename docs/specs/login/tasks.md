@@ -3,8 +3,7 @@
 ## Estado
 
 Pacote aprovado pelo responsável junto com `spec.md` e `plan.md` (registro em
-2026-10-23). T-LOGIN-01 a T-LOGIN-03 concluídas; T-LOGIN-04 iniciada;
-T-LOGIN-05 não iniciada.
+2026-10-23). T-LOGIN-01 a T-LOGIN-04 concluídas; T-LOGIN-05 não iniciada.
 
 ## Tarefas
 
@@ -38,13 +37,18 @@ T-LOGIN-05 não iniciada.
     institucional e do subtítulo do formulário aprovados pelo responsável em
     2026-10-23, sem nota de suporte.
 
-- [ ] **T-LOGIN-04 — Provas de aceitação**
+- [x] **T-LOGIN-04 — Provas de aceitação**
   - Cobrir CA-LOGIN-01 a CA-LOGIN-07 e CA-LOGIN-09.
   - Verificar que respostas não carregam tokens e que cookies são `httpOnly`.
   - Adicionar cenário Playwright sem credenciais reais.
-  - Progresso: cenário inicial em `e2e/login.spec.ts` (CA-LOGIN-01 e
-    CA-LOGIN-09), executado com sucesso em 2026-10-23 (2 testes aprovados);
-    falta o cenário de validação do formulário.
+  - Progresso: rota `/api/trpc` provada em
+    `src/app/api/trpc/[trpc]/route.test.ts` (CA-LOGIN-02, CA-LOGIN-03,
+    CA-LOGIN-04 e CA-LOGIN-06: sem tokens no corpo, cookie `httpOnly`, nenhum
+    cookie em falha e cookie expirado ao sair); componentes, router e rota
+    `/login` cobrem CA-LOGIN-01, CA-LOGIN-05, CA-LOGIN-07 e CA-LOGIN-09;
+    `e2e/login.spec.ts` cobre CA-LOGIN-01, CA-LOGIN-02 e CA-LOGIN-09 (3 testes
+    aprovados em 2026-10-23). O formulário passou a usar `method="post"` para
+    que um envio anterior à hidratação não ponha credenciais na URL.
 
 - [ ] **T-LOGIN-05 — Qualidade e publicação**
   - Executar lint, typecheck, testes e build.

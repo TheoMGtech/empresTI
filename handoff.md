@@ -10,7 +10,7 @@ Não é fonte de verdade sobre requisitos, comportamento ou arquitetura.
   responsável.
 - O pacote SDD de login (`docs/specs/login/`) foi aprovado pelo responsável.
   Progresso por tarefa em `docs/specs/login/tasks.md`: T-LOGIN-01 a T-LOGIN-03
-  concluídas; T-LOGIN-04 iniciada; T-LOGIN-05 não iniciada.
+  concluídas, assim como T-LOGIN-04; T-LOGIN-05 não iniciada.
 - Nesta branch, `/` já exibe o login Nocturne e `/login` redireciona para `/`;
   a tela técnica foi removida da interface. O procedimento `tecnico.status`
   continua disponível na API.
@@ -29,12 +29,14 @@ Não é fonte de verdade sobre requisitos, comportamento ou arquitetura.
 
 - `npm run lint`: sem erros.
 - `npm run typecheck`: sem erros.
-- `npm test`: 7 arquivos, 23 testes aprovados.
+- `npm test`: 8 arquivos, 28 testes aprovados.
 - `npm run build`: concluído sem erros. Se falhar com `EPERM` em
   `.next/server/app/login` depois de usar `npm run dev`, apague `.next/` e
   rode de novo.
-- `npm run test:e2e`: 2 testes aprovados (CA-LOGIN-01 e CA-LOGIN-09), com o
-  Chromium do Playwright 1.56 instalado localmente.
+- `npm run test:e2e`: 3 testes aprovados (CA-LOGIN-01, CA-LOGIN-02 e
+  CA-LOGIN-09), com o Chromium do Playwright 1.56 instalado localmente. O
+  Playwright usa `localhost`: em `127.0.0.1` o `next dev` bloqueia o HMR e a
+  página não hidrata.
 - Inspeção visual em 1024 px e 375 px: sem rolagem horizontal; estados inicial e
   de erro de validação conferidos.
 
@@ -52,5 +54,6 @@ Não é fonte de verdade sobre requisitos, comportamento ou arquitetura.
 
 ## Próximo passo seguro
 
-Concluir T-LOGIN-04: adicionar o cenário Playwright de validação do formulário
-e cobrir os CAs restantes conforme `docs/specs/login/tasks.md`.
+T-LOGIN-05: abrir o PR de `feature/login` para `develop` (com autorização do
+responsável), validar o preview da Vercel em desktop e mobile, confirmar o
+redirecionamento de `/login` e registrar HTTP 200 (CA-LOGIN-08).
