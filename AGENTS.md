@@ -25,11 +25,11 @@ Regras de processo já definidas para este projeto:
 - **Regras de negócio já aprovadas** (PRD): máximo de 3 itens por pessoa; prazo padrão de devolução de 14 dias; quem tem item em atraso não pode pegar outro emprestado; equipamento em manutenção não aparece como disponível.
 - **Fora de escopo v1** (PRD): reserva com data futura, notificação por e-mail e importação da planilha atual.
 - **Front-end** (docs/layout.md): design system Nocturne, somente modo escuro, tom de copy seco e operacional, sempre em PT-BR.
-- **Estado atual**: o passo 0 documental está concluído e o andar zero
-  executável está em produção (PR #7 em `main`), ainda sem a migration aplicada
-  no banco de produção. A primeira feature, o login (`docs/specs/login/`), tem o
-  pacote SDD aprovado e está em implementação na branch `feature/login`; nenhuma
-  funcionalidade de catálogo ou empréstimo foi implementada.
+- **Estado atual**: o passo 0 documental e o andar zero executável estão
+  concluídos. A primeira feature, o login (`docs/specs/login/`), está em produção
+  desde 2026-10-23 (PR #13 em `develop`, PR #14 em `main`) e substituiu a tela
+  técnica em `/`. O banco de produção ainda não tem a migration do andar zero
+  aplicada. Nenhuma funcionalidade de catálogo ou empréstimo foi implementada.
 
 ## Stack e arquitetura (ADR-001)
 
@@ -101,9 +101,10 @@ Regras de processo já definidas para este projeto:
 - MCP Supabase (`.mcp.json`): limitado a esse projeto, somente leitura e grupos
   `database,docs`. Serve para inspecionar o real; não aplica migrations.
 - Vercel: time `theo-escola`, projeto `empresti`, integrado ao GitHub. Produção
-  publicada a partir de `main` em `empresti-theo-escola.vercel.app`; branches e
-  PRs recebem preview. O domínio `empresti.vercel.app` não aponta para este
-  projeto.
+  publicada a partir de `main` em `empresti-self.vercel.app` e
+  `empresti-theo-escola.vercel.app` (mesmo deploy); `develop` em
+  `empresti-git-develop-theo-escola.vercel.app`; branches e PRs recebem
+  preview. O domínio `empresti.vercel.app` não aponta para este projeto.
 - Skills repo-native ficam em `skills/<nome>/SKILL.md`; skills externas do
   Supabase ficam em `.agents/skills/`, registradas em `skills-lock.json`. Nenhuma
   substitui rules, ADRs ou specs.
