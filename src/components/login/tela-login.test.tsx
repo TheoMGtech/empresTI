@@ -43,6 +43,12 @@ describe("tela de login", () => {
     expect(screen.queryByText(/contas de teste/i)).not.toBeInTheDocument();
   });
 
+  it("RS-LOGIN-03 — envio anterior à hidratação não coloca credenciais na URL", () => {
+    renderizarSemSessao();
+
+    expect(screen.getByLabelText("Senha").closest("form")).toHaveAttribute("method", "post");
+  });
+
   it("CA-LOGIN-02 — bloqueia entradas inválidas no cliente, sem chamar o servidor", async () => {
     const entrar = vi.fn();
     renderizarSemSessao({ "autenticacao.entrar": entrar });

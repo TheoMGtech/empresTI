@@ -47,7 +47,7 @@ export function FormularioLogin() {
   });
 
   return (
-    <form className="flex flex-col gap-[18px]" noValidate onSubmit={enviar}>
+    <form className="flex flex-col gap-[18px]" method="post" noValidate onSubmit={enviar}>
       <div className="flex flex-col gap-2">
         <label className="text-[12px] text-[#9AA3BC]" htmlFor="email">
           E-mail
