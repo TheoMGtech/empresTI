@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
-import { z } from "zod";
 
+import { esquemaEntrada } from "@/lib/esquemas/autenticacao";
 import { criarRouterTRPC, procedimentoPublico } from "@/server/api/trpc";
 import {
   ErroAutenticacaoIndisponivel,
@@ -9,11 +9,6 @@ import {
   entrar,
   sair,
 } from "@/server/services/autenticacao";
-
-export const esquemaEntrada = z.object({
-  email: z.email("Informe um e-mail válido."),
-  senha: z.string().min(1, "Informe a senha."),
-});
 
 export const routerAutenticacao = criarRouterTRPC({
   sessao: procedimentoPublico.query(async ({ ctx }) => {

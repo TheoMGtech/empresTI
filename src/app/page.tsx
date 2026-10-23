@@ -1,5 +1,5 @@
-import { PainelStatus } from "@/components/painel-status";
+import { TelaLogin } from "@/components/login/tela-login";
 
 export default function PaginaInicial() {
-  return <PainelStatus />;
+  return <TelaLogin />;
 }
