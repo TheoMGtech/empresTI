@@ -4,10 +4,12 @@ export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
   reporter: "html",
-  use: { baseURL: "http://127.0.0.1:3000", trace: "on-first-retry" },
+  // `localhost`, e não `127.0.0.1`: o `next dev` bloqueia o HMR para origens não
+  // permitidas e, sem ele, a página não hidrata.
+  use: { baseURL: "http://localhost:3000", trace: "on-first-retry" },
   webServer: {
     command: "npm run dev",
-    url: "http://127.0.0.1:3000",
+    url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
