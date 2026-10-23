@@ -12,6 +12,8 @@ vi.mock("@/trpc/cliente", () => ({
         useQuery: () => ({
           data: {
             ambiente: "test",
+            bancoOperacional: true,
+            quantidadeRegistros: 0,
             supabaseVinculado: true,
             verificadoEm: "2026-10-19T10:00:00.000Z",
             versao: "0.1.0",

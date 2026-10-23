@@ -12,6 +12,10 @@ const esquemaServidor = z.object({
   SUPABASE_PROJECT_REF: z.string().regex(/^[a-z]{20}$/),
 });
 
+const esquemaBanco = z.object({
+  DATABASE_URL: z.string().startsWith("postgresql://"),
+});
+
 export function lerAmbientePublico() {
   return esquemaPublico.parse({
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
@@ -24,5 +28,11 @@ export function lerAmbienteServidor() {
   return esquemaServidor.parse({
     NODE_ENV: process.env.NODE_ENV ?? "development",
     SUPABASE_PROJECT_REF: process.env.SUPABASE_PROJECT_REF ?? "wdudlqacomnasnrxgbni",
+  });
+}
+
+export function lerAmbienteBanco() {
+  return esquemaBanco.parse({
+    DATABASE_URL: process.env.DATABASE_URL,
   });
 }

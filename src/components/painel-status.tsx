@@ -85,11 +85,17 @@ export function PainelStatus() {
         <article className="cartao">
           <div className="cartao__cabecalho">
             <span className="cartao__numero">03</span>
-            <Indicador estado={status.data?.supabaseVinculado ? "operacional" : "pendente"} />
+            <Indicador
+              estado={
+                status.data?.supabaseVinculado && status.data.bancoOperacional
+                  ? "operacional"
+                  : "pendente"
+              }
+            />
           </div>
           <div>
-            <h2>Supabase</h2>
-            <p>Projeto restrito · banco aguardando migration aprovada</p>
+            <h2>Banco Supabase</h2>
+            <p>Prisma · PostgreSQL · RLS deny-by-default</p>
           </div>
         </article>
       </section>
