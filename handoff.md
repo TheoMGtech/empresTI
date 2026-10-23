@@ -33,9 +33,8 @@ Não é fonte de verdade sobre requisitos, comportamento ou arquitetura.
 - `npm run build`: concluído sem erros. Se falhar com `EPERM` em
   `.next/server/app/login` depois de usar `npm run dev`, apague `.next/` e
   rode de novo.
-- `npm run test:e2e`: não executado; o Playwright 1.56 exige um Chromium que não
-  está instalado (`npx playwright install chromium`, download pendente de
-  autorização).
+- `npm run test:e2e`: 2 testes aprovados (CA-LOGIN-01 e CA-LOGIN-09), com o
+  Chromium do Playwright 1.56 instalado localmente.
 - Inspeção visual em 1024 px e 375 px: sem rolagem horizontal; estados inicial e
   de erro de validação conferidos.
 
@@ -53,6 +52,5 @@ Não é fonte de verdade sobre requisitos, comportamento ou arquitetura.
 
 ## Próximo passo seguro
 
-Concluir T-LOGIN-04: completar os cenários Playwright (validação do formulário)
-e executá-los depois de instalar o navegador, além de cobrir os CAs restantes
-conforme `docs/specs/login/tasks.md`.
+Concluir T-LOGIN-04: adicionar o cenário Playwright de validação do formulário
+e cobrir os CAs restantes conforme `docs/specs/login/tasks.md`.

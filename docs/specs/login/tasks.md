@@ -43,8 +43,8 @@ T-LOGIN-05 não iniciada.
   - Verificar que respostas não carregam tokens e que cookies são `httpOnly`.
   - Adicionar cenário Playwright sem credenciais reais.
   - Progresso: cenário inicial em `e2e/login.spec.ts` (CA-LOGIN-01 e
-    CA-LOGIN-09), ainda não executado porque o navegador exigido pelo
-    Playwright 1.56 não está instalado localmente.
+    CA-LOGIN-09), executado com sucesso em 2026-10-23 (2 testes aprovados);
+    falta o cenário de validação do formulário.
 
 - [ ] **T-LOGIN-05 — Qualidade e publicação**
   - Executar lint, typecheck, testes e build.
