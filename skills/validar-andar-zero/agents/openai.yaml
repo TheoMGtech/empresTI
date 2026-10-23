@@ -1,0 +1,3 @@
+interface:
+  display_name: "Validar Andar Zero"
+  short_description: "Prova o andar zero com evidências locais e de deploy"

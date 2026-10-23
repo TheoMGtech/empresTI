@@ -1,6 +1,6 @@
 # ADR-001 — Stack
 
-Status: RASCUNHO
+Status: APROVADO
 
 ## 1. Arquitetura e repositório
 

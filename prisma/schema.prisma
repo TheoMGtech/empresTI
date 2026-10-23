@@ -1,0 +1,17 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model SaudeSistema {
+  id           String   @id @default(uuid()) @db.Uuid
+  tenantId     String   @map("tenant_id") @db.Uuid
+  componente   String
+  verificadoEm DateTime @default(now()) @map("verificado_em") @db.Timestamptz(6)
+
+  @@index([tenantId], map: "saude_sistema_tenant_id_idx")
+  @@map("saude_sistema")
+}

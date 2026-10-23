@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "supabase-empresti": {
+      "url": "https://mcp.supabase.com/mcp?project_ref=wdudlqacomnasnrxgbni&read_only=true&features=database,docs"
+    }
+  }
+}
