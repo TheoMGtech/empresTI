@@ -5,6 +5,7 @@ const esquemaPublico = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.url().refine((url) => url.endsWith(".supabase.co"), {
     message: "NEXT_PUBLIC_SUPABASE_URL deve apontar para um projeto Supabase.",
   }),
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(20),
 });
 
 const esquemaServidor = z.object({
@@ -21,6 +22,7 @@ export function lerAmbientePublico() {
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
     NEXT_PUBLIC_SUPABASE_URL:
       process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://wdudlqacomnasnrxgbni.supabase.co",
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
   });
 }
 
