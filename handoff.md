@@ -5,9 +5,14 @@ Não é fonte de verdade sobre requisitos, comportamento ou arquitetura.
 
 ## Estado atual
 
-* O passo 0 documental está concluído e o andar zero executável foi planejado.
-* Nenhuma funcionalidade de produto, schema, integração ou credencial foi implementada.
-* ADR-001 é vinculante; Prisma Migrate é o único dono de migrations.
-* `develop` é a integração contínua; somente o responsável integra em `main`.
-* A primeira feature ainda depende da escolha do responsável e das respostas às
-  ambiguidades de negócio da respectiva spec.
+- O andar zero executável está no PR #6, com CI verde e três commits coesos:
+  governança, infraestrutura e tela técnica.
+- A tela Nocturne e o Route Handler tRPC foram validados localmente; nenhuma
+  funcionalidade de produto foi implementada.
+- O MCP global do Supabase está autenticado e limitado ao projeto
+  `wdudlqacomnasnrxgbni`; o conector Supabase do ChatGPT requer reconexão.
+- Nenhuma mudança de schema foi gerada ou aplicada. O DDL da tabela técnica
+  `saude_sistema` aguarda aprovação literal conforme `rules/migration.md`.
+- A CLI da Vercel aguarda a conclusão do login por dispositivo. Ainda não há
+  deploy de produção.
+- O PR #6 não foi integrado: a aprovação e o merge pertencem ao responsável.
