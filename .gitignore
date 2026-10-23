@@ -1,5 +1,6 @@
 # Dependencies and build output
 node_modules/
+node_modules.incompleto-*/
 .next/
 out/
 coverage/
@@ -16,3 +17,4 @@ test-results/
 .DS_Store
 *.log
 *.tsbuildinfo
+package-lock.incompleto-*.json

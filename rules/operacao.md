@@ -25,12 +25,12 @@ alwaysApply: true
 
 | ação                                        | nível          |
 |---------------------------------------------|----------------|
-| Editar arquivo existente dentro do escopo d | livre          |
+| Editar arquivo existente dentro do escopo da tarefa | livre          |
 | Criar arquivo novo                          | avisar depois  |
 | Deletar ou renomear arquivo                 | avisar depois  |
 | Instalar ou atualizar dependência           | pedir antes    |
 | Criar ou alterar migration                  | pedir antes    |
-| Mexer em variável de ambiente, config de de | proibido       |
+| Alterar variável de ambiente ou configuração de deploy | pedir antes    |
 
 O que cada nível significa:
 - livre — faça e siga em frente.
@@ -54,3 +54,13 @@ O que cada nível significa:
   modelo diferente do que escreveu o código.
 - Sessão longa não se corrige com regra mais enfática: encerre
   seguindo rules/handoff.md e abra outra.
+
+## Autorização vigente para o andar zero
+> leitor: agente
+
+- O responsável autorizou em 2026-10-19 a configuração do projeto Supabase
+  `InovacaoTecnologia` (`wdudlqacomnasnrxgbni`) e o primeiro deploy de produção
+  na Vercel a partir de `main`.
+- A autorização vale somente para o andar zero técnico e não inclui
+  funcionalidade de produto, regra de negócio ou segredo versionado.
+- O DDL continua sujeito ao ponto de parada de `rules/migration.md`.
