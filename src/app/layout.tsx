@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Open_Sans } from "next/font/google";
 import type { ReactNode } from "react";
 
 import { ProvedorTRPC } from "@/trpc/provedor";
 
 import "./globals.css";
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
-const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" });
+const openSans = Open_Sans({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  weight: ["400", "500", "600", "700"],
+});
 
 export const metadata: Metadata = {
   title: "EmpresTI — Status do sistema",
@@ -16,7 +19,7 @@ export const metadata: Metadata = {
 
 export default function LayoutRaiz({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="pt-BR" className={`${geist.variable} ${geistMono.variable}`}>
+    <html lang="pt-BR" className={openSans.variable}>
       <body>
         <ProvedorTRPC>{children}</ProvedorTRPC>
       </body>
