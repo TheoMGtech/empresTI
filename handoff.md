@@ -6,11 +6,12 @@ Não é fonte de verdade sobre requisitos, comportamento ou arquitetura.
 ## Estado atual (2026-10-23)
 
 - Branch de trabalho: `feature/login`, criada a partir de `origin/develop`.
-  Publicada em `origin/feature/login`; sem PR aberto, por decisão do
-  responsável.
+  Publicada em `origin/feature/login`, com o PR #13 para `develop` aberto e
+  CI verde; o merge aguarda o responsável.
 - O pacote SDD de login (`docs/specs/login/`) foi aprovado pelo responsável.
   Progresso por tarefa em `docs/specs/login/tasks.md`: T-LOGIN-01 a T-LOGIN-03
-  concluídas, assim como T-LOGIN-04; T-LOGIN-05 não iniciada.
+  concluídas, assim como T-LOGIN-04 e T-LOGIN-05 (preview da Vercel
+  validado).
 - Nesta branch, `/` já exibe o login Nocturne e `/login` redireciona para `/`;
   a tela técnica foi removida da interface. O procedimento `tecnico.status`
   continua disponível na API.
@@ -54,6 +55,7 @@ Não é fonte de verdade sobre requisitos, comportamento ou arquitetura.
 
 ## Próximo passo seguro
 
-T-LOGIN-05: abrir o PR de `feature/login` para `develop` (com autorização do
-responsável), validar o preview da Vercel em desktop e mobile, confirmar o
-redirecionamento de `/login` e registrar HTTP 200 (CA-LOGIN-08).
+Aguardar a revisão do PR #13. Depois do merge em `develop`, a promoção para
+`main` (produção) depende de autorização explícita do responsável. A
+autenticação com conta real ainda não foi exercitada e depende de uma conta
+oficial fornecida pelo responsável.

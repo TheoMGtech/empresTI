@@ -3,7 +3,8 @@
 ## Estado
 
 Pacote aprovado pelo responsável junto com `spec.md` e `plan.md` (registro em
-2026-10-23). T-LOGIN-01 a T-LOGIN-04 concluídas; T-LOGIN-05 não iniciada.
+2026-10-23). T-LOGIN-01 a T-LOGIN-05 concluídas; integração pelo PR #13 em
+`develop`, aguardando o responsável.
 
 ## Tarefas
 
@@ -50,11 +51,18 @@ Pacote aprovado pelo responsável junto com `spec.md` e `plan.md` (registro em
     aprovados em 2026-10-23). O formulário passou a usar `method="post"` para
     que um envio anterior à hidratação não ponha credenciais na URL.
 
-- [ ] **T-LOGIN-05 — Qualidade e publicação**
+- [x] **T-LOGIN-05 — Qualidade e publicação**
   - Executar lint, typecheck, testes e build.
   - Publicar preview, validar `/` em desktop e mobile, confirmar o
     redirecionamento de `/login` e registrar HTTP 200.
   - Atende: CA-LOGIN-08.
+  - Progresso: PR #13 com CI verde (`Documentation and secret guard`,
+    `Application quality` e Vercel). Preview
+    `empresti-git-feature-login-theo-escola.vercel.app` validado em
+    2026-10-23: `/` responde HTTP 200, `/login` responde 307 para `/`,
+    `autenticacao.sessao` sem cookie responde `autenticado: false`; em 1024 px e
+    375 px a página hidrata, não tem rolagem horizontal, não expõe cookie ao
+    JavaScript e bloqueia entradas inválidas sem chamar `autenticacao.entrar`.
 
 ## Ponto obrigatório de parada
 
