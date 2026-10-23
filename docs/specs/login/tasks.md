@@ -3,18 +3,18 @@
 ## Estado
 
 Pacote aprovado pelo responsável junto com `spec.md` e `plan.md` (registro em
-2026-10-23). T-LOGIN-02 concluída; T-LOGIN-01 implementada com evidência
-pendente; T-LOGIN-03 a T-LOGIN-05 não iniciadas.
+2026-10-23). T-LOGIN-01 e T-LOGIN-02 concluídas; T-LOGIN-03 a T-LOGIN-05 não
+iniciadas.
 
 ## Tarefas
 
-- [ ] **T-LOGIN-01 — Ambiente e contrato Supabase**
+- [x] **T-LOGIN-01 — Ambiente e contrato Supabase**
   - Validar URL e chave publishable em `src/env.ts`.
   - Preparar fábrica SSR e adaptador de cookies.
   - Atende: RF-LOGIN-03, RS-LOGIN-01, RS-LOGIN-02.
   - Evidência: testes de configuração e atributos de cookie.
-  - Progresso: código no commit `e7479f1`; faltam os testes de configuração e
-    de atributos de cookie exigidos como evidência.
+  - Progresso: código no commit `e7479f1`; testes em `src/env.test.ts`,
+    `src/server/supabase/cliente.test.ts` e `src/server/supabase/proxy.test.ts`.
 
 - [x] **T-LOGIN-02 — Service e router de autenticação**
   - Implementar entrada, leitura de usuário autenticado e saída.

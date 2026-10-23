@@ -6,12 +6,10 @@ Não é fonte de verdade sobre requisitos, comportamento ou arquitetura.
 ## Estado atual (2026-10-23)
 
 - Branch de trabalho: `feature/login`, criada a partir de `origin/develop`.
-  Último commit de código: `97a9b7c` (T-LOGIN-02). A branch ainda não foi
-  enviada ao remoto.
+  A branch ainda não foi enviada ao remoto.
 - O pacote SDD de login (`docs/specs/login/`) foi aprovado pelo responsável.
-  Progresso por tarefa em `docs/specs/login/tasks.md`: T-LOGIN-02 concluída;
-  T-LOGIN-01 implementada sem os testes de configuração e de atributos de cookie
-  exigidos como evidência; T-LOGIN-03 a T-LOGIN-05 não iniciadas.
+  Progresso por tarefa em `docs/specs/login/tasks.md`: T-LOGIN-01 e T-LOGIN-02
+  concluídas; T-LOGIN-03 a T-LOGIN-05 não iniciadas.
 - O andar zero está em produção (PR #7 em `main`) em
   `empresti-theo-escola.vercel.app`, ainda com a tela técnica. O procedimento
   `tecnico.status` responde `bancoOperacional: false`: a tabela `saude_sistema`
@@ -27,8 +25,8 @@ Não é fonte de verdade sobre requisitos, comportamento ou arquitetura.
 
 - `npm run lint`: sem erros.
 - `npm run typecheck`: sem erros.
-- `npm test`: 3 arquivos, 5 testes aprovados.
-- `npm run build`: não executado.
+- `npm test`: 6 arquivos, 15 testes aprovados.
+- `npm run build`: concluído sem erros.
 
 ## Pendências do responsável
 
@@ -44,5 +42,5 @@ Não é fonte de verdade sobre requisitos, comportamento ou arquitetura.
 
 ## Próximo passo seguro
 
-Completar a evidência de T-LOGIN-01 (testes de configuração e de atributos de
-cookie) e seguir para T-LOGIN-03, validando cada tarefa com `rules/checks.md`.
+Implementar T-LOGIN-03 (tela Nocturne de login em `/` e redirecionamento de
+`/login`), validando com `rules/checks.md`.
