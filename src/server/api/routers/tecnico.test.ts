@@ -12,6 +12,9 @@ describe("router técnico", () => {
     } as unknown as PrismaClient;
     const caller = routerAplicacao.createCaller({
       obterClientePrisma: () => clientePrisma,
+      obterClienteSupabase: async () => {
+        throw new Error("Supabase não usado neste teste.");
+      },
     });
 
     const resposta = await caller.tecnico.status();
