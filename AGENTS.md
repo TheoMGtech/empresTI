@@ -26,8 +26,10 @@ Regras de processo já definidas para este projeto:
 - **Fora de escopo v1** (PRD): reserva com data futura, notificação por e-mail e importação da planilha atual.
 - **Front-end** (docs/layout.md): design system Nocturne, somente modo escuro, tom de copy seco e operacional, sempre em PT-BR.
 - **Estado atual**: o passo 0 documental está concluído e o andar zero
-  executável está em implementação; nenhuma funcionalidade de produto foi
-  implementada.
+  executável está em produção (PR #7 em `main`), ainda sem a migration aplicada
+  no banco de produção. A primeira feature, o login (`docs/specs/login/`), tem o
+  pacote SDD aprovado e está em implementação na branch `feature/login`; nenhuma
+  funcionalidade de catálogo ou empréstimo foi implementada.
 
 ## Stack e arquitetura (ADR-001)
 
@@ -74,6 +76,9 @@ Regras de processo já definidas para este projeto:
 - Nunca inventar credenciais nem versionar segredos; regras completas em `rules/restrictions.md`.
 - A única representação de variáveis é `.env.example`, sem valores secretos.
 - Migrações de produção: workflow manual, com confirmação literal `APPLY`, somente a partir do Environment protegido `production`.
+  O Environment ainda não existe no GitHub; ele precisa ser criado e protegido pelo
+  responsável antes da primeira execução, porque uma execução anterior o criaria
+  sem proteção e sem segredos.
 - Proteção de `main` e `develop`: pull request obrigatório, histórico linear e status
   check do job `Documentation and secret guard` do workflow `Architecture checks`.
 - Atualização de dependências: semanal via Dependabot quando exista `package.json`.
@@ -95,8 +100,13 @@ Regras de processo já definidas para este projeto:
   `wdudlqacomnasnrxgbni`. Mudanças de schema seguem `rules/migration.md`.
 - MCP Supabase (`.mcp.json`): limitado a esse projeto, somente leitura e grupos
   `database,docs`. Serve para inspecionar o real; não aplica migrations.
-- Skills repo-native ficam em `skills/<nome>/SKILL.md` e não substituem rules,
-  ADRs ou specs.
+- Vercel: time `theo-escola`, projeto `empresti`, integrado ao GitHub. Produção
+  publicada a partir de `main` em `empresti-theo-escola.vercel.app`; branches e
+  PRs recebem preview. O domínio `empresti.vercel.app` não aponta para este
+  projeto.
+- Skills repo-native ficam em `skills/<nome>/SKILL.md`; skills externas do
+  Supabase ficam em `.agents/skills/`, registradas em `skills-lock.json`. Nenhuma
+  substitui rules, ADRs ou specs.
 
 ## Fim de sessão
 

@@ -13,8 +13,8 @@ const openSans = Open_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "EmpresTI — Status do sistema",
-  description: "Prova executável da fundação técnica do EmpresTI.",
+  title: "EmpresTI",
+  description: "Acesso ao sistema de empréstimo interno.",
 };
 
 export default function LayoutRaiz({ children }: Readonly<{ children: ReactNode }>) {
