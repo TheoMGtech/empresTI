@@ -13,6 +13,16 @@ updates:
         patterns:
           - "tailwindcss"
           - "@tailwindcss/*"
+      # @supabase/ssr declara peer dependency de uma versão mínima do
+      # @supabase/supabase-js: sozinho, o PR quebra o npm ci (ERESOLVE).
+      supabase:
+        patterns:
+          - "@supabase/*"
+      # eslint-config-next acompanha a versão do next.
+      next:
+        patterns:
+          - "next"
+          - "eslint-config-next"
   - package-ecosystem: github-actions
     directory: /
     target-branch: develop
