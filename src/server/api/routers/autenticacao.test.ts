@@ -3,7 +3,19 @@ import { describe, expect, it, vi } from "vitest";
 import { routerAplicacao } from "@/server/api/raiz";
 import type { ClienteSupabaseAutenticacao } from "@/server/services/autenticacao";
 
-function criarCliente({ autenticado = false, falhaEntrada = false, falhaSaida = false } = {}) {
+type ErroEntrada = { code?: string; status?: number; message: string } | null;
+
+const CREDENCIAIS_INVALIDAS: ErroEntrada = {
+  code: "invalid_credentials",
+  status: 400,
+  message: "Invalid login credentials",
+};
+
+function criarCliente({
+  autenticado = false,
+  erroEntrada = null as ErroEntrada,
+  falhaSaida = false,
+} = {}) {
   return {
     auth: {
       getUser: vi.fn(async () => ({
@@ -11,8 +23,8 @@ function criarCliente({ autenticado = false, falhaEntrada = false, falhaSaida = 
         error: null,
       })),
       signInWithPassword: vi.fn(async () => ({
-        data: { user: falhaEntrada ? null : { id: "usuario-1" }, session: null },
-        error: falhaEntrada ? { message: "detalhe interno" } : null,
+        data: { user: erroEntrada ? null : { id: "usuario-1" }, session: null },
+        error: erroEntrada,
       })),
       signOut: vi.fn(async () => ({
         error: falhaSaida ? { message: "detalhe interno" } : null,
@@ -44,13 +56,32 @@ describe("router de autenticação", () => {
 
   it("CA-LOGIN-03 — normaliza credenciais inválidas", async () => {
     await expect(
-      criarCaller(criarCliente({ falhaEntrada: true })).autenticacao.entrar({
+      criarCaller(criarCliente({ erroEntrada: CREDENCIAIS_INVALIDAS })).autenticacao.entrar({
         email: "colaborador@empresa.com",
         senha: "senha-incorreta",
       }),
     ).rejects.toMatchObject({
       code: "UNAUTHORIZED",
       message: "Não foi possível entrar. Confira e-mail e senha.",
+    });
+  });
+
+  it.each([
+    ["Supabase indisponível", { status: 503, message: "detalhe interno" }],
+    [
+      "limite de requisições",
+      { code: "over_request_rate_limit", status: 429, message: "detalhe interno" },
+    ],
+    ["falha de rede", { status: 0, message: "detalhe interno: fetch failed" }],
+  ])("RF-LOGIN-08 — %s não vira erro de credenciais", async (_caso, erroEntrada) => {
+    await expect(
+      criarCaller(criarCliente({ erroEntrada })).autenticacao.entrar({
+        email: "colaborador@empresa.com",
+        senha: "senha-valida",
+      }),
+    ).rejects.toMatchObject({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Não foi possível concluir o acesso. Tente novamente.",
     });
   });
 

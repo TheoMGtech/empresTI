@@ -16,8 +16,14 @@ export async function entrar(
     password: credenciais.senha,
   });
 
-  if (error || !data.user) {
+  // Só `invalid_credentials` é erro de credencial; indisponibilidade ou limite de
+  // requisições do Supabase não podem aparecer como "confira e-mail e senha".
+  if (error?.code === "invalid_credentials") {
     throw new ErroCredenciaisInvalidas();
+  }
+
+  if (error || !data.user) {
+    throw new ErroAutenticacaoIndisponivel();
   }
 
   return { autenticado: true as const };
