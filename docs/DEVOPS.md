@@ -38,6 +38,22 @@ Itens sob responsabilidade do responsável:
 4. ~~Criar e proteger `develop`~~ — concluído: `main` e `develop` exigem pull
    request, histórico linear e o status check `Documentation and secret guard`.
 5. Configurar a integração do Sentry depois da feature que introduzir o runtime.
+6. Decidir se o cadastro público será desabilitado no Supabase Auth
+   (`disable_signup: false` hoje), conforme RS-LOGIN-04 de
+   `docs/specs/001-login/spec.md`.
+7. Fornecer uma conta oficial para validar CA-LOGIN-04 em produção.
+8. Decidir o destino dos PRs abertos do Dependabot (#8 a #12); o #11
+   (TypeScript 5.9 → 7.0) estava com CI falhando em 2026-10-23.
+9. Decidir como o banco local de desenvolvimento e de testes sobe (por exemplo,
+   Testcontainers, Postgres em container ou Supabase local só como Postgres).
+   Sem isso, `rules/checks.md` e `rules/migration.md` não conseguem aplicar
+   migration localmente.
+10. Alinhar a ordem das paradas do fluxo SDD: `rules/spec-flow.md` pede
+    aprovação da spec antes de `plan.md` e `tasks.md`; o `AGENTS.md` pede a
+    entrega do pacote completo.
+11. Avaliar tornar o job `Application quality` um status check obrigatório em
+    `develop` e `main`; hoje só `Documentation and secret guard` é exigido, e o
+    CI não roda `npm run test:e2e`.
 
 O workflow de migrations não dispara automaticamente. Ele só é executável manualmente, com confirmação literal `APPLY`, e usa o Environment protegido. Ele ainda não foi executado; o Environment `production` precisa existir com proteção antes da primeira execução, pois o GitHub criaria um Environment sem proteção se o workflow rodasse antes.
 
