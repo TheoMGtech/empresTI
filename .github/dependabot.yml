@@ -6,6 +6,13 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    groups:
+      # tailwindcss e @tailwindcss/* precisam da mesma versão: atualizar só o
+      # plugin deixa duas versões do Tailwind no lock.
+      tailwind:
+        patterns:
+          - "tailwindcss"
+          - "@tailwindcss/*"
   - package-ecosystem: github-actions
     directory: /
     target-branch: develop
