@@ -48,7 +48,8 @@ Regras de processo já definidas para este projeto:
 ## Governança
 
 - O **responsável único** do projeto é a pessoa que aprova todas as mudanças: specs, planos, tasks, ADRs, PRs e ajustes de processo.
-- O agente não aprova nem faz merge por conta própria: qualquer decisão de governança não documentada deve ser consultada com o responsável.
+- O agente não aprova spec, plano, tarefas nem ADR por conta própria: qualquer decisão de governança não documentada deve ser consultada com o responsável.
+- Merge segue `rules/operacao.md`: o agente pode fazer squash merge de PR próprio em `develop` depois de CI verde; o merge em `main` é exclusivo do responsável, com autorização explícita.
 
 ## Fluxo de trabalho (SDD na prática)
 
