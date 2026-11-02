@@ -54,13 +54,3 @@ O que cada nível significa:
   modelo diferente do que escreveu o código.
 - Sessão longa não se corrige com regra mais enfática: encerre
   seguindo rules/handoff.md e abra outra.
-
-## Autorização vigente para o andar zero
-> leitor: agente
-
-- O responsável autorizou em 2026-10-19 a configuração do projeto Supabase
-  `InovacaoTecnologia` (`wdudlqacomnasnrxgbni`) e o primeiro deploy de produção
-  na Vercel a partir de `main`.
-- A autorização vale somente para o andar zero técnico e não inclui
-  funcionalidade de produto, regra de negócio ou segredo versionado.
-- O DDL continua sujeito ao ponto de parada de `rules/migration.md`.

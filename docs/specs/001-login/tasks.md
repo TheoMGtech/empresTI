@@ -3,8 +3,8 @@
 ## Estado
 
 Pacote aprovado pelo responsável junto com `spec.md` e `plan.md` (registro em
-2026-10-23). T-LOGIN-01 a T-LOGIN-05 concluídas; integração pelo PR #13 em
-`develop`, aguardando o responsável.
+2026-10-23). T-LOGIN-01 a T-LOGIN-05 concluídas; integradas pelo PR #13 em
+`develop` e promovidas para `main` pelo PR #14.
 
 ## Tarefas
 

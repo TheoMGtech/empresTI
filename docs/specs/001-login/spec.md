@@ -2,8 +2,12 @@
 
 ## Estado
 
+**Status:** Implementada — spec vigente (descreve o comportamento atual).
+
 Aprovada pelo responsável junto com `plan.md` e `tasks.md` (registro em
-2026-10-23). Implementação em andamento; progresso em `tasks.md`.
+2026-10-23). Em produção desde 2026-10-23 (PR #13 em `develop`, PR #14 em
+`main`). Pendente de evidência: CA-LOGIN-04 com conta real em produção e
+RS-LOGIN-04, porque o cadastro público ainda está habilitado no Supabase Auth.
 
 ## Objetivo
 

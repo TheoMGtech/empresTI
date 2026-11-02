@@ -1,12 +1,24 @@
 ---
 name: supabase
-description: "Use when doing ANY task involving Supabase. Triggers: Supabase products (Database, Auth, Edge Functions, Realtime, Storage, Vectors, Cron, Queues); client libraries and SSR integrations (supabase-js, @supabase/ssr) in Next.js, React, SvelteKit, Astro, Remix; auth issues (login, logout, sessions, JWT, cookies, getSession, getUser, getClaims, RLS); Supabase CLI or MCP server; schema changes, migrations, declarative schemas, security audits, Postgres extensions (pg_graphql, pg_cron, pg_vector); debugging and troubleshooting errors or unexpected behavior on Supabase projects (HTTP errors, Postgres errors, RLS surprises, permission denied, schema cache issues, timeouts, Edge Function crashes, Realtime drops, Storage failures) and reading or querying logs (Logs Explorer, ClickHouse)."
+description: "Checklist de segurança e diagnóstico do Supabase (Auth com @supabase/ssr, cookies e sessão, chaves publishable × service_role, RLS e policies, erros do Supabase, uso do MCP do Supabase em leitura). Use ao escrever ou revisar código de autenticação, ao desenhar policy RLS dentro de uma migration do Prisma ou ao diagnosticar erro do Supabase. Não use para criar ou aplicar migration (isso é rules/migration.md com Prisma Migrate) nem para decidir stack."
 metadata:
   author: supabase
   version: "0.1.2"
+  origem: github.com/supabase/agent-skills (skills/supabase)
+  licenca: não declarada no SKILL.md original; conferir no repositório de origem
+  adaptada-em: 2026-11-02
+  mudancas: description restrita ao que é dela; removidas a seção "Making and Committing Schema Changes", a dica de `supabase migration new` e a orientação de criar `.mcp.json`, porque contradizem o ADR-001 §5 e rules/migration.md; removido o fluxo de abrir issue pública (references/skill-feedback.md e assets/).
 ---
 
 # Supabase
+
+## Precedência neste projeto
+
+Esta skill orienta; não decide. Em conflito, valem `rules/` e `docs/adr/`:
+pare e avise. O Prisma Migrate é o único dono do schema (ADR-001 §5); a Supabase
+CLI e o MCP nunca alteram schema nem dado aqui. O projeto Supabase remoto atende
+produção: o MCP é só leitura (`rules/restrictions.md`). Não atualize esta skill
+pelo CLI sem refazer a auditoria — isso sobrescreve a adaptação.
 
 ## Core Principles
 
@@ -90,7 +102,6 @@ supabase <group> <command> --help  # Flags for a specific command
 - `supabase db query` requires **CLI v2.79.0+** → use MCP `execute_sql` or `psql` as fallback
 - `supabase db advisors` requires **CLI v2.81.3+** → use MCP `get_advisors` as fallback
 - The browser flow of `supabase login` creates a classic token with full account access. In CI, set `SUPABASE_ACCESS_TOKEN` to a scoped personal access token instead. It takes precedence over any saved login. Commands that connect with the database password (`--password` or `SUPABASE_DB_PASSWORD`, for example `supabase db push`) aren't limited by the token's permissions.
-- In imperative migration projects, create new hand-authored migration files with `supabase migration new <name>` first. Never invent a migration filename or rely on memory for the expected format. Declarative schema projects generate migrations from `supabase/schemas/`; see "Making and Committing Schema Changes" below.
 
 **Version check and upgrade:** Run `supabase --version` to check. For CLI changelogs and version-specific features, consult the [CLI documentation](https://supabase.com/docs/reference/cli/introduction) or [GitHub releases](https://github.com/supabase/cli/releases).
 
@@ -105,7 +116,7 @@ For setup instructions, server URL, and configuration, see the [MCP setup guide]
    A `401` is expected (no token) and means the server is up. Timeout or "connection refused" means it may be down.
 
 2. **Check `.mcp.json` configuration:**
-   Verify the project root has a valid `.mcp.json` with the correct server URL. If missing, create one pointing to `https://mcp.supabase.com/mcp`.
+   Verify the project root has a valid `.mcp.json` with the correct server URL. If it is missing or wrong, stop and tell the user — changing it requires approval (`rules/operacao.md`).
 
 3. **Authenticate the MCP server:**
    If the server is reachable and `.mcp.json` is correct but tools aren't visible, the user needs to authenticate. The Supabase MCP server uses OAuth 2.1 — tell the user to trigger the auth flow in their agent, complete it in the browser, and reload the session.
@@ -122,34 +133,11 @@ Before implementing any Supabase feature, find the relevant documentation. Use t
 2. **Fetch docs pages as markdown** — any docs page can be fetched by appending `.md` to the URL path.
 3. **Web search** for Supabase-specific topics when you don't know which page to look at.
 
-## Making and Committing Schema Changes
+## Schema Changes
 
-First decide which schema workflow the project uses.
-
-### Option A: Declarative schemas
-
-Use this when `supabase/schemas/` exists or `config.toml` sets `schema_paths`. Edit the desired schema state in those files, then generate and review the migration. Do not start by hand-writing a migration. See the [Declarative database schemas guide](https://supabase.com/docs/guides/local-development/declarative-database-schemas).
-
-### Option B: Imperative migrations
-
-Use this when the project does not use declarative schemas.
-
-**To make schema changes, use `execute_sql` (MCP) or `supabase db query` (CLI).** These run SQL directly on the database without creating migration history entries, so you can iterate freely and generate a clean migration when ready.
-
-Do NOT use `apply_migration` to change a local database schema — it writes a migration history entry on every call, which means you can't iterate, and `supabase db diff` / `supabase db pull` will produce empty or conflicting diffs. If you use it, you'll be stuck with whatever SQL you passed on the first try.
-
-**When ready to commit** your changes to a migration file:
-
-1. **Run advisors** → `supabase db advisors` (CLI v2.81.3+) or MCP `get_advisors`. Fix any issues.
-2. **Review the Security Checklist above** if your changes involve views, functions, triggers, or storage.
-3. **Generate the migration** → `supabase db pull <descriptive-name> --local --yes`
-4. **Verify** → `supabase migration list --local`
+Neste projeto, toda mudança de schema, RLS, policy ou trigger segue `rules/migration.md`
+(Prisma Migrate). Use o checklist de segurança acima ao desenhar a policy.
 
 ## Debugging
 
 When you get an error on a Supabase-related request, for example an error code from the Supabase REST API, Postgres database, or PostgREST, an empty result, getting blocked by RLS unexpectedly, or an error from a Supabase service like Auth, Realtime, Edge Functions, or Storage, you **must** fetch Supabase's [Monitoring and Debugging](https://supabase.com/docs/guides/monitoring-and-debugging.md) documentation before diagnosing or proposing a fix, rather than working from memory. The same docs also cover performance optimizations, such as slow queries and missing indexes.
-
-## Reference Guides
-
-- **Skill Feedback** → [references/skill-feedback.md](references/skill-feedback.md)
-  **MUST read when** the user reports that this skill gave incorrect guidance or is missing information.

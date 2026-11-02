@@ -26,14 +26,17 @@ Regras de processo já definidas para este projeto:
 - **Fora de escopo v1** (PRD): reserva com data futura, notificação por e-mail e importação da planilha atual.
 - **Front-end** (docs/layout.md): design system Nocturne, somente modo escuro, tom de copy seco e operacional, sempre em PT-BR.
 - **Estado atual**: o passo 0 documental e o andar zero executável estão
-  concluídos. A primeira feature, o login (`docs/specs/login/`), está em produção
+  concluídos. A primeira feature, o login (`docs/specs/001-login/`), está em produção
   desde 2026-10-23 (PR #13 em `develop`, PR #14 em `main`) e substituiu a tela
   técnica em `/`. O banco de produção ainda não tem a migration do andar zero
   aplicada. Nenhuma funcionalidade de catálogo ou empréstimo foi implementada.
+- **Ainda não existe banco local** para desenvolvimento e testes (não há
+  `DATABASE_URL` local nem teste com Testcontainers). Como subir esse banco é
+  decisão pendente do responsável: tarefa que precise de banco para e avisa.
 
 ## Stack e arquitetura (ADR-001)
 
-- Mesmo marcado como `RASCUNHO` no documento, o **ADR-001** é tratado como **aprovado e vinculante**.
+- O **ADR-001** está aprovado e é vinculante. Índice dos ADRs em `docs/adr/README.md`.
 - Resumo do decidido no ADR:
   - **Aplicação:** monolito Next.js (App Router), front e servidor no mesmo projeto; deploy em um único projeto na Vercel; Route Handlers do Next, sem servidor separado.
   - **Apresentação:** TypeScript em modo `strict`; Client Components como padrão para telas com dados; TanStack Query via `@trpc/react-query`; estado de cliente com `useState` e Context; formulários com React Hook Form + `zodResolver`; Tailwind CSS; componentes shadcn/ui.
@@ -45,7 +48,8 @@ Regras de processo já definidas para este projeto:
 ## Governança
 
 - O **responsável único** do projeto é a pessoa que aprova todas as mudanças: specs, planos, tasks, ADRs, PRs e ajustes de processo.
-- O agente não aprova nem faz merge por conta própria: qualquer decisão de governança não documentada deve ser consultada com o responsável.
+- O agente não aprova spec, plano, tarefas nem ADR por conta própria: qualquer decisão de governança não documentada deve ser consultada com o responsável.
+- Merge segue `rules/operacao.md`: o agente pode fazer squash merge de PR próprio em `develop` depois de CI verde; o merge em `main` é exclusivo do responsável, com autorização explícita.
 
 ## Fluxo de trabalho (SDD na prática)
 
@@ -61,7 +65,7 @@ Regras de processo já definidas para este projeto:
 - **Tests:** obrigatórios em cada feature, com tamanho proporcional ao risco (como exige o template de PR).
 - Cada PR deve incluir **evidência** da verificação executada (comandos e resultado) e cobrir os critérios de aceitação da spec.
 - Quando aplicável, verificar o **isolamento entre tenants** (checklist do template de PR).
-- Estratégia de referência: Vitest, Testing Library, Testcontainers e Playwright (ADR-001); os detalhes serão definidos quando existam specs (rules/tests.md).
+- Estratégia de referência: Vitest, Testing Library, Testcontainers e Playwright (ADR-001); o procedimento está em `rules/tests.md`.
 
 ## Convenções
 
@@ -81,11 +85,42 @@ Regras de processo já definidas para este projeto:
   sem proteção e sem segredos.
 - Proteção de `main` e `develop`: pull request obrigatório, histórico linear e status
   check do job `Documentation and secret guard` do workflow `Architecture checks`.
-- Atualização de dependências: semanal via Dependabot quando exista `package.json`.
+- Atualização de dependências: semanal via Dependabot, com PRs para `develop`.
+
+## Comandos
+
+Executados nesta máquina em 2026-11-02:
+
+- `npm run dev` — sobe a aplicação em `http://localhost:3000`.
+- `npm run lint` · `npm run typecheck` · `npm test` · `npm run build`.
+- `npm run test:e2e` — Playwright. Suba `npm run dev` antes: a primeira
+  compilação do `next dev` nesta pasta pode passar dos 60 s que o Playwright
+  espera. Use `localhost`, não `127.0.0.1`.
+- `npm run prisma:migrate` e `npm run prisma:reset` existem, mas ainda não há
+  banco local para rodá-los (ver Estado atual).
+
+Não use `npx` nesta pasta: o `&` no caminho quebra o comando. Use os scripts
+`npm run …` ou `node ./node_modules/<pacote>/…`. O `npm run build` reescreve
+`next-env.d.ts`; desfaça essa alteração se ela não fizer parte da tarefa.
+
+## Mapa de diretórios
+
+- `src/app/` — rotas do App Router e o Route Handler `api/trpc/[trpc]/route.ts`.
+- `src/components/` — componentes de tela, agrupados por funcionalidade.
+- `src/server/api/` — contexto tRPC (`trpc.ts`), router raiz e `routers/<dominio>.ts`.
+- `src/server/services/` — regra de negócio e integrações chamadas pelos routers.
+- `src/server/supabase/` — cliente Supabase server-side e cookies.
+- `src/trpc/` — cliente e provedor tRPC do navegador.
+- `src/lib/` — esquemas Zod compartilhados e utilitários.
+- `src/test/` — setup e utilitários de teste. Testes unitários ficam ao lado do
+  arquivo testado (`*.test.ts[x]`); testes de navegador ficam em `e2e/`.
+- `prisma/` — schema e migrations versionadas.
+- `docs/` — PRD, ADRs, specs (`docs/specs/<NNN-nome>/`), layout, andar zero e DevOps.
 
 ## Mapa de instruções
 
-- `rules/restrictions.md`: limites permanentes de autoridade, escopo e segredos.
+- `rules/restrictions.md`: limites de autoridade, escopo, ritmo, produção e
+  segredos. Leia sempre, antes de qualquer tarefa.
 - `rules/operacao.md`: contrato de commits, push, aprovações e configuração.
 - `rules/checks.md`: verificações obrigatórias antes de declarar trabalho pronto.
 - `rules/migration.md`: procedimento e ponto de parada para mudanças de schema.
@@ -93,6 +128,7 @@ Regras de processo já definidas para este projeto:
 - `rules/tests.md`: estratégia e evidências de teste.
 - `rules/handoff.md`: encerramento de sessão com trabalho pendente.
 - `rules/spec-flow.md`: abertura e execução de funcionalidades pelo fluxo SDD.
+- `docs/adr/README.md`: índice das decisões; leia antes de propor mudança estrutural.
 
 ## Ambiente e capacidades
 
@@ -105,11 +141,33 @@ Regras de processo já definidas para este projeto:
   `empresti-theo-escola.vercel.app` (mesmo deploy); `develop` em
   `empresti-git-develop-theo-escola.vercel.app`; branches e PRs recebem
   preview. O domínio `empresti.vercel.app` não aponta para este projeto.
-- Skills repo-native ficam em `skills/<nome>/SKILL.md`; skills externas do
-  Supabase ficam em `.agents/skills/`, registradas em `skills-lock.json`. Nenhuma
-  substitui rules, ADRs ou specs.
+
+## Skills
+
+- Skills do time ficam em `skills/<nome>/SKILL.md`; skills externas do Supabase
+  ficam em `.agents/skills/`, registradas em `skills-lock.json` e adaptadas a este
+  projeto (ver `metadata` de cada uma).
+- No início de cada tarefa, leia só o frontmatter (`name` e `description`) de
+  cada skill. Carregue o corpo apenas quando a tarefa casar com a description;
+  abra `references/` só quando o `SKILL.md` mandar.
+- Em conflito, `rules/` e `docs/adr/` vencem qualquer skill.
+- Skill que não foi escrita pelo time passa por auditoria antes do primeiro uso.
+  Atualizar uma skill externa pelo CLI sobrescreve a adaptação: compare, audite e
+  aplique só o que passar.
+
+## Subagentes
+
+- Ficam em `agents/<nome>.md`. O frontmatter diz quando delegar; o corpo é a
+  instrução completa do subagente.
+- `agents/verificador-spec.md` confere a spec CA a CA antes de ela ser declarada
+  pronta (`rules/spec-flow.md`). Ele não corrige nada.
+- Subagente não herda esta conversa: ao delegar, passe tudo que o arquivo dele
+  pede como entrada.
+- Se o harness não tiver subagentes, abra uma sessão nova e comece com: "Aja
+  conforme agents/<nome>.md." e as entradas pedidas.
 
 ## Fim de sessão
 
-- Atualizar `handoff.md` **quando seja necessário** (por exemplo, quando ao final da sessão exista trabalho não terminado ou pendências).
-- `handoff.md` é um artefato efímero: registra onde a sessão acabou, mas não é fonte de verdade sobre requisitos, comportamento nem arquitetura.
+- Atualizar `handoff.md` **quando seja necessário** (por exemplo, quando ao final da sessão exista trabalho não terminado ou pendências), no formato de `rules/handoff.md`.
+- `handoff.md` é um artefato efêmero e não versionado (está no `.gitignore`): registra onde a sessão acabou, mas não é fonte de verdade sobre requisitos, comportamento nem arquitetura.
+- Pendências permanentes do responsável ficam em `docs/DEVOPS.md`, não no handoff.

@@ -15,7 +15,7 @@ parecer trivial.
 ## Procedimento
 1. Antes de gerar qualquer coisa: escreva o DDL pretendido na resposta
    e PARE. Eu aprovo ou corrijo.
-2. Gere a migration com `npx prisma migrate dev --name <nome-curto>`.
+2. Gere a migration com `npm run prisma:migrate -- --name <nome-curto>`.
    Prisma Migrate é o único dono do schema. Uma migration por tarefa.
 3. Toda tabela nova nasce com Row Level Security habilitada e pelo
    menos uma policy explícita no SQL da migration gerada. Tabela sem
@@ -23,12 +23,14 @@ parecer trivial.
 4. Se a tabela já tem dado, diga o que acontece com as linhas
    existentes. Coluna obrigatória nova precisa de default ou de um
    passo de preenchimento.
-5. Aplique com `npx prisma migrate reset --force` no banco local e
-   rode `npm test`.
+5. Aplique com `npm run prisma:reset` no banco local e rode `npm test`.
+   Ainda não existe banco local definido: até essa decisão do responsável,
+   pare neste passo e avise. Nunca aponte `DATABASE_URL` ou `DIRECT_URL`
+   para o projeto remoto para contornar.
 
 ## Verificação
-`npx prisma migrate reset --force` num banco local limpo aplica todas
-as migrations do zero, sem erro e sem nenhum passo manual.
+`npm run prisma:reset` num banco local limpo aplica todas as migrations
+do zero, sem erro e sem nenhum passo manual.
 
 ## Não faça
 - Não altere schema pelo Studio, pela Supabase CLI nem por SQL avulso.
@@ -36,3 +38,5 @@ as migrations do zero, sem erro e sem nenhum passo manual.
 - Não edite migration que já foi para o repositório remoto. Escreva
   a próxima.
 - Não toque no projeto Supabase remoto. Tudo acontece no local.
+- Não use `npx` nesta pasta: o `&` no caminho quebra o comando. Use os
+  scripts `npm run prisma:*`.
