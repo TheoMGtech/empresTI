@@ -23,6 +23,11 @@ updates:
         patterns:
           - "next"
           - "eslint-config-next"
+      # @trpc/client, @trpc/server e @trpc/react-query exigem versão idêntica
+      # entre si: sozinho, o PR quebra o npm ci (ERESOLVE).
+      trpc:
+        patterns:
+          - "@trpc/*"
   - package-ecosystem: github-actions
     directory: /
     target-branch: develop
