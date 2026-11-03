@@ -3,8 +3,8 @@
 ## Estado
 
 Pacote aprovado pelo responsável junto com `spec.md` e `plan.md` (registro em
-2026-10-23). T-LOGIN-01 a T-LOGIN-05 concluídas; integração pelo PR #13 em
-`develop`, aguardando o responsável.
+2026-10-23). T-LOGIN-01 a T-LOGIN-05 concluídas; integradas pelo PR #13 em
+`develop` e promovidas para `main` pelo PR #14.
 
 ## Tarefas
 
@@ -63,6 +63,18 @@ Pacote aprovado pelo responsável junto com `spec.md` e `plan.md` (registro em
     `autenticacao.sessao` sem cookie responde `autenticado: false`; em 1024 px e
     375 px a página hidrata, não tem rolagem horizontal, não expõe cookie ao
     JavaScript e bloqueia entradas inválidas sem chamar `autenticacao.entrar`.
+
+- [x] **T-LOGIN-06 — Correções apontadas pelo `verificador-spec` (2026-11-02)**
+  - Só o código `invalid_credentials` do Supabase vira erro de credenciais;
+    qualquer outra falha de `signInWithPassword` (indisponibilidade, limite de
+    requisições, resposta sem usuário) vira a mensagem operacional genérica. Antes,
+    toda falha era tratada como credencial inválida, contrariando RF-LOGIN-08.
+  - Os testes de tela que cobrem validação, sucesso, falha, sessão e logout
+    passam a citar CA-LOGIN-07.
+  - Atende: RF-LOGIN-04, RF-LOGIN-08, CA-LOGIN-03, CA-LOGIN-07.
+  - Evidência: `src/server/api/routers/autenticacao.test.ts` e
+    `src/components/login/tela-login.test.tsx`.
+  - Aprovação: pedida pelo responsável nesta data, após a verificação.
 
 ## Ponto obrigatório de parada
 
