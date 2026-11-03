@@ -1,6 +1,6 @@
 ---
 name: supabase-postgres-best-practices
-description: "Postgres best practices maintained by Supabase, for Postgres running anywhere. Load this skill BEFORE writing or changing anything that lives in a Postgres database: creating or altering tables and columns (including choosing column types), schema design, migrations and declarative schema files, RLS policies and the tests that verify them, indexes, triggers, database functions, queues and scheduled jobs (pg_cron, pgmq), vector/semantic search (pgvector), and restoring dumps (pg_restore) or importing data. Also load it when diagnosing slow queries, high CPU, timeouts, EXPLAIN plans, connection exhaustion, locking, bloat, or rows visible to the wrong user or tenant. This is not just a performance guide — schema, migration, security, and SQL authoring tasks need these rules too, even for a one-column change or a single query."
+description: "Catálogo de boas práticas de PostgreSQL (tipos de coluna, chaves, índices, constraints, RLS e performance de policy, conexões e pooling, locks, N+1, paginação, EXPLAIN). Use ao desenhar tabela, coluna, índice ou policy RLS que vai entrar numa migration do Prisma, ao escrever SQL de consulta ou ao diagnosticar consulta lenta ou linha visível para o tenant errado. Não use para decidir o fluxo de migration (rules/migration.md) nem modelagem de domínio (é da spec)."
 license: MIT
 metadata:
   author: supabase
@@ -8,9 +8,19 @@ metadata:
   organization: Supabase
   date: January 2026
   abstract: Comprehensive Postgres performance optimization guide for developers using Supabase and Postgres. Contains performance rules across 8 categories, prioritized by impact from critical (query performance, connection management) to incremental (advanced features). Each rule includes detailed explanations, incorrect vs. correct SQL examples, query plan analysis, and specific performance metrics to guide automated optimization and code generation.
+  origem: github.com/supabase/agent-skills (skills/supabase-postgres-best-practices)
+  licenca: MIT
+  adaptada-em: 2026-11-02
+  mudancas: description restrita (a original carregava em qualquer tarefa de banco, inclusive o fluxo de migration); seção de precedência adicionada; removidos references/_contributing.md e _template.md, que o SKILL.md não aponta.
 ---
 
 # Supabase Postgres Best Practices
+
+## Precedência neste projeto
+
+Esta skill orienta; não decide. Em conflito, valem `rules/` e `docs/adr/`: pare e
+avise. Toda mudança de schema segue `rules/migration.md` (Prisma Migrate, DDL
+mostrado antes). Modelagem de domínio vem da spec aprovada, não desta skill.
 
 Comprehensive performance optimization guide for Postgres, maintained by Supabase. Contains rules across 8 categories, prioritized by impact to guide automated query optimization and schema design.
 

@@ -28,7 +28,9 @@ function renderizarSemSessao(manipuladores: Record<string, (entrada: unknown) =>
   });
 }
 
-describe("tela de login", () => {
+// CA-LOGIN-07: validação, sucesso, falha genérica, sessão existente e logout,
+// todos sem credenciais reais.
+describe("CA-LOGIN-07 — tela de login", () => {
   it("CA-LOGIN-01/CA-LOGIN-09 — renderiza o login em / sem a tela técnica nem credenciais de teste", async () => {
     renderizarSemSessao();
 
