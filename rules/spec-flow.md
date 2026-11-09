@@ -1,7 +1,7 @@
 ---
 description: Procedimento para iniciar ou alterar funcionalidade de produto
 globs: ["docs/specs/**"]
-alwaysApply: false
+alwaysApply: true
 ---
 
 # Fluxo de especificação
@@ -9,6 +9,9 @@ alwaysApply: false
 
 ## Quando
 Ao iniciar funcionalidade nova ou alterar comportamento observável existente.
+
+## Ordem oficial
+`SPEC → aprovação humana → PLAN → TASKS → aprovação humana → CODE`
 
 ## Procedimento
 1. Antes de escrever a spec, liste as perguntas que o PRD não responde sobre a

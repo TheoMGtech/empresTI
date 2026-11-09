@@ -5,7 +5,7 @@
 Regras de processo já definidas para este projeto:
 
 1. O projeto utiliza SDD repo-native/manual.
-2. A ordem é `SPEC → PLAN → TASKS → CODE`.
+2. A ordem é `SPEC → aprovação humana → PLAN → TASKS → aprovação humana → CODE`.
 3. Não se implementa uma funcionalidade antes de sua especificação.
 4. Specs governam comportamento.
 5. Se spec e código divergirem sobre comportamento, a spec prevalece até ser alterada.
@@ -53,9 +53,9 @@ Regras de processo já definidas para este projeto:
 
 ## Fluxo de trabalho (SDD na prática)
 
-1. Para uma feature nova, o agente elabora o rascunho completo: `spec.md`, depois `plan.md`, depois `tasks.md`, na pasta própria da feature (regra 11).
-2. Antes de escrever qualquer código, o agente para e entrega o pacote (spec + plan + tasks) ao responsável para revisão e aprovação.
-3. Só depois da aprovação do pacote se escreve código (regras 2, 3 e 10).
+1. Para uma feature nova, o agente elabora `spec.md` na pasta própria da feature (regra 11) e aguarda a aprovação do responsável.
+2. Com a spec aprovada, o agente elabora `plan.md` e `tasks.md` e aguarda nova aprovação do responsável.
+3. Só depois da aprovação de `plan.md` e `tasks.md` se escreve código (regras 2, 3 e 10).
 4. A implementação deve ser validada contra os critérios de aceitação da spec (regra 12).
 5. Cada PR deve ser pequeno, verificável e vinculado a uma spec aprovada.
 
