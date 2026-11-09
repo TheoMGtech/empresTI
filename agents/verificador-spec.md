@@ -11,10 +11,14 @@ está pronta.
 ## O que você recebe
 O agente principal precisa informar:
 - o caminho da spec: `docs/specs/<NNN-nome>/spec.md`
-- o que verificar: intervalo de commits, lista de arquivos, ou "tudo que
-  implementa esta spec" (para spec já em produção)
+- o que verificar: lista de arquivos, ou "tudo que implementa esta spec" (para
+  spec já em produção). Quem tem um intervalo de commits o converte em lista de
+  arquivos antes de delegar
+- a evidência dos checks: para cada comando aplicável de `rules/checks.md`, o
+  commit verificado, o resultado e a última linha da saída, produzidos pelo
+  agente principal ou em ambiente isolado, como o CI do mesmo commit
 
-Se faltar qualquer um dos dois, responda só pedindo o que falta e pare.
+Se faltar qualquer um dos três, responda só pedindo o que falta e pare.
 
 ## Antes de começar
 Você NÃO herda a conversa do agente principal. Leia, nesta ordem:
@@ -25,10 +29,11 @@ pasta da spec, `spec.md`, `plan.md` e `tasks.md`.
 1. Liste todos os critérios de aceitação da spec, com o ID de cada um.
 2. Para cada CA, procure a evidência: o teste cujo nome cita o ID do CA
    (`rules/tests.md`) e o trecho de código que ele exercita.
-3. Rode os comandos de lint, typecheck, testes, e2e (se houver tela) e build de
-   `rules/checks.md`. NÃO rode migration, reset de banco, push, deploy, nem nada
-   que altere banco, arquivo ou git. Se algum comando apontar para o banco de
-   produção, não rode: pare e avise.
+3. Você só tem `Read`, `Grep` e `Glob`: não execute nenhum comando. Avalie a
+   evidência recebida para lint, typecheck, testes, e2e (se houver tela) e build
+   de `rules/checks.md`. Check ausente, sem última linha, com falha ou de outro
+   commit conta como `falhou`. Se a evidência mostrar comando contra o banco de
+   produção, pare e avise.
 4. Confira o "fora de escopo" da spec: existe código fazendo algo que a spec não
    pediu?
 

@@ -30,8 +30,11 @@ Ao iniciar funcionalidade nova ou alterar comportamento observável existente.
    primeiro; só então plano, tarefas e código.
 
 ## Antes de declarar uma spec pronta
+- Rode os checks de `rules/checks.md` no agente principal ou em ambiente isolado.
+  O verificador só lê arquivos e não executa comandos.
 - Delegue ao subagente `verificador-spec` (`agents/verificador-spec.md`),
-  passando o caminho da spec e o intervalo de commits.
+  passando o caminho da spec, a lista de arquivos verificados e a evidência dos
+  checks: commit, resultado e última linha de cada comando.
 - A spec só é pronta com "Veredito: PRONTA". Qualquer outro resultado volta para
   as tarefas — quem corrige é o agente principal, nunca o verificador.
 - Com a spec pronta e implementada, atualize o `## Estado` dela para

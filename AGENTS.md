@@ -160,7 +160,8 @@ Não use `npx` nesta pasta: o `&` no caminho quebra o comando. Use os scripts
 - Ficam em `agents/<nome>.md`. O frontmatter diz quando delegar; o corpo é a
   instrução completa do subagente.
 - `agents/verificador-spec.md` confere a spec CA a CA antes de ela ser declarada
-  pronta (`rules/spec-flow.md`). Ele não corrige nada.
+  pronta (`rules/spec-flow.md`). Ele não corrige nada e só lê arquivos: o agente
+  principal, ou um ambiente isolado, roda os checks e entrega a evidência.
 - Subagente não herda esta conversa: ao delegar, passe tudo que o arquivo dele
   pede como entrada.
 - Se o harness não tiver subagentes, abra uma sessão nova e comece com: "Aja
