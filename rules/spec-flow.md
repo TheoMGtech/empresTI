@@ -8,8 +8,8 @@ alwaysApply: true
 > leitor: agente
 
 ## Quando
-Ao iniciar funcionalidade nova, alterar comportamento observável existente ou
-declarar uma spec `PRONTA`.
+Ao iniciar funcionalidade nova, alterar comportamento observável existente,
+avaliar se uma spec está pronta ou declarar uma spec `PRONTA`.
 
 ## Ordem oficial
 `SPEC → aprovação humana → PLAN → TASKS → aprovação humana → CODE`
@@ -39,10 +39,30 @@ declarar uma spec `PRONTA`.
 - `Implementada` não implica `PRONTA`. Spec marcada `Implementada` antes desta
   regra mantém o estado registrado até o responsável decidir.
 
+## Consulta e verificação formal
+O que separa os dois casos é a autorização recebida, não o resultado obtido.
+
+**Consulta ou diagnóstico:** o usuário pergunta se uma spec está pronta ou pede
+uma avaliação, sem autorizar registro.
+- Invoque o `verificador-spec` quando a resposta exigir avaliar a spec, com as
+  mesmas entradas e a mesma neutralidade da verificação formal.
+- Apresente ao usuário o veredito e as evidências.
+- Não modifique arquivos, não registre em `verificacao.md` e não crie commit sem
+  autorização explícita do responsável. Alteração gerada por check é desfeita,
+  conforme `rules/checks.md`.
+- A ausência de registro versionado não permite inventar resultado: evidência que
+  falta é informada como falta.
+- O resultado da consulta não altera o estado da spec nem permite declará-la
+  `PRONTA`.
+
+**Verificação formal:** há fluxo de implementação autorizado e a spec será
+declarada `PRONTA`, ou o responsável autorizou o registro. Siga as duas seções
+abaixo e registre o resultado, inclusive quando for `NÃO PRONTA`.
+
 ## Antes de declarar uma spec `PRONTA`
-Esta seção vale somente para declarar uma spec `PRONTA`. PR de configuração,
-manutenção, dependência ou ferramenta de verificação que não faz essa declaração
-não precisa de verificação nem de `verificacao.md`: escreva "Não se aplica" no PR.
+Esta seção vale para a verificação formal. PR de configuração, manutenção,
+dependência ou ferramenta de verificação que não declara `PRONTA` não precisa de
+verificação nem de `verificacao.md`: escreva "Não se aplica" no PR.
 
 1. Rode os checks de `rules/checks.md` no commit exato, com a pasta de trabalho
    sem alterações, no agente principal ou em ambiente isolado. O verificador só
@@ -52,9 +72,9 @@ não precisa de verificação nem de `verificacao.md`: escreva "Não se aplica" 
    verificados e a evidência dos checks: commit, resultado e última linha de cada
    comando. A delegação traz só essas entradas: não descreve o que mudou nem
    antecipa o resultado.
-3. Registre o relatório em `docs/specs/<NNN-nome>/verificacao.md`, no formato
-   abaixo. O verificador continua somente leitura: quem registra é o agente
-   principal.
+3. Registre o relatório integral em `docs/specs/<NNN-nome>/verificacao.md`, no
+   formato abaixo, identificando o commit exato avaliado. O verificador continua
+   somente leitura: quem registra é o agente principal.
 4. A spec só é `PRONTA` com `Veredito: PRONTA` na execução mais recente. Qualquer
    outro resultado volta para as tarefas — quem corrige é o agente principal,
    nunca o verificador — e a correção exige nova execução.
@@ -63,9 +83,10 @@ não precisa de verificação nem de `verificacao.md`: escreva "Não se aplica" 
    mudança exige nova execução.
 
 ## Registro em `verificacao.md`
-- Toda execução que devolveu veredito entra no arquivo, inclusive `NÃO PRONTA` e
-  resultados inesperados. Sem veredito, como no pedido de entradas faltantes, não
-  há execução a registrar.
+- Toda execução de verificação formal que devolveu veredito entra no arquivo,
+  inclusive `NÃO PRONTA` e resultados inesperados. Sem veredito, como no pedido de
+  entradas faltantes, não há execução a registrar. Resultado de consulta só entra
+  com autorização explícita do responsável.
 - O arquivo só cresce: acrescente a linha do histórico e a seção da nova execução,
   sem editar nem remover execuções anteriores.
 - O relatório é transcrito sem edição. Se vier fora do formato ou errado, registre
@@ -118,3 +139,5 @@ de seus critérios de aceitação. Toda spec `PRONTA` tem, em `verificacao.md`,
 - Não apague spec implementada: ela continua descrevendo o comportamento vigente.
 - Não declare spec `PRONTA` sem o registro em `verificacao.md`.
 - Não edite o veredito, não omita reprovação e não reescreva execução anterior.
+- Não registre nem commite resultado de consulta sem autorização explícita do
+  responsável.
