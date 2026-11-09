@@ -18,6 +18,7 @@ test-results/
 *.log
 *.tsbuildinfo
 package-lock.incompleto-*.json
+.artefatos/imagens-equipamentos/
 
 # Session handoff (ephemeral, see rules/handoff.md)
 handoff.md

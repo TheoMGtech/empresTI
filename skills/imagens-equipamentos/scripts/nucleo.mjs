@@ -362,7 +362,7 @@ function verificarEstadoDeclarado(manifesto, estado, problema) {
   }
 }
 
-function urlDePaginaValida(valor, pixabayId) {
+export function urlDePaginaValida(valor, pixabayId) {
   let url;
   try {
     url = new URL(valor);
