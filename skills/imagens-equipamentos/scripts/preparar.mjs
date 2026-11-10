@@ -24,8 +24,11 @@ import {
   BUCKET_PLANEJADO,
   calcularSha256,
   CATEGORIA_POR_ID,
+  codigoDeRegiaoImpropria,
   LARGURA_FINAL,
   MOTIVOS_DE_REJEICAO,
+  regiaoCabeNaBase,
+  regiaoSchema,
   validarManifesto,
 } from "./nucleo.mjs";
 
@@ -136,18 +139,17 @@ export async function baixarImagem(
   throw falha("REDIRECIONAMENTO_NAO_PERMITIDO", "redirecionamentos em excesso");
 }
 
-export async function processarImagem(bytes, { enquadramento = "centre" } = {}) {
-  if (!ENQUADRAMENTOS.includes(enquadramento)) throw entradaInvalida("enquadramento desconhecido");
+const OPCOES_DE_LEITURA = { failOn: "warning", limitInputPixels: LIMITE_PIXELS_ORIGEM };
+const conteudoNaoImagem = () =>
+  falha("CONTEUDO_NAO_IMAGEM", "o conteúdo baixado não é uma imagem válida");
 
-  const naoImagem = () =>
-    falha("CONTEUDO_NAO_IMAGEM", "o conteúdo baixado não é uma imagem válida");
-  const opcoes = { failOn: "warning", limitInputPixels: LIMITE_PIXELS_ORIGEM };
-
+// Devolve as dimensões da imagem como ela é vista, depois de aplicada a orientação EXIF.
+async function medirOrigem(bytes) {
   let metadados;
   try {
-    metadados = await sharp(bytes, opcoes).metadata();
+    metadados = await sharp(bytes, OPCOES_DE_LEITURA).metadata();
   } catch {
-    throw naoImagem();
+    throw conteudoNaoImagem();
   }
 
   if (!FORMATOS_DE_ORIGEM.has(metadados.format)) {
@@ -160,22 +162,130 @@ export async function processarImagem(bytes, { enquadramento = "centre" } = {}) 
   if (largura < LARGURA_FINAL || altura < ALTURA_FINAL) {
     throw falha("ORIGEM_PEQUENA_DEMAIS", "a imagem é menor que 800 × 600 e não será ampliada");
   }
+  return { largura, altura };
+}
 
+// Sem withMetadata: EXIF, XMP e perfis são descartados pelo sharp.
+async function codificarFinal(canal) {
   try {
-    // Sem withMetadata: EXIF, XMP e perfis são descartados pelo sharp.
-    return await sharp(bytes, opcoes)
-      .autoOrient()
-      .resize(LARGURA_FINAL, ALTURA_FINAL, {
-        fit: "cover",
-        position: enquadramento,
-        withoutEnlargement: true,
-      })
-      .toColourspace("srgb")
-      .jpeg({ quality: 82, mozjpeg: true })
-      .toBuffer();
+    return await canal.toColourspace("srgb").jpeg({ quality: 82, mozjpeg: true }).toBuffer();
   } catch {
-    throw naoImagem();
+    throw conteudoNaoImagem();
   }
+}
+
+export async function processarImagem(bytes, { enquadramento = "centre" } = {}) {
+  if (!ENQUADRAMENTOS.includes(enquadramento)) throw entradaInvalida("enquadramento desconhecido");
+
+  await medirOrigem(bytes);
+  return codificarFinal(
+    sharp(bytes, OPCOES_DE_LEITURA).autoOrient().resize(LARGURA_FINAL, ALTURA_FINAL, {
+      fit: "cover",
+      position: enquadramento,
+      withoutEnlargement: true,
+    }),
+  );
+}
+
+export function interpretarRegiao(texto) {
+  if (!/^\d{1,5},\d{1,5},\d{1,5},\d{1,5}$/.test(texto)) {
+    throw entradaInvalida("use a região no formato esquerda,topo,largura,altura");
+  }
+  const [esquerda, topo, largura, altura] = texto.split(",").map(Number);
+  return { esquerda, topo, largura, altura };
+}
+
+// Tudo o que dá para recusar sem abrir a imagem, antes de manifesto e rede.
+function exigirParametrosDeRecorte({ enquadramento, regiao, sha256Base }) {
+  if (regiao === undefined) {
+    if (sha256Base !== undefined) {
+      throw entradaInvalida("o SHA-256 da imagem-base só se aplica a uma região explícita");
+    }
+    return;
+  }
+  if (enquadramento !== undefined) {
+    throw entradaInvalida("informe enquadramento ou região, nunca os dois");
+  }
+  if (!regiaoSchema.safeParse(regiao).success) {
+    throw entradaInvalida("a região precisa de quatro coordenadas inteiras válidas");
+  }
+  if (sha256Base !== undefined && !/^[0-9a-f]{64}$/.test(sha256Base)) {
+    throw entradaInvalida("SHA-256 da imagem-base malformado");
+  }
+
+  const codigo = codigoDeRegiaoImpropria(regiao);
+  if (codigo === "REGIAO_PROPORCAO_INVALIDA") {
+    throw falha(codigo, "a região precisa ter proporção exata de 4:3");
+  }
+  if (codigo === "REGIAO_PEQUENA_DEMAIS") {
+    throw falha(codigo, "a região é menor que 800 × 600 e não será ampliada");
+  }
+}
+
+export async function processarRecorte(bytes, regiao) {
+  exigirParametrosDeRecorte({ regiao });
+
+  const { largura, altura } = await medirOrigem(bytes);
+  if (!regiaoCabeNaBase(regiao, { largura, altura })) {
+    throw falha("REGIAO_FORA_DOS_LIMITES", "a região ultrapassa os limites da imagem orientada");
+  }
+
+  const final = await codificarFinal(
+    sharp(bytes, OPCOES_DE_LEITURA)
+      .autoOrient()
+      .extract({
+        left: regiao.esquerda,
+        top: regiao.topo,
+        width: regiao.largura,
+        height: regiao.altura,
+      })
+      // A região já tem 4:3 exato: preencher não distorce.
+      .resize(LARGURA_FINAL, ALTURA_FINAL, { fit: "fill", withoutEnlargement: true }),
+  );
+
+  return {
+    final,
+    recorte: {
+      imagem_base: { sha256: calcularSha256(bytes), largura, altura },
+      regiao: {
+        esquerda: regiao.esquerda,
+        topo: regiao.topo,
+        largura: regiao.largura,
+        altura: regiao.altura,
+      },
+    },
+  };
+}
+
+const baseDivergente = () =>
+  falha("IMAGEM_BASE_DIVERGENTE", "a imagem-base não é a esperada; nada foi alterado");
+
+const mesmaRegiao = (a, b) =>
+  a.esquerda === b.esquerda &&
+  a.topo === b.topo &&
+  a.largura === b.largura &&
+  a.altura === b.altura;
+
+// Item sem recorte registrado não prova como foi cortado: região pedida sobre ele é conflito.
+function exigirMesmoRecorte(arquivo, regiao, sha256Base) {
+  const registrado = arquivo.recorte;
+  if (!registrado && regiao === undefined) return;
+  if (!registrado || regiao === undefined || !mesmaRegiao(registrado.regiao, regiao)) {
+    throw falha("CONFLITO_DE_RECORTE", "o item já foi preparado com outro recorte; nada mudou");
+  }
+  if (sha256Base !== undefined && sha256Base !== registrado.imagem_base.sha256) {
+    throw baseDivergente();
+  }
+}
+
+async function gerarImagemFinal(original, { enquadramento, regiao, sha256Base }) {
+  if (regiao === undefined) {
+    return { final: await processarImagem(original, { enquadramento }) };
+  }
+  if (sha256Base !== undefined && sha256Base !== calcularSha256(original)) {
+    throw baseDivergente();
+  }
+  return processarRecorte(original, regiao);
 }
 
 async function carregarManifestoCoerente(caminhoManifesto, diretorioTrabalho) {
@@ -295,7 +405,9 @@ export async function selecionarCandidato({
   id,
   pixabayId,
   licencaConsultadaEm,
-  enquadramento = "centre",
+  enquadramento,
+  regiao,
+  sha256Base,
   fetch: buscarHttp = globalThis.fetch,
   agora = Date.now,
   tempoLimiteMs,
@@ -306,12 +418,14 @@ export async function selecionarCandidato({
   if (!dataSchema.safeParse(licencaConsultadaEm).success) {
     throw entradaInvalida("informe a data real de consulta da licença");
   }
+  exigirParametrosDeRecorte({ enquadramento, regiao, sha256Base });
 
   const manifesto = await carregarManifestoCoerente(caminhoManifesto, diretorioTrabalho);
   const item = manifesto.itens.find((candidato) => candidato.id === id);
 
   if (item.situacao === "selecionada") {
     if (item.origem.pixabay_id === pixabayId && item.arquivo) {
+      exigirMesmoRecorte(item.arquivo, regiao, sha256Base);
       return {
         situacao: "ja_preparado",
         nome: item.arquivo.nome_relativo,
@@ -345,7 +459,11 @@ export async function selecionarCandidato({
     tempoLimiteMs,
     limiteBytes,
   });
-  const final = await processarImagem(original, { enquadramento });
+  const { final, recorte } = await gerarImagemFinal(original, {
+    enquadramento,
+    regiao,
+    sha256Base,
+  });
   const sha256 = calcularSha256(final);
 
   if (manifesto.itens.some((outro) => outro.arquivo?.sha256 === sha256)) {
@@ -373,6 +491,7 @@ export async function selecionarCandidato({
       nome_relativo: nome,
       dimensoes_finais: { largura: LARGURA_FINAL, altura: ALTURA_FINAL },
       sha256,
+      ...(recorte ? { recorte } : {}),
     },
     revisao_visual: { resultado: "pendente" },
     storage: { destino_planejado: `${BUCKET_PLANEJADO}/${nome}` },
@@ -519,12 +638,16 @@ const AJUDA = `Prepara as imagens selecionadas e mantém o manifesto. Não usa c
 Uso:
   node preparar.mjs iniciar   --manifesto <m.json> --lote <lote.json>
   node preparar.mjs selecionar --manifesto <m.json> --id TI-0001 --pixabay-id <n>
-                               --licenca-consultada-em AAAA-MM-DD [--enquadramento centre]
+                               --licenca-consultada-em AAAA-MM-DD
+                               [--enquadramento centre |
+                                --regiao esquerda,topo,largura,altura [--sha256-base <hex>]]
   node preparar.mjs rejeitar  --manifesto <m.json> --id TI-0001 --pixabay-id <n>
                                --motivos MARCA,PESSOA [--observacao <texto>]
   node preparar.mjs revisar   --manifesto <m.json> --id TI-0001
                                --resultado aceita_agente|reprovada [--observacao <texto>]
   node preparar.mjs concluir  --manifesto <m.json>
+
+A região usa pixels inteiros da imagem já orientada, com proporção 4:3 e no mínimo 800 × 600.
 
 Os arquivos ficam em .artefatos/imagens-equipamentos/. Aprovação humana e publicação não são
 registradas por este script.
@@ -550,10 +673,16 @@ const CODIGOS_DE_IMAGEM = new Set([
   "CONTEUDO_NAO_IMAGEM",
   "FORMATO_NAO_PERMITIDO",
   "ORIGEM_PEQUENA_DEMAIS",
+  "REGIAO_FORA_DOS_LIMITES",
+]);
+const CODIGOS_DE_USO = new Set([
+  "ENTRADA_INVALIDA",
+  "REGIAO_PROPORCAO_INVALIDA",
+  "REGIAO_PEQUENA_DEMAIS",
 ]);
 
 export function codigoDeSaidaDaFalha(codigo) {
-  if (codigo === "ENTRADA_INVALIDA") return 2;
+  if (CODIGOS_DE_USO.has(codigo)) return 2;
   if (CODIGOS_DE_DOWNLOAD.has(codigo)) return 4;
   if (CODIGOS_DE_IMAGEM.has(codigo)) return 5;
   return 3;
@@ -576,6 +705,8 @@ async function principal() {
         "pixabay-id": { type: "string" },
         "licenca-consultada-em": { type: "string" },
         enquadramento: { type: "string" },
+        regiao: { type: "string" },
+        "sha256-base": { type: "string" },
         motivos: { type: "string" },
         observacao: { type: "string" },
         resultado: { type: "string" },
@@ -612,6 +743,8 @@ async function principal() {
         pixabayId,
         licencaConsultadaEm: v["licenca-consultada-em"],
         enquadramento: v.enquadramento,
+        regiao: v.regiao === undefined ? undefined : interpretarRegiao(v.regiao),
+        sha256Base: v["sha256-base"],
       }),
     rejeitar: () =>
       registrarRejeicao({ ...base, id: v.id, pixabayId, motivos, observacao: v.observacao }),

@@ -33,7 +33,8 @@ polegadas.
 
 Rejeitar um candidato o impede de ser selecionado de novo para o mesmo equipamento. Por
 isso, teste `--enquadramento` (`centre`, `top`, `bottom`, `left`, `right`) antes de
-selecionar quando o recorte central puder prejudicar a foto.
+selecionar quando o recorte central puder prejudicar a foto. Se nenhum servir, defina a
+área com `--regiao` antes de selecionar: depois de preparado, o recorte do item não muda.
 
 ## O que a automação prova e o que não prova
 
@@ -43,6 +44,7 @@ selecionar quando o recorte central puder prejudicar a foto.
 | SHA-256 do arquivo igual ao manifesto | Ausência de pessoas, marcas ou textos |
 | Mesmos bytes ou mesma foto em dois itens | Que imagens de hash diferente sejam visualmente distintas |
 | Procedência preenchida e coerente | Que a foto seja real e não gerada por IA |
+| Região registrada coerente com a imagem-base declarada | Que o JPEG tenha vindo dessa base, pois o validador não a reprocessa |
 
 A API não oferece filtro nem campo sobre IA, e o rótulo na Pixabay é declarado por quem
 envia a imagem. A ausência de rótulo não prova que a foto é real. `safesearch` e os demais

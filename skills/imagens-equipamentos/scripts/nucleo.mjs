@@ -73,6 +73,26 @@ const origemSchema = z.strictObject({
   dimensoes_originais: dimensoes.nullable(),
 });
 
+// Pixels inteiros na imagem-base já orientada pelo EXIF.
+const coordenada = z.number().int().max(65_535);
+export const regiaoSchema = z.strictObject({
+  esquerda: coordenada.nonnegative(),
+  topo: coordenada.nonnegative(),
+  largura: coordenada.positive(),
+  altura: coordenada.positive(),
+});
+
+// Presente só em recortes explícitos. imagem_base descreve o arquivo realmente processado,
+// que pode diferir de origem.dimensoes_originais, informada pela API.
+const recorteSchema = z.strictObject({
+  imagem_base: z.strictObject({
+    sha256,
+    largura: z.number().int().positive(),
+    altura: z.number().int().positive(),
+  }),
+  regiao: regiaoSchema,
+});
+
 const arquivoSchema = z.strictObject({
   nome_relativo: z.string().max(260),
   dimensoes_finais: z.strictObject({
@@ -80,6 +100,7 @@ const arquivoSchema = z.strictObject({
     altura: z.literal(ALTURA_FINAL),
   }),
   sha256,
+  recorte: recorteSchema.optional(),
 });
 
 const camposDoEquipamento = {
@@ -169,6 +190,17 @@ export class FalhaDeArquivo extends Error {
     super(mensagem);
     this.codigo = codigo;
   }
+}
+
+// A proporção exata é o que garante recorte sem distorção; o mínimo, que nada seja ampliado.
+export function codigoDeRegiaoImpropria({ largura, altura }) {
+  if (largura * ALTURA_FINAL !== altura * LARGURA_FINAL) return "REGIAO_PROPORCAO_INVALIDA";
+  if (largura < LARGURA_FINAL || altura < ALTURA_FINAL) return "REGIAO_PEQUENA_DEMAIS";
+  return undefined;
+}
+
+export function regiaoCabeNaBase({ esquerda, topo, largura, altura }, base) {
+  return esquerda + largura <= base.largura && topo + altura <= base.altura;
 }
 
 export function calcularSha256(bytes) {
@@ -460,6 +492,19 @@ function verificarConsistenciaDoItem(item, estado, problema) {
         "destino planejado não corresponde ao arquivo",
         local,
       );
+    }
+  }
+
+  if (arquivo?.recorte) {
+    const { imagem_base: base, regiao } = arquivo.recorte;
+    const codigo =
+      codigoDeRegiaoImpropria(regiao) ??
+      (regiaoCabeNaBase(regiao, base) ? undefined : "REGIAO_FORA_DOS_LIMITES");
+    if (codigo) {
+      problema("metadados", codigo, "recorte registrado incoerente com a imagem-base", {
+        ...local,
+        campo: "arquivo.recorte",
+      });
     }
   }
 

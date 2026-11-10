@@ -15,8 +15,11 @@ import {
   baixarImagem,
   codigoDeSaidaDaFalha,
   concluirPreparacao,
+  ENQUADRAMENTOS,
   iniciarManifesto,
+  interpretarRegiao,
   processarImagem,
+  processarRecorte,
   registrarRejeicao,
   registrarRevisao,
   selecionarCandidato,
@@ -638,6 +641,630 @@ describe("CA-IMG-14: seleção e idempotência", () => {
   });
 });
 
+// Quatro quadrantes de cores conhecidas revelam qual área da base foi usada.
+const VERMELHO = "100";
+const VERDE = "010";
+const AZUL = "001";
+const BRANCO = "111";
+
+async function imagemEmQuadrantes(largura = 2000, altura = 1500) {
+  const quadrante = (cor) =>
+    sharp({
+      create: { width: largura / 2, height: altura / 2, channels: 3, background: cor },
+    })
+      .png()
+      .toBuffer();
+  return sharp({ create: { width: largura, height: altura, channels: 3, background: "#000000" } })
+    .composite([
+      { input: await quadrante("#ff0000"), left: 0, top: 0 },
+      { input: await quadrante("#00ff00"), left: largura / 2, top: 0 },
+      { input: await quadrante("#0000ff"), left: 0, top: altura / 2 },
+      { input: await quadrante("#ffffff"), left: largura / 2, top: altura / 2 },
+    ])
+    .jpeg({ quality: 100 })
+    .toBuffer();
+}
+
+async function corCentral(jpeg) {
+  const { data, info } = await sharp(jpeg).raw().toBuffer({ resolveWithObject: true });
+  const inicio = (Math.floor(info.height / 2) * info.width + Math.floor(info.width / 2)) * 3;
+  return [...data.subarray(inicio, inicio + 3)].map((valor) => (valor > 128 ? "1" : "0")).join("");
+}
+
+// Pipeline independente: se a implementação mudar um parâmetro, o SHA-256 deixa de bater.
+function referenciaDeRecorte(bytes, { esquerda, topo, largura, altura }) {
+  return sharp(bytes, { failOn: "warning" })
+    .autoOrient()
+    .extract({ left: esquerda, top: topo, width: largura, height: altura })
+    .resize(800, 600, { fit: "fill", withoutEnlargement: true })
+    .toColourspace("srgb")
+    .jpeg({ quality: 82, mozjpeg: true })
+    .toBuffer();
+}
+
+const REGIAO = { esquerda: 1000, topo: 750, largura: 1000, altura: 750 };
+const OUTRA_REGIAO = { esquerda: 0, topo: 0, largura: 1000, altura: 750 };
+
+const instantaneo = async (caminho) => ({
+  bytes: await readFile(caminho),
+  mtimeMs: (await stat(caminho)).mtimeMs,
+});
+
+describe("CA-IMG-05: recorte explícito", () => {
+  it("CA-IMG-05: recorta a região pedida e registra a imagem-base", async () => {
+    const origem = await imagemEmQuadrantes();
+
+    const { final, recorte } = await processarRecorte(origem, REGIAO);
+
+    expect(await sharp(final).metadata()).toMatchObject({
+      format: "jpeg",
+      width: 800,
+      height: 600,
+      space: "srgb",
+    });
+    expect(await corCentral(final)).toBe(BRANCO);
+    expect(recorte).toEqual({
+      imagem_base: { sha256: calcularSha256(origem), largura: 2000, altura: 1500 },
+      regiao: REGIAO,
+    });
+    expect(recorte.imagem_base.sha256).not.toBe(calcularSha256(final));
+  });
+
+  it("CA-IMG-05: reproduz os mesmos bytes do pipeline de referência, repetidamente", async () => {
+    const origem = await imagemEmQuadrantes();
+    const regiao = { esquerda: 272, topo: 0, largura: 1008, altura: 756 };
+    const esperado = calcularSha256(await referenciaDeRecorte(origem, regiao));
+
+    const primeira = await processarRecorte(origem, regiao);
+    const segunda = await processarRecorte(origem, regiao);
+
+    expect(calcularSha256(primeira.final)).toBe(esperado);
+    expect(calcularSha256(segunda.final)).toBe(esperado);
+  });
+
+  it("CA-IMG-05: aceita região encostada nos limites e sem redução", async () => {
+    const origem = await imagemEmQuadrantes();
+
+    const { final } = await processarRecorte(origem, {
+      esquerda: 1200,
+      topo: 900,
+      largura: 800,
+      altura: 600,
+    });
+
+    expect(await sharp(final).metadata()).toMatchObject({ width: 800, height: 600 });
+  });
+
+  it("CA-IMG-05: não distorce o conteúdo da região", async () => {
+    const quadrado = await sharp({
+      create: { width: 300, height: 300, channels: 3, background: "#ff0000" },
+    })
+      .png()
+      .toBuffer();
+    const origem = await sharp({
+      create: { width: 2000, height: 1500, channels: 3, background: "#000000" },
+    })
+      .composite([{ input: quadrado, left: 650, top: 450 }])
+      .jpeg({ quality: 100 })
+      .toBuffer();
+
+    const { final } = await processarRecorte(origem, {
+      esquerda: 200,
+      topo: 150,
+      largura: 1200,
+      altura: 900,
+    });
+    const { data, info } = await sharp(final).raw().toBuffer({ resolveWithObject: true });
+    const vermelho = (x, y) => data[(y * info.width + x) * info.channels] > 128;
+    const larguraVermelha = Array.from({ length: 800 }, (_v, x) => vermelho(x, 300)).filter(
+      Boolean,
+    ).length;
+    const alturaVermelha = Array.from({ length: 600 }, (_v, y) => vermelho(400, y)).filter(
+      Boolean,
+    ).length;
+
+    expect(Math.abs(larguraVermelha - 200)).toBeLessThanOrEqual(4);
+    expect(Math.abs(alturaVermelha - 200)).toBeLessThanOrEqual(4);
+  });
+
+  it.each([
+    ["à direita", { esquerda: 1001, topo: 0, largura: 1000, altura: 750 }],
+    ["abaixo", { esquerda: 0, topo: 751, largura: 1000, altura: 750 }],
+    ["além da largura", { esquerda: 0, topo: 0, largura: 2400, altura: 1800 }],
+  ])("CA-IMG-05: recusa região fora dos limites: %s", async (_nome, regiao) => {
+    const falha = await capturarFalha(processarRecorte(await imagemEmQuadrantes(), regiao));
+
+    expect(falha.codigo).toBe("REGIAO_FORA_DOS_LIMITES");
+  });
+
+  it.each([
+    ["796 × 597", { esquerda: 0, topo: 0, largura: 796, altura: 597 }],
+    ["640 × 480", { esquerda: 0, topo: 0, largura: 640, altura: 480 }],
+  ])("CA-IMG-05: recusa região insuficiente: %s", async (_nome, regiao) => {
+    const falha = await capturarFalha(processarRecorte(await imagemEmQuadrantes(), regiao));
+
+    expect(falha.codigo).toBe("REGIAO_PEQUENA_DEMAIS");
+  });
+
+  it("CA-IMG-05: recusa base menor que 800 × 600, mesmo com região bem formada", async () => {
+    const falha = await capturarFalha(
+      processarRecorte(await imagem(0, 640, 480), {
+        esquerda: 0,
+        topo: 0,
+        largura: 800,
+        altura: 600,
+      }),
+    );
+
+    expect(falha.codigo).toBe("ORIGEM_PEQUENA_DEMAIS");
+  });
+
+  it.each([
+    ["1000 × 700", 1000, 700],
+    ["1000 × 751", 1000, 751],
+    ["800 × 601", 800, 601],
+    ["quadrada", 900, 900],
+  ])("CA-IMG-05: recusa proporção diferente de 4:3: %s", async (_nome, largura, altura) => {
+    const falha = await capturarFalha(
+      processarRecorte(await imagemEmQuadrantes(), { esquerda: 0, topo: 0, largura, altura }),
+    );
+
+    expect(falha.codigo).toBe("REGIAO_PROPORCAO_INVALIDA");
+  });
+
+  it.each([
+    ["esquerda negativa", { ...REGIAO, esquerda: -1 }],
+    ["topo decimal", { ...REGIAO, topo: 1.5 }],
+    ["largura zero", { ...REGIAO, largura: 0 }],
+    ["altura negativa", { ...REGIAO, altura: -750 }],
+    ["texto", { ...REGIAO, esquerda: "10" }],
+    ["não numérico", { ...REGIAO, topo: Number.NaN }],
+    ["infinito", { ...REGIAO, largura: Number.POSITIVE_INFINITY }],
+    ["acima do máximo", { ...REGIAO, largura: 80_000, altura: 60_000 }],
+    ["campo ausente", { esquerda: 0, topo: 0, largura: 1000 }],
+    ["campo extra", { ...REGIAO, escala: 1 }],
+    ["sem objeto", null],
+  ])("CA-IMG-05: recusa coordenadas inválidas: %s", async (_nome, regiao) => {
+    const falha = await capturarFalha(processarRecorte(await imagemEmQuadrantes(), regiao));
+
+    expect(falha.codigo).toBe("ENTRADA_INVALIDA");
+  });
+
+  it("CA-IMG-05: interpreta o texto da região em números", () => {
+    expect(interpretarRegiao("272,0,1008,756")).toEqual({
+      esquerda: 272,
+      topo: 0,
+      largura: 1008,
+      altura: 756,
+    });
+  });
+
+  it.each(["", "1,2,3", "1,2,3,4,5", "a,b,c,d", "1.5,0,800,600", "-1,0,800,600", " 1,0,800,600"])(
+    "CA-IMG-05: recusa texto de região malformado: %j",
+    (texto) => {
+      expect(() => interpretarRegiao(texto)).toThrowError(/formato/);
+    },
+  );
+
+  it("CA-IMG-05: aplica a região sobre a imagem orientada pelo EXIF", async () => {
+    // Pixels gravados de pé (1500 × 2000); a orientação 6 os exibe deitados (2000 × 1500).
+    const origem = await sharp(
+      await sharp(await imagemEmQuadrantes())
+        .rotate(270)
+        .toBuffer(),
+    )
+      .withMetadata({ orientation: 6 })
+      .jpeg({ quality: 100 })
+      .toBuffer();
+    expect(await sharp(origem).metadata()).toMatchObject({
+      width: 1500,
+      height: 2000,
+      orientation: 6,
+    });
+
+    const resultados = await Promise.all(
+      [
+        [{ esquerda: 0, topo: 0 }, VERMELHO],
+        [{ esquerda: 1000, topo: 0 }, VERDE],
+        [{ esquerda: 0, topo: 750 }, AZUL],
+        [{ esquerda: 1000, topo: 750 }, BRANCO],
+      ].map(async ([canto, cor]) => {
+        const regiao = { ...canto, largura: 1000, altura: 750 };
+        const { final, recorte } = await processarRecorte(origem, regiao);
+        return { cor, obtida: await corCentral(final), recorte };
+      }),
+    );
+
+    for (const { cor, obtida, recorte } of resultados) {
+      expect(obtida).toBe(cor);
+      expect(recorte.imagem_base).toMatchObject({ largura: 2000, altura: 1500 });
+    }
+  });
+
+  it("CA-IMG-05: mede os limites depois da orientação", async () => {
+    const origem = await sharp(
+      await sharp(await imagemEmQuadrantes())
+        .rotate(270)
+        .toBuffer(),
+    )
+      .withMetadata({ orientation: 6 })
+      .jpeg({ quality: 100 })
+      .toBuffer();
+
+    // Cabe nos pixels gravados (altura 2000), mas não na imagem como é vista (altura 1500).
+    const falha = await capturarFalha(
+      processarRecorte(origem, { esquerda: 0, topo: 800, largura: 1000, altura: 750 }),
+    );
+
+    expect(falha.codigo).toBe("REGIAO_FORA_DOS_LIMITES");
+  });
+
+  it.each(ENQUADRAMENTOS)("CA-IMG-05: preserva o enquadramento fixo: %s", async (enquadramento) => {
+    const origem = await imagem(3, 1920, 1280);
+    const esperado = await sharp(origem, { failOn: "warning", limitInputPixels: 64_000_000 })
+      .autoOrient()
+      .resize(800, 600, { fit: "cover", position: enquadramento, withoutEnlargement: true })
+      .toColourspace("srgb")
+      .jpeg({ quality: 82, mozjpeg: true })
+      .toBuffer();
+
+    const final = await processarImagem(origem, { enquadramento });
+
+    expect(calcularSha256(final)).toBe(calcularSha256(esperado));
+  });
+});
+
+describe("CA-IMG-14: recorte explícito no manifesto", () => {
+  it("CA-IMG-07: registra o recorte separado da dimensão informada pela API", async () => {
+    const preparo = await preparoComLote();
+    const origem = await imagemEmQuadrantes();
+
+    const resultado = await preparo.selecionar("TI-0001", 2000, origem, { regiao: REGIAO });
+    const item = (await preparo.lerManifesto()).itens[0];
+
+    expect(item.arquivo).toEqual({
+      nome_relativo: resultado.nome,
+      dimensoes_finais: { largura: 800, altura: 600 },
+      sha256: resultado.sha256,
+      recorte: {
+        imagem_base: { sha256: calcularSha256(origem), largura: 2000, altura: 1500 },
+        regiao: REGIAO,
+      },
+    });
+    expect(item.origem.dimensoes_originais).toEqual({ largura: 1920, altura: 1440 });
+    expect((await preparo.validar("preparacao")).aprovado).toBe(true);
+  });
+
+  it("CA-IMG-14: duas preparações independentes geram o mesmo arquivo e o mesmo registro", async () => {
+    const origem = await imagemEmQuadrantes();
+    const preparos = [await preparoComLote(1), await preparoComLote(1)];
+
+    const resultados = [];
+    for (const preparo of preparos) {
+      resultados.push(await preparo.selecionar("TI-0001", 2000, origem, { regiao: REGIAO }));
+    }
+    const [arquivoA, arquivoB] = await Promise.all(
+      preparos.map(async (preparo) => (await preparo.lerManifesto()).itens[0].arquivo),
+    );
+
+    expect(resultados[0]).toEqual(resultados[1]);
+    expect(arquivoA).toEqual(arquivoB);
+  });
+
+  it("CA-IMG-14: enquadramento fixo continua sem o campo de recorte", async () => {
+    const preparo = await preparoComLote();
+
+    await preparo.selecionar("TI-0001", 2000, await imagem(), { enquadramento: "top" });
+
+    expect(Object.keys((await preparo.lerManifesto()).itens[0].arquivo).sort()).toEqual([
+      "dimensoes_finais",
+      "nome_relativo",
+      "sha256",
+    ]);
+  });
+
+  it("CA-IMG-14: mesma foto e mesma região reconhecem a operação, sem baixar nem alterar", async () => {
+    const preparo = await preparoComLote();
+    const origem = await imagemEmQuadrantes();
+    const primeira = await preparo.selecionar("TI-0001", 2000, origem, { regiao: REGIAO });
+    const arquivo = path.join(preparo.pastaFinal, primeira.nome);
+    const antes = await instantaneo(arquivo);
+    const manifestoAntes = await readFile(preparo.caminhoManifesto);
+    const buscarHttp = fetchSimulado();
+
+    const segunda = await preparo.selecionar("TI-0001", 2000, Buffer.alloc(0), {
+      regiao: { ...REGIAO },
+      sha256Base: calcularSha256(origem),
+      fetch: buscarHttp,
+    });
+
+    expect(segunda).toEqual({
+      situacao: "ja_preparado",
+      nome: primeira.nome,
+      sha256: primeira.sha256,
+    });
+    expect(buscarHttp).not.toHaveBeenCalled();
+    expect(await instantaneo(arquivo)).toEqual(antes);
+    expect((await readFile(preparo.caminhoManifesto)).equals(manifestoAntes)).toBe(true);
+  });
+
+  it.each([
+    ["região diferente", { regiao: OUTRA_REGIAO }],
+    ["enquadramento fixo", { enquadramento: "centre" }],
+    ["sem indicar recorte", {}],
+  ])("CA-IMG-14: item com recorte conflita com %s", async (_nome, pedido) => {
+    const preparo = await preparoComLote();
+    const primeira = await preparo.selecionar("TI-0001", 2000, await imagemEmQuadrantes(), {
+      regiao: REGIAO,
+    });
+    const arquivo = path.join(preparo.pastaFinal, primeira.nome);
+    const antes = await instantaneo(arquivo);
+    const manifestoAntes = await readFile(preparo.caminhoManifesto);
+    const buscarHttp = fetchSimulado();
+
+    const falha = await capturarFalha(
+      preparo.selecionar("TI-0001", 2000, Buffer.alloc(0), { ...pedido, fetch: buscarHttp }),
+    );
+
+    expect(falha.codigo).toBe("CONFLITO_DE_RECORTE");
+    expect(buscarHttp).not.toHaveBeenCalled();
+    expect(await instantaneo(arquivo)).toEqual(antes);
+    expect((await readFile(preparo.caminhoManifesto)).equals(manifestoAntes)).toBe(true);
+  });
+
+  it("CA-IMG-14: região sobre foto já registrada sem recorte é conflito e nada muda", async () => {
+    const preparo = await preparoComLote();
+    const nomes = [];
+    for (const [indice, id] of IDS.slice(0, 3).entries()) {
+      nomes.push((await preparo.selecionar(id, 2000 + indice, await imagem(indice))).nome);
+    }
+    const caminhos = nomes.map((nome) => path.join(preparo.pastaFinal, nome));
+    const antes = await Promise.all(caminhos.map(instantaneo));
+    const manifestoAntes = await readFile(preparo.caminhoManifesto);
+    const buscarHttp = fetchSimulado();
+
+    const falha = await capturarFalha(
+      preparo.selecionar("TI-0001", 2000, Buffer.alloc(0), {
+        regiao: REGIAO,
+        fetch: buscarHttp,
+      }),
+    );
+
+    expect(falha.codigo).toBe("CONFLITO_DE_RECORTE");
+    expect(buscarHttp).not.toHaveBeenCalled();
+    expect(await Promise.all(caminhos.map(instantaneo))).toEqual(antes);
+    expect((await readFile(preparo.caminhoManifesto)).equals(manifestoAntes)).toBe(true);
+    expect(await arquivosEm(preparo.pastaFinal)).toEqual([...nomes].sort());
+  });
+
+  it("CA-IMG-14: um novo recorte não altera as imagens já preparadas de outros itens", async () => {
+    const preparo = await preparoComLote();
+    const { nome } = await preparo.selecionar("TI-0001", 2000, await imagem());
+    const caminho = path.join(preparo.pastaFinal, nome);
+    const antes = await instantaneo(caminho);
+    const itemAntes = (await preparo.lerManifesto()).itens[0];
+
+    await preparo.selecionar("TI-0002", 2001, await imagemEmQuadrantes(), { regiao: REGIAO });
+
+    expect(await instantaneo(caminho)).toEqual(antes);
+    expect((await preparo.lerManifesto()).itens[0]).toEqual(itemAntes);
+  });
+
+  it("CA-IMG-14: foto já registrada sem recorte continua idempotente sem indicar região", async () => {
+    const preparo = await preparoComLote();
+    const primeira = await preparo.selecionar("TI-0001", 2000, await imagem());
+
+    const segunda = await preparo.selecionar("TI-0001", 2000, Buffer.alloc(0), {
+      fetch: fetchSimulado(),
+    });
+
+    expect(segunda.situacao).toBe("ja_preparado");
+    expect(segunda.sha256).toBe(primeira.sha256);
+  });
+
+  it("CA-IMG-14: base baixada diferente da esperada interrompe antes de gravar", async () => {
+    const preparo = await preparoComLote();
+    const manifestoAntes = await readFile(preparo.caminhoManifesto);
+
+    const falha = await capturarFalha(
+      preparo.selecionar("TI-0001", 2000, await imagemEmQuadrantes(), {
+        regiao: REGIAO,
+        sha256Base: "0".repeat(64),
+      }),
+    );
+
+    expect(falha.codigo).toBe("IMAGEM_BASE_DIVERGENTE");
+    expect(await arquivosEm(preparo.pastaFinal)).toEqual([]);
+    expect((await readFile(preparo.caminhoManifesto)).equals(manifestoAntes)).toBe(true);
+  });
+
+  it("CA-IMG-14: base esperada igual à baixada é aceita", async () => {
+    const preparo = await preparoComLote();
+    const origem = await imagemEmQuadrantes();
+
+    const resultado = await preparo.selecionar("TI-0001", 2000, origem, {
+      regiao: REGIAO,
+      sha256Base: calcularSha256(origem),
+    });
+
+    expect(resultado.situacao).toBe("preparado");
+  });
+
+  it("CA-IMG-14: na repetição, base diferente da registrada interrompe sem alterar", async () => {
+    const preparo = await preparoComLote();
+    const primeira = await preparo.selecionar("TI-0001", 2000, await imagemEmQuadrantes(), {
+      regiao: REGIAO,
+    });
+    const arquivo = path.join(preparo.pastaFinal, primeira.nome);
+    const antes = await instantaneo(arquivo);
+    const manifestoAntes = await readFile(preparo.caminhoManifesto);
+
+    const falha = await capturarFalha(
+      preparo.selecionar("TI-0001", 2000, Buffer.alloc(0), {
+        regiao: REGIAO,
+        sha256Base: "f".repeat(64),
+        fetch: fetchSimulado(),
+      }),
+    );
+
+    expect(falha.codigo).toBe("IMAGEM_BASE_DIVERGENTE");
+    expect(await instantaneo(arquivo)).toEqual(antes);
+    expect((await readFile(preparo.caminhoManifesto)).equals(manifestoAntes)).toBe(true);
+  });
+
+  it("CA-IMG-14: arquivo adulterado de item com recorte interrompe sem sobrescrever", async () => {
+    const preparo = await preparoComLote();
+    const { nome } = await preparo.selecionar("TI-0001", 2000, await imagemEmQuadrantes(), {
+      regiao: REGIAO,
+    });
+    const adulterado = await sharp(await imagem(5, 800, 600))
+      .jpeg({ quality: 50 })
+      .toBuffer();
+    await writeFile(path.join(preparo.pastaFinal, nome), adulterado);
+    const manifestoAntes = await readFile(preparo.caminhoManifesto);
+
+    const falha = await capturarFalha(
+      preparo.selecionar("TI-0001", 2000, Buffer.alloc(0), {
+        regiao: REGIAO,
+        fetch: fetchSimulado(),
+      }),
+    );
+
+    expect(falha.codigo).toBe("MANIFESTO_INCONSISTENTE");
+    expect(falha.detalhes.problemas).toEqual([{ codigo: "HASH_DIVERGENTE", item: "TI-0001" }]);
+    expect((await readFile(path.join(preparo.pastaFinal, nome))).equals(adulterado)).toBe(true);
+    expect((await readFile(preparo.caminhoManifesto)).equals(manifestoAntes)).toBe(true);
+  });
+
+  it("CA-IMG-14: não sobrescreve arquivo divergente com o nome do recorte", async () => {
+    const preparo = await preparoComLote();
+    const origem = await imagemEmQuadrantes();
+    const { final } = await processarRecorte(origem, REGIAO);
+    const nome = `TI-0001-${calcularSha256(final).slice(0, 8)}.jpg`;
+    const manifestoAntes = await readFile(preparo.caminhoManifesto);
+    await writeFile(path.join(preparo.pastaFinal, nome), "conteudo anterior");
+
+    const falha = await capturarFalha(
+      preparo.selecionar("TI-0001", 2000, origem, { regiao: REGIAO }),
+    );
+
+    expect(falha.codigo).toBe("ARQUIVO_CONFLITANTE");
+    expect(await readFile(path.join(preparo.pastaFinal, nome), "utf8")).toBe("conteudo anterior");
+    expect((await readFile(preparo.caminhoManifesto)).equals(manifestoAntes)).toBe(true);
+  });
+
+  it.each([
+    [
+      "região fora dos limites",
+      { regiao: { ...REGIAO, esquerda: 1001 } },
+      "REGIAO_FORA_DOS_LIMITES",
+    ],
+    ["região sem proporção", { regiao: { ...REGIAO, altura: 700 } }, "REGIAO_PROPORCAO_INVALIDA"],
+    [
+      "região pequena",
+      { regiao: { ...REGIAO, largura: 640, altura: 480 } },
+      "REGIAO_PEQUENA_DEMAIS",
+    ],
+  ])("CA-IMG-14: mantém o manifesto íntegro após falha: %s", async (_nome, extras, codigo) => {
+    const preparo = await preparoComLote();
+    const manifestoAntes = await readFile(preparo.caminhoManifesto);
+
+    const falha = await capturarFalha(
+      preparo.selecionar("TI-0001", 2000, await imagemEmQuadrantes(), extras),
+    );
+
+    expect(falha.codigo).toBe(codigo);
+    expect(await arquivosEm(preparo.pastaFinal)).toEqual([]);
+    expect(await arquivosEm(path.join(preparo.diretorioTrabalho, "tmp"))).toEqual([]);
+    expect((await readFile(preparo.caminhoManifesto)).equals(manifestoAntes)).toBe(true);
+    expect((await preparo.validar("preparacao")).aprovado).toBe(true);
+  });
+
+  it.each([
+    ["região e enquadramento juntos", { regiao: REGIAO, enquadramento: "top" }],
+    ["região e enquadramento central", { regiao: REGIAO, enquadramento: "centre" }],
+    ["SHA-256 sem região", { sha256Base: "a".repeat(64) }],
+    ["SHA-256 malformado", { regiao: REGIAO, sha256Base: "ABC" }],
+    ["coordenada inválida", { regiao: { ...REGIAO, topo: -1 } }],
+  ])("CA-IMG-14: recusa parâmetros conflitantes antes da rede: %s", async (_nome, extras) => {
+    const preparo = await preparoComLote();
+    const buscarHttp = fetchSimulado();
+
+    const falha = await capturarFalha(
+      preparo.selecionar("TI-0001", 2000, Buffer.alloc(0), { ...extras, fetch: buscarHttp }),
+    );
+
+    expect(falha.codigo).toBe("ENTRADA_INVALIDA");
+    expect(buscarHttp).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["região fora da base", { regiao: { ...REGIAO, esquerda: 1001 } }, "REGIAO_FORA_DOS_LIMITES"],
+    ["proporção incorreta", { regiao: { ...REGIAO, altura: 700 } }, "REGIAO_PROPORCAO_INVALIDA"],
+    [
+      "região pequena",
+      { regiao: { ...REGIAO, largura: 640, altura: 480 } },
+      "REGIAO_PEQUENA_DEMAIS",
+    ],
+  ])("CA-IMG-07: o validador reprova recorte adulterado: %s", async (_nome, troca, codigo) => {
+    const preparo = await preparoComLote();
+    await preparo.selecionar("TI-0001", 2000, await imagemEmQuadrantes(), { regiao: REGIAO });
+    const manifesto = await preparo.lerManifesto();
+    Object.assign(manifesto.itens[0].arquivo.recorte, troca);
+    await writeFile(preparo.caminhoManifesto, JSON.stringify(manifesto));
+
+    const relatorio = await preparo.validar("preparacao");
+
+    expect(relatorio.aprovado).toBe(false);
+    expect(relatorio.problemas).toContainEqual(
+      expect.objectContaining({ categoria: "metadados", codigo, item: "TI-0001" }),
+    );
+  });
+
+  it.each([
+    ["campo extra no recorte", (recorte) => Object.assign(recorte, { escala: 0.79 })],
+    ["campo extra na região", (recorte) => Object.assign(recorte.regiao, { giro: 0 })],
+    ["coordenada decimal", (recorte) => Object.assign(recorte.regiao, { topo: 0.5 })],
+    ["SHA-256 malformado", (recorte) => Object.assign(recorte.imagem_base, { sha256: "abc" })],
+    ["sem imagem-base", (recorte) => delete recorte.imagem_base],
+  ])("CA-IMG-07: o esquema estrito reprova: %s", async (_nome, adulterar) => {
+    const preparo = await preparoComLote();
+    await preparo.selecionar("TI-0001", 2000, await imagemEmQuadrantes(), { regiao: REGIAO });
+    const manifesto = await preparo.lerManifesto();
+    adulterar(manifesto.itens[0].arquivo.recorte);
+    await writeFile(preparo.caminhoManifesto, JSON.stringify(manifesto));
+
+    const relatorio = await preparo.validar("preparacao");
+
+    expect(relatorio.aprovado).toBe(false);
+    expect(relatorio.problemas[0].categoria).toBe("estrutura");
+  });
+
+  it("CA-IMG-14: revisão e rejeição preservam ou limpam o recorte", async () => {
+    const preparo = await preparoComLote();
+    const { nome } = await preparo.selecionar("TI-0001", 2000, await imagemEmQuadrantes(), {
+      regiao: REGIAO,
+    });
+    const base = {
+      caminhoManifesto: preparo.caminhoManifesto,
+      diretorioTrabalho: preparo.diretorioTrabalho,
+      id: "TI-0001",
+    };
+
+    await registrarRevisao({ ...base, resultado: "aceita_agente" });
+    expect((await preparo.lerManifesto()).itens[0].arquivo.recorte.regiao).toEqual(REGIAO);
+
+    await registrarRejeicao({
+      ...base,
+      pixabayId: 2000,
+      motivos: ["RECORTE"],
+      agora: () => INSTANTE,
+    });
+    expect((await preparo.lerManifesto()).itens[0].arquivo).toBeUndefined();
+    expect(await arquivosEm(preparo.pastaFinal)).not.toContain(nome);
+  });
+});
+
 describe("CA-IMG-12: falha sem arquivo parcial", () => {
   const semArtefatos = async (preparo, manifestoAntes) => {
     expect(await arquivosEm(preparo.pastaFinal)).toEqual([]);
@@ -1010,7 +1637,37 @@ describe("CA-IMG-12: linha de comando", () => {
     ["CONTEUDO_NAO_IMAGEM", 5],
     ["MANIFESTO_INCONSISTENTE", 3],
     ["ARQUIVO_CONFLITANTE", 3],
+    ["REGIAO_PROPORCAO_INVALIDA", 2],
+    ["REGIAO_PEQUENA_DEMAIS", 2],
+    ["REGIAO_FORA_DOS_LIMITES", 5],
+    ["CONFLITO_DE_RECORTE", 3],
+    ["IMAGEM_BASE_DIVERGENTE", 3],
   ])("CA-IMG-12: associa %s ao código de saída %i", (codigo, saida) => {
     expect(codigoDeSaidaDaFalha(codigo)).toBe(saida);
+  });
+
+  it.each([
+    ["região malformada", ["--regiao=1,2,3"]],
+    ["coordenada negativa", ["--regiao=-1,0,800,600"]],
+    ["sem proporção", ["--regiao=0,0,1000,700"]],
+    ["pequena", ["--regiao=0,0,640,480"]],
+    ["com enquadramento", ["--regiao=0,0,800,600", "--enquadramento=top"]],
+    ["base sem região", [`--sha256-base=${"a".repeat(64)}`]],
+  ])("CA-IMG-05: sai com 2 e não abre o manifesto: %s", (_nome, opcoes) => {
+    const resultado = executar(
+      "selecionar",
+      "--manifesto",
+      "manifesto-inexistente.json",
+      "--id",
+      "TI-0001",
+      "--pixabay-id",
+      "1",
+      "--licenca-consultada-em",
+      "2026-11-09",
+      ...opcoes,
+    );
+
+    expect(resultado.status).toBe(2);
+    expect(resultado.stderr).not.toContain("MANIFESTO_ILEGIVEL");
   });
 });

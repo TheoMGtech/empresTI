@@ -41,7 +41,12 @@ Use `--ajuda` em cada script para ver opções e códigos de saída.
    `node <s>/preparar.mjs selecionar --manifesto <m> --id TI-0001 --pixabay-id <n> --licenca-consultada-em AAAA-MM-DD`
 5. **Preparar o JPEG 800 × 600.** O comando do passo 4 baixa, recorta e grava em
    `.artefatos/imagens-equipamentos/publicar/`, fora do Git. Use `--enquadramento` quando
-   o centro cortar o equipamento. Repetir o comando não refaz nada.
+   o centro cortar o equipamento, ou `--regiao esquerda,topo,largura,altura` para um recorte
+   explícito, nunca os dois. A região usa pixels inteiros da imagem já orientada, com 4:3
+   exato e no mínimo 800 × 600, e fica em `arquivo.recorte` com o SHA-256 da imagem-base.
+   `--sha256-base` exige uma base específica e para com `IMAGEM_BASE_DIVERGENTE`.
+   Repetir o comando com o mesmo recorte não refaz nada; outro recorte para com
+   `CONFLITO_DE_RECORTE`, sem alterar arquivo ou manifesto.
 6. **Validar manifesto e arquivos.** Examine cada imagem final, registre o resultado e
    só então conclua a preparação.
    `node <s>/validar.mjs --manifesto <m> --diretorio .artefatos/imagens-equipamentos/publicar --estado preparacao`
