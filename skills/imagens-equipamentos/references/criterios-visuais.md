@@ -7,13 +7,35 @@ da tabela, registrado com `preparar.mjs rejeitar`.
 
 - Fotografia real, não gerada por IA.
 - Equipamento da categoria certa, claramente reconhecível.
-- Nenhuma pessoa, rosto, marca, logotipo, marca-d'água ou texto legível.
+- Nenhuma pessoa, rosto, marca, logotipo ou marca-d'água.
+- Nenhum texto legível, exceto inscrições técnicas genéricas do próprio equipamento, descritas
+  abaixo.
 - Tela apagada ou sem conteúdo identificável.
 - Enquadramento em que o recorte 4:3 mantenha o equipamento inteiro ou reconhecível.
 - Uma foto distinta para cada equipamento, sem cenas quase iguais.
 
 As descrições do lote são referência visual. A foto não confirma marca, modelo exato ou
 polegadas.
+
+## Inscrições técnicas genéricas
+
+Por orientação posterior do professor, relatada pelo responsável, sem data nem documento
+informados, são permitidas inscrições técnicas genéricas que pertencem ao próprio
+equipamento. Sozinhas, elas não justificam a rejeição por `TEXTO`.
+
+| Permitido | Continua proibido |
+|---|---|
+| Resolução ou padrão de vídeo, como “720p”, “1080p”, “HD” e “Full HD” | Nome ou logotipo de fabricante identificável: `MARCA` |
+| Rótulos de controles, como “MENU”, “DISP” e “FUNC” | Marca-d'água ou selo: `MARCA_DAGUA` |
+| Identificação genérica de portas, conectores ou funções, como o símbolo USB | Documento, aplicativo, mensagem ou informação identificável na tela: `TELA_COM_CONTEUDO` |
+| Especificações técnicas gravadas na peça, como abertura e distância focal da lente | Texto da cena que não pertence ao equipamento, como cartaz, livro ou etiqueta: `TEXTO` |
+| | Informação privada, como nome, patrimônio ou número de série: `TEXTO` |
+
+A permissão vale para a inscrição, não para qualquer texto. O agente descreve na revisão
+cada inscrição legível, diz em que coluna a enquadra e não libera por conta própria um caso
+duvidoso, como um nome de modelo que possa identificar o fabricante: a decisão é do
+responsável. Uma rejeição já registrada por `TEXTO` também não se desfaz sozinha. A
+reclassificação depende de decisão do responsável e de registro de auditoria.
 
 ## Códigos de rejeição
 
@@ -23,7 +45,7 @@ polegadas.
 | `PESSOA` | Pessoa, rosto ou parte identificável do corpo |
 | `MARCA` | Marca, logotipo ou design que identifique o fabricante |
 | `MARCA_DAGUA` | Marca-d'água ou selo sobre a imagem |
-| `TEXTO` | Texto legível na cena |
+| `TEXTO` | Texto legível que não seja inscrição técnica genérica do equipamento |
 | `TELA_COM_CONTEUDO` | Tela com interface, documento ou conteúdo identificável |
 | `INDICIO_IA` | Rótulo de IA na origem ou sinais visuais de geração artificial |
 | `RESOLUCAO` | Resolução insuficiente para 800 × 600 sem ampliar |
@@ -55,4 +77,5 @@ parâmetros também não garantem ausência de pessoas ou marcas.
 A revisão humana é obrigatória e acontece sobre a imagem **final, já recortada**. Um
 recorte tecnicamente válido pode ser visualmente inadequado. O agente pode fazer a
 primeira leitura e registrar `aceita_agente` ou `reprovada`, mas isso não substitui a
-aprovação do responsável.
+aprovação do responsável. A permissão para inscrições técnicas não muda isso: o agente aponta
+cada inscrição legível, e o responsável decide.
