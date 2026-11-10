@@ -12,6 +12,6 @@ export default defineConfig({
     pool: "forks",
     setupFiles: ["./src/test/setup.ts"],
     testTimeout: 20_000,
-    include: ["src/**/*.test.{ts,tsx}"],
+    include: ["src/**/*.test.{ts,tsx}", "skills/**/*.test.mjs"],
   },
 });
