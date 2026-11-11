@@ -2,8 +2,9 @@
 
 ## Estado
 
-**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-SOLIC-01 a T-SOLIC-07
-concluídas.
+**Status:** Aprovadas pelo responsável em 2026-11-11. T-SOLIC-01 a T-SOLIC-08 concluídas.
+Verificação V-01 (commit `9a421a2`) com `Veredito: PRONTA` (`verificacao.md`), aguardando a
+validação final do responsável.
 
 Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
 `rules/checks.md` ao concluir; todo teste cita no nome o CA que evidencia; DDL de migration com
@@ -49,6 +50,6 @@ de produção ou merge em `main`.
 
 ## Bloco D — fechamento
 
-- [ ] **T-SOLIC-08 — Provas finais (BE)**
+- [x] **T-SOLIC-08 — Provas finais (BE)**
   - Atende: CA-SOLIC-11. Verificação formal conforme `rules/spec-flow.md`.
   - Commit: `test(emprestimos): provar critérios finais da spec 005`.
