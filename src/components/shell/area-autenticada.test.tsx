@@ -2,7 +2,7 @@ import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/re
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AreaAutenticada, MENSAGEM_FALHA_SESSAO } from "@/components/shell/area-autenticada";
-import { MENSAGEM_FALHA_SAIDA } from "@/components/shell/bloco-usuario";
+import { MENSAGEM_FALHA_SAIDA } from "@/components/shell/sair";
 import { iniciais } from "@/components/shell/sessao";
 import { erroTRPC, renderizarComTRPC, type ManipuladoresTRPC } from "@/test/trpc";
 
@@ -122,7 +122,7 @@ describe("T-SESSAO-08 — shell autenticado", () => {
     expect(screen.getByRole("main")).toHaveClass("min-w-0");
   });
 
-  it("RF-SESSAO-12 — Sair encerra a sessão, limpa o cache e volta a /", async () => {
+  it("CA-LOGIN-06/RF-SESSAO-12 — Sair, na sidebar, encerra a sessão, limpa o cache e volta a /", async () => {
     const sair = vi.fn(() => ({ autenticado: false }));
     const { clienteConsulta } = renderizar({
       "sessao.atual": () => COLABORADORA,
