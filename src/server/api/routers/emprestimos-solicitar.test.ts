@@ -142,7 +142,7 @@ afterEach(() => {
 });
 
 describe("solicitação válida", () => {
-  it("CA-SOLIC-01 — cria o empréstimo com prazo de 14 dias corridos, com data fixa", async () => {
+  it("CA-SOLIC-01 / CA-REGRAS-03 — cria o empréstimo com prazo de 14 dias corridos, com data fixa", async () => {
     await comAmbiente(async ({ prisma, cliente, tenantA, ids }) => {
       const agora = new Date("2026-11-11T15:00:00Z");
 
@@ -168,7 +168,7 @@ describe("solicitação válida", () => {
     });
   });
 
-  it("CA-SOLIC-01 — retirada à noite em São Paulo conta o prazo da data local", async () => {
+  it("CA-SOLIC-01 / CA-REGRAS-03 — retirada à noite em São Paulo conta o prazo da data local", async () => {
     await comAmbiente(async ({ prisma, tenantA, ids }) => {
       const saida = await solicitarEmprestimo(
         prisma,
@@ -236,7 +236,7 @@ describe("solicitação válida", () => {
 });
 
 describe("recusas", () => {
-  it("CA-SOLIC-02 — item em manutenção é recusado com EQUIPAMENTO_EM_MANUTENCAO", async () => {
+  it("CA-SOLIC-02 / CA-REGRAS-06 — item em manutenção é recusado com EQUIPAMENTO_EM_MANUTENCAO", async () => {
     await comAmbiente(async ({ prisma, cliente, ids }) => {
       for (const patrimonio of ["TI-0004", "TI-0007"]) {
         await expect(
