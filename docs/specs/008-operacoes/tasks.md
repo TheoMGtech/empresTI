@@ -2,7 +2,7 @@
 
 ## Estado
 
-**Status:** Aprovadas pelo responsável em 2026-11-11. Nenhuma tarefa iniciada.
+**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-OPER-01 concluída.
 
 Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
 `rules/checks.md` ao concluir; todo teste cita no nome o CA que evidencia; sem alteração no
@@ -10,7 +10,7 @@ Supabase remoto, deploy de produção ou merge em `main`.
 
 ## Bloco A — servidor (BE)
 
-- [ ] **T-OPER-01 — Contrato dos seis procedimentos**
+- [x] **T-OPER-01 — Contrato dos seis procedimentos**
   - Avisar o FE.
   - Atende: CA-OPER-04 (formato e `adminProcedure`).
   - Commit: `feat(operacoes): publicar contrato de operações`.

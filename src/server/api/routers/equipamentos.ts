@@ -2,12 +2,17 @@ import { TRPCError } from "@trpc/server";
 
 import { lerAmbientePublico } from "@/env";
 import {
+  esquemaCadastroEquipamento,
   esquemaDetalheEquipamento,
+  esquemaEntradaAlterarSituacao,
   esquemaEntradaDetalharEquipamento,
   esquemaEntradaListarEquipamentos,
+  esquemaSaidaAlterarSituacao,
+  esquemaSaidaCadastroEquipamento,
   esquemaSaidaListarEquipamentos,
 } from "@/lib/esquemas/equipamentos";
-import { ErroComMotivo, criarRouterTRPC, tenantProcedure } from "@/server/api/trpc";
+import { naoImplementadoOperacoes } from "@/server/api/routers/operacoes";
+import { ErroComMotivo, adminProcedure, criarRouterTRPC, tenantProcedure } from "@/server/api/trpc";
 import {
   ErroEquipamentoNaoEncontrado,
   detalharEquipamento,
@@ -53,4 +58,15 @@ export const routerEquipamentos = criarRouterTRPC({
         throw erro;
       }
     }),
+
+  // Spec 008 (T-OPER-01): só Operações (RS-OPER-01). Respondem `NOT_IMPLEMENTED` até as T-OPER-04
+  // e T-OPER-05.
+  cadastrar: adminProcedure
+    .input(esquemaCadastroEquipamento)
+    .output(esquemaSaidaCadastroEquipamento)
+    .mutation(naoImplementadoOperacoes),
+  alterarSituacao: adminProcedure
+    .input(esquemaEntradaAlterarSituacao)
+    .output(esquemaSaidaAlterarSituacao)
+    .mutation(naoImplementadoOperacoes),
 });
