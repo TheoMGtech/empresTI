@@ -1,8 +1,13 @@
 import { TRPCError } from "@trpc/server";
 
 import {
+  esquemaEntradaDevolver,
+  esquemaEntradaHistorico,
   esquemaEntradaSolicitarEmprestimo,
   esquemaMeuResumo,
+  esquemaSaidaDevolver,
+  esquemaSaidaHistorico,
+  esquemaSaidaMeusEmprestimos,
   esquemaSaidaSolicitarEmprestimo,
   type MotivoSolicitacao,
 } from "@/lib/esquemas/emprestimos";
@@ -24,7 +29,25 @@ export const RECUSAS_SOLICITACAO: Record<
   ITEM_EM_ATRASO: { code: "CONFLICT", message: "Há item em atraso. Devolva antes de pegar outro." },
 };
 
+export const MENSAGEM_DEVOLUCAO_NAO_IMPLEMENTADA = "Devolução e histórico ainda não disponíveis.";
+
+const naoImplementado = (): never => {
+  throw new TRPCError({ code: "NOT_IMPLEMENTED", message: MENSAGEM_DEVOLUCAO_NAO_IMPLEMENTADA });
+};
+
 export const routerEmprestimos = criarRouterTRPC({
+  // Contratos publicados na T-DEVOL-01 (Spec 007). Já exigem sessão e membership (RS-DEVOL-01);
+  // `devolver` responde `NOT_IMPLEMENTED` até a T-DEVOL-02, e `meus` e `historico` até a T-DEVOL-03.
+  meus: tenantProcedure.output(esquemaSaidaMeusEmprestimos).query(naoImplementado),
+  historico: tenantProcedure
+    .input(esquemaEntradaHistorico)
+    .output(esquemaSaidaHistorico)
+    .query(naoImplementado),
+  devolver: tenantProcedure
+    .input(esquemaEntradaDevolver)
+    .output(esquemaSaidaDevolver)
+    .mutation(naoImplementado),
+
   // RF-REGRAS-01: itens abertos, limite, atrasados e prazo da própria pessoa (RS-REGRAS-02).
   meuResumo: tenantProcedure
     .output(esquemaMeuResumo)
