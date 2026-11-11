@@ -2,7 +2,7 @@
 
 ## Estado
 
-**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-SESSAO-01 a T-SESSAO-03
+**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-SESSAO-01 a T-SESSAO-04
 concluídas.
 
 Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
@@ -32,7 +32,7 @@ de produção ou merge em `main`.
 
 ## Bloco B — autorização (BE)
 
-- [ ] **T-SESSAO-04 — Contexto e middlewares**
+- [x] **T-SESSAO-04 — Contexto e middlewares**
   - Identidade validada a cada request; `protectedProcedure`, `tenantProcedure`, `adminProcedure`.
   - Atende: CA-SESSAO-01, 02, 03, 04, 08.
   - Testes: sem sessão; sem membership; múltiplos memberships; papel; `tenantId` no input ignorado.
