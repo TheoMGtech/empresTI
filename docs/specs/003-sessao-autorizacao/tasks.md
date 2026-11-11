@@ -2,7 +2,7 @@
 
 ## Estado
 
-**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-SESSAO-01 a T-SESSAO-08
+**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-SESSAO-01 a T-SESSAO-09
 concluídas.
 
 Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
@@ -56,7 +56,7 @@ de produção ou merge em `main`.
   - Instala `@phosphor-icons/react` (DF-10).
   - Atende: CA-SESSAO-06, CA-SESSAO-13.
   - Commit: `feat(shell): criar área autenticada responsiva`.
-- [ ] **T-SESSAO-09 — Destino, expiração e acesso restrito**
+- [x] **T-SESSAO-09 — Destino, expiração e acesso restrito**
   - Atende: CA-SESSAO-07, 09, 10; CA-LOGIN-05 e CA-LOGIN-06 revisados.
   - Commit: `feat(sessao): redirecionar ao catálogo e tratar sessão inválida`.
 
