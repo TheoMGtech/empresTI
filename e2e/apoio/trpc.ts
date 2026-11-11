@@ -5,10 +5,12 @@ import superjson from "superjson";
 // integrada real antes da entrega e não toca em Supabase nem banco.
 
 const CODIGOS_JSON_RPC = {
-  UNAUTHORIZED: -32001,
-  FORBIDDEN: -32003,
-  NOT_FOUND: -32004,
-  INTERNAL_SERVER_ERROR: -32603,
+  UNAUTHORIZED: [-32001, 401],
+  FORBIDDEN: [-32003, 403],
+  NOT_FOUND: [-32004, 404],
+  CONFLICT: [-32009, 409],
+  PRECONDITION_FAILED: [-32012, 412],
+  INTERNAL_SERVER_ERROR: [-32603, 500],
 } as const;
 
 export type RespostaSimulada =
@@ -20,10 +22,13 @@ export type RespostasSimuladas = Record<
   RespostaSimulada | ((entrada: unknown) => RespostaSimulada)
 >;
 
-function entradas(url: URL) {
-  const bruto = url.searchParams.get("input");
+type LoteSerializado = Record<string, Parameters<typeof superjson.deserialize>[0]>;
+
+// Consultas levam a entrada na URL; mutations, no corpo do POST.
+function entradas(url: URL, corpo: string | null) {
+  const bruto = url.searchParams.get("input") ?? corpo;
   if (!bruto) return {};
-  const lote = JSON.parse(bruto) as Record<string, Parameters<typeof superjson.deserialize>[0]>;
+  const lote = JSON.parse(bruto) as LoteSerializado;
   return Object.fromEntries(
     Object.entries(lote).map(([indice, valor]) => [indice, superjson.deserialize(valor)]),
   );
@@ -34,7 +39,7 @@ export async function simularTRPC(page: Page, respostas: RespostasSimuladas) {
   await page.route("**/api/trpc/**", async (rota) => {
     const url = new URL(rota.request().url());
     const caminhos = decodeURIComponent(url.pathname.replace(/^\/api\/trpc\//, "")).split(",");
-    const lote = entradas(url);
+    const lote = entradas(url, rota.request().postData());
 
     const corpo = caminhos.map((caminho, indice) => {
       const definida = respostas[caminho];
@@ -48,13 +53,14 @@ export async function simularTRPC(page: Page, respostas: RespostasSimuladas) {
         return { result: { data: superjson.serialize(resposta.dados) } };
       }
 
+      const [codigoJson, status] = CODIGOS_JSON_RPC[resposta.erro];
       return {
         error: superjson.serialize({
-          code: CODIGOS_JSON_RPC[resposta.erro],
+          code: codigoJson,
           message: resposta.mensagem,
           data: {
             code: resposta.erro,
-            httpStatus: 0,
+            httpStatus: status,
             path: caminho,
             motivo: resposta.motivo ?? null,
             campos: null,
