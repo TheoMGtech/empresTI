@@ -14,6 +14,13 @@ export const ICONE_CATEGORIA: Record<CategoriaCatalogo, Icon> = {
   camera: VideoCamera,
 };
 
+export const ROTULO_CATEGORIA_PLURAL: Record<CategoriaCatalogo, string> = {
+  notebook: "Notebooks",
+  monitor: "Monitores",
+  cabo: "Cabos",
+  camera: "Câmeras",
+};
+
 export const ROTULO_CATEGORIA: Record<CategoriaCatalogo, string> = {
   notebook: "Notebook",
   monitor: "Monitor",

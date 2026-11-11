@@ -64,3 +64,41 @@ a:hover {
   outline: 2px solid var(--accent-500);
   outline-offset: 2px;
 }
+
+/* Diálogo (layout §8): abre em 180ms, fecha em 120ms. */
+@keyframes fundo-dialogo-entrar {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes fundo-dialogo-sair {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes dialogo-entrar {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes dialogo-sair {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
