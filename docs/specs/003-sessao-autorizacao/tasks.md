@@ -2,7 +2,7 @@
 
 ## Estado
 
-**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-SESSAO-01 e T-SESSAO-02
+**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-SESSAO-01 a T-SESSAO-03
 concluídas.
 
 Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
@@ -24,7 +24,7 @@ de produção ou merge em `main`.
   - Esquema Zod de saída e procedimento registrado, ainda "não implementado". Avisar o FE.
   - Atende: CA-SESSAO-05 (formato).
   - Commit: `feat(sessao): publicar contrato de sessao.atual`.
-- [ ] **T-SESSAO-03 — Migration de `nome_exibicao`**
+- [x] **T-SESSAO-03 — Migration de `nome_exibicao`**
   - Paradas: DDL para revisão; geração e reset pelo responsável.
   - Atende: CA-SESSAO-05, CA-SESSAO-14.
   - Testes: coluna opcional; texto vazio recusado.
