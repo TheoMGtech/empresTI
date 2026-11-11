@@ -6,7 +6,9 @@ import {
   type DetalheEquipamento,
   type Disponibilidade,
   type EntradaListarEquipamentos,
+  type SaidaAlterarSituacao,
   type SaidaCadastroEquipamento,
+  type Situacao,
   type SaidaListarEquipamentos,
 } from "@/lib/esquemas/equipamentos";
 import type { Papel } from "@/lib/esquemas/sessao";
@@ -258,4 +260,54 @@ export async function cadastrarEquipamento(
     }
     throw erro;
   }
+}
+
+/** Ação gravada na auditoria pela alteração de situação (RS-OPER-03). */
+export const ACAO_ALTERAR_SITUACAO = "equipamento.alterarSituacao";
+
+export class ErroEmprestimoEmAberto extends Error {}
+
+/**
+ * Altera a situação de um equipamento do tenant da sessão (RF-OPER-07). A linha do equipamento é
+ * travada (FOR UPDATE) e o empréstimo em aberto é conferido na mesma transação (plano da Spec 008);
+ * havendo um, a alteração é recusada (CA-OPER-09). `emprestimos.solicitar` trava a mesma linha
+ * (FOR SHARE), então os dois não se cruzam. Mesma situação: nada muda e nada é auditado.
+ */
+export async function alterarSituacaoEquipamento(
+  prisma: Pick<PrismaClient, "$transaction">,
+  escopo: { tenantId: string; ator: string },
+  equipamentoId: string,
+  situacao: Situacao,
+): Promise<SaidaAlterarSituacao> {
+  return prisma.$transaction(async (transacao) => {
+    const travados = await transacao.$queryRaw<{ situacao: Situacao }[]>`
+      SELECT "situacao"::text AS "situacao" FROM "equipamentos"
+       WHERE "id" = ${equipamentoId}::uuid AND "tenant_id" = ${escopo.tenantId}::uuid
+       FOR UPDATE`;
+    const atual = travados[0];
+    if (!atual) throw new ErroEquipamentoNaoEncontrado();
+
+    const aberto = await transacao.emprestimo.findFirst({
+      where: { tenantId: escopo.tenantId, equipamentoId, devolvidoEm: null },
+      select: { id: true },
+    });
+    if (aberto) throw new ErroEmprestimoEmAberto();
+
+    if (atual.situacao === situacao) return { id: equipamentoId, situacao };
+
+    await transacao.equipamento.update({
+      where: { id: equipamentoId },
+      data: { situacao },
+    });
+    await transacao.auditoria.create({
+      data: {
+        tenantId: escopo.tenantId,
+        ator: escopo.ator,
+        acao: ACAO_ALTERAR_SITUACAO,
+        recurso: recursoEquipamento(equipamentoId),
+      },
+    });
+
+    return { id: equipamentoId, situacao };
+  });
 }

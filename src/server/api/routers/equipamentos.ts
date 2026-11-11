@@ -11,11 +11,12 @@ import {
   esquemaSaidaCadastroEquipamento,
   esquemaSaidaListarEquipamentos,
 } from "@/lib/esquemas/equipamentos";
-import { naoImplementadoOperacoes } from "@/server/api/routers/operacoes";
 import { ErroComMotivo, adminProcedure, criarRouterTRPC, tenantProcedure } from "@/server/api/trpc";
 import {
+  ErroEmprestimoEmAberto,
   ErroEquipamentoNaoEncontrado,
   ErroPatrimonioDuplicado,
+  alterarSituacaoEquipamento,
   cadastrarEquipamento,
   detalharEquipamento,
   listarEquipamentos,
@@ -23,6 +24,8 @@ import {
 
 export const MENSAGEM_EQUIPAMENTO_NAO_ENCONTRADO = "Equipamento não encontrado.";
 export const MENSAGEM_PATRIMONIO_DUPLICADO = "Já existe equipamento com este patrimônio.";
+export const MENSAGEM_EMPRESTIMO_EM_ABERTO =
+  "Há empréstimo em aberto deste equipamento. Registre a devolução antes.";
 
 export const routerEquipamentos = criarRouterTRPC({
   // RF-CATALOGO-01, RS-CATALOGO-01: tenant e papel vêm do contexto, nunca do input.
@@ -84,9 +87,34 @@ export const routerEquipamentos = criarRouterTRPC({
         throw erro;
       }
     }),
-  // Responde `NOT_IMPLEMENTED` até a T-OPER-05.
+  // RF-OPER-07: só Operações; recusa com empréstimo em aberto.
   alterarSituacao: adminProcedure
     .input(esquemaEntradaAlterarSituacao)
     .output(esquemaSaidaAlterarSituacao)
-    .mutation(naoImplementadoOperacoes),
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await alterarSituacaoEquipamento(
+          ctx.obterClientePrisma(),
+          { tenantId: ctx.tenantId, ator: ctx.usuarioId },
+          input.equipamentoId,
+          input.situacao,
+        );
+      } catch (erro) {
+        if (erro instanceof ErroEquipamentoNaoEncontrado) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: MENSAGEM_EQUIPAMENTO_NAO_ENCONTRADO,
+            cause: new ErroComMotivo("EQUIPAMENTO_NAO_ENCONTRADO"),
+          });
+        }
+        if (erro instanceof ErroEmprestimoEmAberto) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: MENSAGEM_EMPRESTIMO_EM_ABERTO,
+            cause: new ErroComMotivo("EMPRESTIMO_EM_ABERTO"),
+          });
+        }
+        throw erro;
+      }
+    }),
 });
