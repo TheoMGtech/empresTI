@@ -49,8 +49,47 @@ export const esquemaSaidaListarEquipamentos = z.strictObject({
   }),
 });
 
+// Entrada de `equipamentos.detalhar` (RF-SOLIC-01): busca por patrimônio no tenant da sessão.
+export const esquemaEntradaDetalharEquipamento = z.object({
+  patrimonio: z.string().trim().min(1),
+});
+
+/** Empréstimo no histórico do equipamento, visível só para Operações (RS-SOLIC-05). */
+export const esquemaEmprestimoHistorico = z.strictObject({
+  retiradoEm: z.date(),
+  /** Data de devolução combinada (AAAA-MM-DD, calendário de São Paulo). */
+  devolverAte: z.iso.date(),
+  /** `null` enquanto o empréstimo está aberto. */
+  devolvidoEm: z.date().nullable(),
+  /** Nome de exibição de quem pegou; `null` sem nome cadastrado. */
+  tomadorNome: z.string().min(1).nullable(),
+});
+
+// Saída de `equipamentos.detalhar` (RF-SOLIC-01). `numeroSerie`, `observacoes` e `historico` só
+// existem na resposta para Operações (CA-SOLIC-09): para `colaborador` as chaves não vêm.
+// Campos sem valor chegam `null` e a tela os oculta (RF-SOLIC-05).
+export const esquemaDetalheEquipamento = z.strictObject({
+  id: z.uuid(),
+  patrimonio: z.string().min(1),
+  nome: z.string().min(1),
+  categoria: esquemaCategoria,
+  imagemUrl: z.url().nullable(),
+  disponibilidade: esquemaDisponibilidade,
+  local: z.string().min(1).nullable(),
+  /** Momento da última devolução; `null` se nunca foi emprestado. */
+  ultimaDevolucao: z.date().nullable(),
+  /** Prazo calculado no servidor se a solicitação fosse confirmada agora (RF-SOLIC-03). */
+  devolverAtePrevisto: z.iso.date(),
+  numeroSerie: z.string().min(1).nullable().optional(),
+  observacoes: z.string().min(1).nullable().optional(),
+  historico: z.array(esquemaEmprestimoHistorico).optional(),
+});
+
 export type Categoria = z.infer<typeof esquemaCategoria>;
 export type Disponibilidade = z.infer<typeof esquemaDisponibilidade>;
 export type EntradaListarEquipamentos = z.infer<typeof esquemaEntradaListarEquipamentos>;
 export type ItemCatalogo = z.infer<typeof esquemaItemCatalogo>;
 export type SaidaListarEquipamentos = z.infer<typeof esquemaSaidaListarEquipamentos>;
+export type EntradaDetalharEquipamento = z.infer<typeof esquemaEntradaDetalharEquipamento>;
+export type EmprestimoHistorico = z.infer<typeof esquemaEmprestimoHistorico>;
+export type DetalheEquipamento = z.infer<typeof esquemaDetalheEquipamento>;
