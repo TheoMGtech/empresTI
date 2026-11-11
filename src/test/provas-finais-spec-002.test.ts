@@ -1,6 +1,10 @@
 // @vitest-environment node
 //
 // Provas estáticas restantes da spec 002: o que o conjunto de arquivos não pode conter.
+//
+// As provas de escopo valem para o estado entregue pela spec 002 (V-03, f882591): specs
+// posteriores acrescentam migrations, procedimentos, rotas e dependências. As provas de
+// segurança, como não escrever em auth.users, continuam valendo para todos os arquivos.
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -22,6 +26,17 @@ function listar(pasta: string, filtro: (arquivo: string) => boolean) {
 
 const MIGRATIONS = listar("prisma/migrations", (arquivo) => arquivo.endsWith("migration.sql"));
 
+const nomeDaMigration = (arquivo: string) => arquivo.split("/")[2]?.replace(/^\d+_/, "");
+
+const MIGRATIONS_DA_SPEC_002 = [
+  "criar_saude_sistema",
+  "criar_estrutura_dominio",
+  "criar_auditoria",
+  "reforcar_bloqueio_truncate",
+];
+
+const ARQUIVOS_DA_SPEC_002 = MIGRATIONS.slice(0, MIGRATIONS_DA_SPEC_002.length);
+
 const ROTINAS = [
   "prisma/seed.ts",
   "prisma/vincular-professor.ts",
@@ -36,17 +51,57 @@ const ARQUIVOS_DE_TESTE = [
   ...listar("prisma/rotinas", (arquivo) => arquivo.endsWith(".test.ts")),
 ];
 
+const DEPENDENCIAS_DA_SPEC_002 = [
+  "@hookform/resolvers",
+  "@prisma/adapter-pg",
+  "@prisma/client",
+  "@supabase/ssr",
+  "@supabase/supabase-js",
+  "@tanstack/react-query",
+  "@trpc/client",
+  "@trpc/react-query",
+  "@trpc/server",
+  "class-variance-authority",
+  "clsx",
+  "next",
+  "pg",
+  "react",
+  "react-dom",
+  "react-hook-form",
+  "superjson",
+  "tailwind-merge",
+  "zod",
+];
+
+const DEPENDENCIAS_DE_DESENVOLVIMENTO_DA_SPEC_002 = [
+  "@playwright/test",
+  "@tailwindcss/postcss",
+  "@testing-library/jest-dom",
+  "@testing-library/react",
+  "@types/node",
+  "@types/pg",
+  "@types/react",
+  "@types/react-dom",
+  "@vitejs/plugin-react",
+  "eslint",
+  "eslint-config-next",
+  "jsdom",
+  "postcss",
+  "prettier",
+  "prisma",
+  "sharp",
+  "tailwindcss",
+  "testcontainers",
+  "typescript",
+  "vitest",
+];
+
 describe("escopo das migrations", () => {
-  it("CA-DADOS-18 — as migrations esperadas existem", () => {
-    expect(MIGRATIONS.map((arquivo) => arquivo.split("/")[2]?.replace(/^\d+_/, ""))).toEqual([
-      "criar_saude_sistema",
-      "criar_estrutura_dominio",
-      "criar_auditoria",
-      "reforcar_bloqueio_truncate",
-    ]);
+  it("CA-DADOS-18 — as migrations da spec 002 existem e vêm antes das demais", () => {
+    expect(ARQUIVOS_DA_SPEC_002.map(nomeDaMigration)).toEqual(MIGRATIONS_DA_SPEC_002);
   });
 
-  it.each(MIGRATIONS)("CA-DADOS-18 — %s não cria estrutura de empréstimos", (arquivo) => {
+  it.each(ARQUIVOS_DA_SPEC_002)("CA-DADOS-18 — %s não cria estrutura de empréstimos", (arquivo) => {
     expect(ler(arquivo)).not.toMatch(/emprestimo|empréstimo/i);
   });
 
@@ -99,76 +154,43 @@ describe("escopo das rotinas", () => {
 });
 
 describe("escopo da aplicação", () => {
-  it("CA-DADOS-25 — o AppRouter mantém só os procedimentos existentes", () => {
-    expect(Object.keys(routerAplicacao._def.procedures).sort()).toEqual([
-      "autenticacao.entrar",
-      "autenticacao.sair",
-      "autenticacao.sessao",
-      "tecnico.status",
-    ]);
+  it("CA-DADOS-25 — o AppRouter mantém os procedimentos do estado da spec 002", () => {
+    expect(Object.keys(routerAplicacao._def.procedures)).toEqual(
+      expect.arrayContaining([
+        "autenticacao.entrar",
+        "autenticacao.sair",
+        "autenticacao.sessao",
+        "tecnico.status",
+      ]),
+    );
   });
 
-  it("CA-DADOS-25 — não há páginas nem rotas novas", () => {
+  it("CA-DADOS-25 — as páginas e rotas do estado da spec 002 continuam existindo", () => {
     const rotas = listar("src/app", (arquivo) => /\/(page|route)\.tsx?$/.test(arquivo));
 
-    expect(rotas).toEqual([
-      "src/app/api/trpc/[trpc]/route.ts",
-      "src/app/login/page.tsx",
-      "src/app/page.tsx",
-    ]);
+    expect(rotas).toEqual(
+      expect.arrayContaining([
+        "src/app/api/trpc/[trpc]/route.ts",
+        "src/app/login/page.tsx",
+        "src/app/page.tsx",
+      ]),
+    );
   });
 });
 
 describe("dependências", () => {
-  it("CA-DADOS-26 — package.json mantém exatamente as dependências anteriores", () => {
+  it("CA-DADOS-26 — package.json mantém as dependências do estado da spec 002", () => {
     const pacote = JSON.parse(ler("package.json")) as {
       dependencies: Record<string, string>;
       devDependencies: Record<string, string>;
     };
 
-    expect(Object.keys(pacote.dependencies).sort()).toEqual([
-      "@hookform/resolvers",
-      "@prisma/adapter-pg",
-      "@prisma/client",
-      "@supabase/ssr",
-      "@supabase/supabase-js",
-      "@tanstack/react-query",
-      "@trpc/client",
-      "@trpc/react-query",
-      "@trpc/server",
-      "class-variance-authority",
-      "clsx",
-      "next",
-      "pg",
-      "react",
-      "react-dom",
-      "react-hook-form",
-      "superjson",
-      "tailwind-merge",
-      "zod",
-    ]);
-    expect(Object.keys(pacote.devDependencies).sort()).toEqual([
-      "@playwright/test",
-      "@tailwindcss/postcss",
-      "@testing-library/jest-dom",
-      "@testing-library/react",
-      "@types/node",
-      "@types/pg",
-      "@types/react",
-      "@types/react-dom",
-      "@vitejs/plugin-react",
-      "eslint",
-      "eslint-config-next",
-      "jsdom",
-      "postcss",
-      "prettier",
-      "prisma",
-      "sharp",
-      "tailwindcss",
-      "testcontainers",
-      "typescript",
-      "vitest",
-    ]);
+    expect(Object.keys(pacote.dependencies)).toEqual(
+      expect.arrayContaining(DEPENDENCIAS_DA_SPEC_002),
+    );
+    expect(Object.keys(pacote.devDependencies)).toEqual(
+      expect.arrayContaining(DEPENDENCIAS_DE_DESENVOLVIMENTO_DA_SPEC_002),
+    );
   });
 });
 

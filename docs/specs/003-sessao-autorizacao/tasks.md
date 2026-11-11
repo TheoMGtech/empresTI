@@ -12,9 +12,11 @@ de produção ou merge em `main`.
 
 ## Bloco A — contrato e dados (BE)
 
-- [ ] **T-SESSAO-01 — Delimitar provas históricas da Spec 002**
+- [x] **T-SESSAO-01 — Delimitar provas históricas da Spec 002**
   - Restringir CA-DADOS-25, a lista de migrations e as colunas de `memberships` ao estado da
-    Spec 002, sem remover provas.
+    Spec 002, sem remover provas. Inclui CA-DADOS-26 (dependências), necessário para instalar
+    `@phosphor-icons/react` na T-SESSAO-08. As provas de segurança continuam valendo para todos
+    os arquivos.
   - Atende: pré-condição de CA-SESSAO-14.
   - Commit: `test(dados): delimitar provas históricas à spec 002`.
 - [ ] **T-SESSAO-02 — Contrato de `sessao.atual`**
