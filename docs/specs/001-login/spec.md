@@ -9,6 +9,11 @@ Aprovada pelo responsável junto com `plan.md` e `tasks.md` (registro em
 `main`). Pendente de evidência: CA-LOGIN-04 com conta real em produção e
 RS-LOGIN-04, porque o cadastro público ainda está habilitado no Supabase Auth.
 
+**Revisão aprovada pelo responsável em 2026-11-11 (DF-15):** o destino após o login passa a
+ser `/catalogo`, e `Sair` passa ao bloco de usuário da sidebar, mantendo autenticação segura,
+proteção de sessão e o tratamento de quem não tem membership. Implementação pela Spec 003; até
+lá vale em produção o comportamento anterior.
+
 ## Objetivo
 
 Disponibilizar a tela inicial efetiva do EmpresTI em `/`, aderente ao design system
@@ -28,11 +33,11 @@ Supabase Auth. A entrega não libera funcionalidades de catálogo ou operações
 - Sessão mantida por cookies seguros, `httpOnly`, `sameSite=lax` e `secure` em
   produção.
 - Estado de carregamento, erro genérico de credenciais e confirmação de sessão.
-- Encerramento da sessão na própria tela.
-- Usuário já autenticado vê o estado de sessão ativa em `/`.
-- Permanência em `/` após a autenticação. O acesso às áreas do produto fica
-  fechado até existir uma spec aprovada para o destino autenticado e para
-  memberships.
+- Encerramento da sessão no bloco de usuário da sidebar (Spec 003).
+- Usuário já autenticado em `/` é redirecionado para `/catalogo`.
+- Redirecionamento para `/catalogo` após a autenticação. O acesso às áreas do produto segue
+  as regras de sessão e
+  memberships da Spec 003.
 
 ## Fora de escopo
 
@@ -56,9 +61,10 @@ Supabase Auth. A entrega não libera funcionalidades de catálogo ou operações
   `Não foi possível entrar. Confira e-mail e senha.` sem revelar qual campo falhou.
 - **RF-LOGIN-05** — durante o envio, a ação fica desabilitada e mostra
   `Entrando...`, impedindo envio duplicado.
-- **RF-LOGIN-06** — uma sessão válida é representada como `Acesso confirmado` e
-  oferece a ação `Sair`.
-- **RF-LOGIN-07** — `Sair` invalida a sessão Supabase e retorna ao formulário.
+- **RF-LOGIN-06** — uma sessão válida em `/` e um login bem-sucedido redirecionam para
+  `/catalogo`. O login continua em `/`.
+- **RF-LOGIN-07** — `Sair`, no bloco de usuário da sidebar, invalida a sessão Supabase e
+  retorna ao formulário.
 - **RF-LOGIN-08** — falhas inesperadas exibem uma mensagem operacional genérica e
   não expõem tokens, chaves, URL de banco ou detalhes internos.
 - **RF-LOGIN-09** — `/login` redireciona para `/`, e a interface inicial não
@@ -102,8 +108,9 @@ Supabase Auth. A entrega não libera funcionalidades de catálogo ou operações
 - **CA-LOGIN-04** — uma conta previamente criada no Supabase autentica e resulta
   em cookie `httpOnly`, sem token disponível no corpo da resposta.
 - **CA-LOGIN-05** — ao recarregar `/`, uma sessão válida continua reconhecida
-  e apresenta `Acesso confirmado`.
-- **CA-LOGIN-06** — `Sair` invalida a sessão e volta a apresentar o formulário.
+  e redireciona para `/catalogo`.
+- **CA-LOGIN-06** — `Sair`, no bloco de usuário da sidebar, invalida a sessão e volta a
+  apresentar o formulário.
 - **CA-LOGIN-07** — testes automatizados cobrem validação, sucesso, falha genérica,
   sessão existente e logout sem usar credenciais reais.
 - **CA-LOGIN-08** — lint, typecheck, testes e build passam; a página publicada
