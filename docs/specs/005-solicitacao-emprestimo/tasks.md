@@ -2,7 +2,7 @@
 
 ## Estado
 
-**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-SOLIC-01 a T-SOLIC-06
+**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-SOLIC-01 a T-SOLIC-07
 concluídas.
 
 Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
@@ -42,7 +42,7 @@ de produção ou merge em `main`.
 
 ## Bloco C — interface (FE)
 
-- [ ] **T-SOLIC-07 — Tela de detalhe e diálogo**
+- [x] **T-SOLIC-07 — Tela de detalhe e diálogo**
   - Instala Radix Dialog (DF-10).
   - Atende: CA-SOLIC-09, 10.
   - Commit: `feat(catalogo): detalhar e solicitar na interface`.

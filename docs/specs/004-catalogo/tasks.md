@@ -2,7 +2,7 @@
 
 ## Estado
 
-**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-CATALOGO-01 a T-CATALOGO-03
+**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-CATALOGO-01 a T-CATALOGO-05
 concluídas.
 
 Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
@@ -25,10 +25,10 @@ Supabase remoto, deploy de produção ou merge em `main`.
 
 ## Bloco B — interface (FE)
 
-- [ ] **T-CATALOGO-04 — Tela e cards**
+- [x] **T-CATALOGO-04 — Tela e cards**
   - Atende: CA-CATALOGO-04, 06.
   - Commit: `feat(catalogo): exibir cards de equipamentos`.
-- [ ] **T-CATALOGO-05 — Chips e "Só disponíveis"**
+- [x] **T-CATALOGO-05 — Chips e "Só disponíveis"**
   - Atende: CA-CATALOGO-07.
   - Commit: `feat(catalogo): adicionar filtros à tela`.
 

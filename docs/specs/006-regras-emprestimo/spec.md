@@ -60,8 +60,9 @@ Renovação de prazo, multa, exceção de limite e notificação de atraso.
 - **CA-REGRAS-07** — A interface desabilita a ação e mostra o motivo.
 - **CA-REGRAS-08** — A chamada direta ao servidor, sem a interface, também é recusada.
 - **CA-REGRAS-09** — O vencimento é tratado no fuso de São Paulo, com datas fixas nas bordas do dia.
-- **CA-REGRAS-10** — Lint, typecheck, testes, E2E e build passam, com a validação integrada real
-  obrigatória antes da entrega.
+- **CA-REGRAS-10** — Lint, typecheck, testes, E2E e build passam. E2E com tRPC simulado vale no
+  desenvolvimento e basta para declarar esta spec PRONTA; a validação integrada real é obrigatória
+  antes da entrega final, isto é, antes da publicação em `main` e na Vercel (DF-14).
 
 ## Dependências
 
@@ -75,3 +76,8 @@ Ler a contagem e inserir sem bloqueio permite ultrapassar o limite: a transaçã
 
 - **D-REGRAS-01 e 02 (DF-2):** 14 dias corridos; atraso após o fim da data de vencimento, em São Paulo.
 - **D-REGRAS-03 (DF-1):** limite de 3.
+- **DF-14 (responsável, 2026-11-11):** a validação integrada real é obrigatória antes da entrega
+  final (publicação em `main` e na Vercel), mas não é pré-condição para declarar esta spec PRONTA.
+  A spec pode ser PRONTA com os critérios comprovados, lint, typecheck, testes e build aprovados, o
+  E2E previsto aprovado (tRPC simulado vale no desenvolvimento) e `Veredito: PRONTA` do
+  `verificador-spec` no commit exato. Roteiro: `docs/VALIDACAO-INTEGRADA.md`.
