@@ -29,6 +29,11 @@ const ContextoSessao = createContext<SessaoAplicacao | null>(null);
 
 export const ProvedorSessao = ContextoSessao.Provider;
 
+/** Sessão da área autenticada, ou `null` fora dela. */
+export function useSessaoOpcional() {
+  return useContext(ContextoSessao);
+}
+
 export function useSessaoAplicacao() {
   const sessao = useContext(ContextoSessao);
 
