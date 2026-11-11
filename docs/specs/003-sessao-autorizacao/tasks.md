@@ -2,7 +2,7 @@
 
 ## Estado
 
-**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-SESSAO-01 a T-SESSAO-04
+**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-SESSAO-01 a T-SESSAO-05
 concluídas.
 
 Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
@@ -37,7 +37,7 @@ de produção ou merge em `main`.
   - Atende: CA-SESSAO-01, 02, 03, 04, 08.
   - Testes: sem sessão; sem membership; múltiplos memberships; papel; `tenantId` no input ignorado.
   - Commit: `feat(sessao): resolver identidade, tenant e papel no contexto`.
-- [ ] **T-SESSAO-05 — `errorFormatter`**
+- [x] **T-SESSAO-05 — `errorFormatter`**
   - Atende: CA-SESSAO-11.
   - Testes: erro Zod com `campos`; erro de regra com `motivo`; sem vazamento de detalhe interno.
   - Commit: `feat(api): padronizar motivo e campos nos erros`.
