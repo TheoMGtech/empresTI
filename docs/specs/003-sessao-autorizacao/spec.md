@@ -2,8 +2,8 @@
 
 ## Estado
 
-**Status:** RASCUNHO — não aprovado. Nenhum plano, tarefa, migration ou código deriva deste texto
-antes da aprovação do responsável.
+**Status:** PROPOSTA — aguardando aprovação conjunta. Decisões funcionais aprovadas pelo
+responsável em 2026-11-11. Nenhum código ou migration antes da aprovação de spec, plano e tarefas.
 
 ## Objetivo
 
@@ -12,37 +12,44 @@ procedimentos e entregar a área autenticada, base de todas as telas da Etapa 4.
 
 ## Vínculos
 
-- **PRD:** item 1 (cada pessoa vê os próprios empréstimos); atores Colaborador e Operações.
-- **ADR-001:** §3 (contexto com sessão, `tenant_id` e `role`), §6 (tenant vindo da sessão), §7
-  (`protectedProcedure`, `tenantProcedure`, `adminProcedure`).
-- **Spec 001:** RF-LOGIN-06 e RS-LOGIN-05. **Spec 002:** `memberships` e papéis.
+- **PRD:** item 1; atores Colaborador e Operações.
+- **ADR-001:** §3 (contexto com sessão, `tenant_id` e `role`), §4 (`errorFormatter`), §6, §7.
+- **Spec 001:** revisão de RF-LOGIN-06 e RF-LOGIN-07 (DF-15). **Spec 002:** `memberships`.
 - **Layout:** §7, sidebar e navegação.
 
 ## Escopo
 
-- Contexto tRPC com identidade, tenant e papel.
-- Os três middlewares de autorização e o procedimento `sessao.atual`.
-- Shell autenticado, com sidebar.
-- Destino após o login e tratamento de sessão sem membership.
+- Contexto tRPC com identidade, tenant e papel; os três middlewares; `sessao.atual`.
+- `errorFormatter` com `error.data.motivo` e `error.data.campos` para erros Zod.
+- Coluna `nome_exibicao` em `memberships`, com a migration desta spec.
+- Rotina de vínculo passa a aceitar papel e nome.
+- Shell autenticado responsivo e destino após o login.
 
 ## Fora de escopo
 
 - Catálogo, empréstimos e Operações. Convite, cadastro, recuperação de senha, seletor de tenant.
-- Cabeçalhos de segurança, CSP e rate limit (ADR-001 §10), a tratar em spec própria.
+- CSP, cabeçalhos e rate limit: spec própria, depois da 008, obrigatória antes da entrega (DF-13).
 
 ## Requisitos funcionais
 
-- **RF-SESSAO-01** — O contexto valida a identidade com o Supabase Auth a cada request, sem
-  confiar só no conteúdo do cookie.
+- **RF-SESSAO-01** — O contexto valida a identidade com o Supabase Auth a cada request.
 - **RF-SESSAO-02** — Tenant e papel vêm de `memberships`, nunca do input.
 - **RF-SESSAO-03** — `protectedProcedure` recusa com `UNAUTHORIZED` quem não tem sessão.
 - **RF-SESSAO-04** — `tenantProcedure` recusa com `FORBIDDEN` sessão sem membership e injeta
   `tenantId` e papel no contexto.
 - **RF-SESSAO-05** — `adminProcedure` recusa com `FORBIDDEN` quem não tem papel `operacoes`.
-- **RF-SESSAO-06** — `sessao.atual` devolve o papel e o nome de exibição, sem token nem e-mail.
-- **RF-SESSAO-07** — O shell autenticado apresenta a sidebar do layout. O grupo Operações só
-  aparece para `operacoes`.
+- **RF-SESSAO-06** — `sessao.atual` usa `tenantProcedure` e devolve `{ nomeExibicao | null, papel }`.
+- **RF-SESSAO-07** — O shell apresenta a sidebar do layout. O grupo Operações só aparece para
+  `operacoes`. Sem nome de exibição, a interface mostra o papel.
 - **RF-SESSAO-08** — Sessão sem membership vê a mensagem de acesso não liberado e a ação `Sair`.
+- **RF-SESSAO-09** — Mais de um membership é recusado com `FORBIDDEN`, motivo
+  `MULTIPLOS_MEMBERSHIPS`, sem escolher tenant.
+- **RF-SESSAO-10** — Sem sessão, ou com sessão expirada, o usuário volta a `/`, limpando o cache
+  do cliente.
+- **RF-SESSAO-11** — `colaborador` em `/operacoes/*` vê "Acesso restrito a Operações."
+- **RF-SESSAO-12** — `Sair` fica no bloco de usuário da sidebar. O sino é omitido.
+- **RF-SESSAO-13** — Sidebar fixa a partir de 1024px; abaixo, barra superior simples sem gaveta;
+  tabelas completas a partir de 1280px; sem rolagem horizontal em 375px. Vale para as specs 003 a 008.
 
 ## Regras de negócio
 
@@ -57,7 +64,11 @@ procedimentos e entregar a área autenticada, base de todas as telas da Etapa 4.
 
 ## Contrato afetado
 
-Contexto tRPC, `sessao.atual`, área autenticada e, se D-SESSAO-02 aprovar, `memberships`.
+Contexto tRPC, `errorFormatter`, `sessao.atual`, `memberships.nome_exibicao`, rotina de vínculo.
+
+**Supera:** CA-DADOS-25 da Spec 002 fixa o `AppRouter` e as rotas, e as provas históricas fixam a
+lista de migrations e as colunas de `memberships`. A primeira tarefa desta spec delimita essas
+provas ao escopo da Spec 002, sem removê-las.
 
 ## Critérios de aceitação
 
@@ -65,30 +76,33 @@ Contexto tRPC, `sessao.atual`, área autenticada e, se D-SESSAO-02 aprovar, `mem
 - **CA-SESSAO-02** — Sessão sem membership responde `FORBIDDEN` em `tenantProcedure`.
 - **CA-SESSAO-03** — `colaborador` recebe `FORBIDDEN` em `adminProcedure`, e `operacoes` passa.
 - **CA-SESSAO-04** — Um `tenantId` enviado no input é ignorado.
-- **CA-SESSAO-05** — `sessao.atual` não devolve token nem e-mail.
+- **CA-SESSAO-05** — `sessao.atual` devolve só `nomeExibicao` e `papel`.
 - **CA-SESSAO-06** — `colaborador` não vê o grupo Operações, e `operacoes` vê.
 - **CA-SESSAO-07** — Sessão sem membership vê acesso não liberado e consegue sair.
-- **CA-SESSAO-08** — Lint, typecheck, testes, E2E e build passam.
+- **CA-SESSAO-08** — Mais de um membership é recusado com `MULTIPLOS_MEMBERSHIPS`.
+- **CA-SESSAO-09** — Sessão expirada volta a `/` e limpa o cache do cliente.
+- **CA-SESSAO-10** — `colaborador` em `/operacoes/*` vê "Acesso restrito a Operações."
+- **CA-SESSAO-11** — Erros Zod chegam com `error.data.campos`, e erros de regra com `error.data.motivo`.
+- **CA-SESSAO-12** — A rotina de vínculo aceita papel e nome, mantendo a verificação de identidade.
+- **CA-SESSAO-13** — Sem rolagem horizontal em 375px, e sidebar fixa a partir de 1024px.
+- **CA-SESSAO-14** — Lint, typecheck, testes, E2E e build passam. E2E com tRPC simulado vale no
+  desenvolvimento; a validação integrada real é obrigatória antes da entrega (DF-14).
 
 ## Dependências
 
-- Spec 002 integrada.
-- **Alterar antes a Spec 001** (`rules/spec-flow.md`, passo 7): ela fixa a permanência em `/` após
-  o login.
+Spec 002 integrada. Revisão da Spec 001 aprovada junto. Segunda conta, com papel `operacoes`,
+criada manualmente pelo responsável.
 
 ## Riscos
 
 - Validar a identidade a cada request soma latência, com functions nos EUA e banco em São Paulo.
 - Middleware esquecido abre dado entre tenants: exige teste por procedimento.
 
-## Decisões pendentes
+## Decisões tomadas
 
-- **D-SESSAO-01 — Mais de um membership.** O ADR permite. **Recomendação:** recusar com erro nesta
-  versão, pois só existe um tenant e não há seletor.
-- **D-SESSAO-02 — Nome de exibição.** O layout mostra nomes, mas o produto só conhece `user_id`.
-  Opções: coluna em `memberships`, tabela de perfis, e-mail. **Recomendação:** `nome_exibicao`
-  opcional em `memberships`, informado no provisionamento. Tem impacto em LGPD, que o ADR não decide.
-- **D-SESSAO-03 — Destino após o login.** **Recomendação:** `/catalogo`, rota prevista no layout.
-- **D-SESSAO-04 — Conta de Operações.** Só existe a do professor, como `colaborador`. Como
-  demonstrar as telas de Operações? **Recomendação:** segunda conta, criada por você, com papel
-  `operacoes`, o que exige estender a rotina de vínculo.
+- **D-SESSAO-01 (DF-16):** múltiplos memberships recusados.
+- **D-SESSAO-02 (DF-5):** `nome_exibicao` opcional em `memberships`; sem nome, exibe o papel.
+- **D-SESSAO-03 (DF-15):** destino após o login é `/catalogo`.
+- **D-SESSAO-04 (DF-9):** segunda conta `operacoes`, criada pelo responsável.
+- **DF-10:** `@phosphor-icons/react` autorizado, instalado só na primeira tarefa que usar ícone.
+- **DF-12:** `Sair` no bloco de usuário; sino omitido. **DF-22:** responsividade.

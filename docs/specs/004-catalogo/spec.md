@@ -2,8 +2,8 @@
 
 ## Estado
 
-**Status:** RASCUNHO — não aprovado. Nenhum plano, tarefa, migration ou código deriva deste texto
-antes da aprovação do responsável.
+**Status:** PROPOSTA — aguardando aprovação conjunta. Decisões funcionais aprovadas pelo
+responsável em 2026-11-11. Nenhum código ou migration antes da aprovação de spec, plano e tarefas.
 
 ## Objetivo
 
@@ -12,10 +12,10 @@ colaborador saber o que pode pedir.
 
 ## Vínculos
 
-- **PRD:** item 2 (catálogo com a situação de cada um); manutenção não aparece como disponível.
-- **ADR-001:** §2 (Client Components, TanStack Query), §4 (paginação por cursor), §6.
+- **PRD:** item 2; manutenção não aparece como disponível.
+- **ADR-001:** §2, §4 (paginação por cursor), §6.
 - **Spec 002:** RN-DADOS-06 e RN-DADOS-08. **Spec 003:** `tenantProcedure` e shell.
-- **Layout:** §5.3, §5.4, §5.8 e tela 02.
+- **Layout:** §5.3, §5.4, §5.8 e tela 02. **Desvio aprovado:** sem campo de busca (DF-11).
 
 ## Escopo
 
@@ -25,46 +25,55 @@ colaborador saber o que pode pedir.
 
 ## Fora de escopo
 
-- Detalhe e solicitação (Spec 005). Limite e contador de itens (Spec 006). Cadastro (Spec 008).
-- Publicação ou conferência remota de fotografias.
+Detalhe e solicitação (Spec 005), limite e contador (Spec 006), cadastro (Spec 008), busca,
+publicação ou conferência remota de fotografias.
 
 ## Requisitos funcionais
 
-- **RF-CATALOGO-01** — `equipamentos.listar` devolve só equipamentos do tenant da sessão, com
-  paginação por cursor.
-- **RF-CATALOGO-02** — A URL pública da fotografia é montada na leitura, a partir de
-  `NEXT_PUBLIC_SUPABASE_URL` e do caminho gravado.
-- **RF-CATALOGO-03** — Sem fotografia, ou se ela não carregar, o card usa o ícone da categoria.
-- **RF-CATALOGO-04** — Chips filtram por categoria, e "Só disponíveis" filtra pela situação efetiva.
+- **RF-CATALOGO-01** — `equipamentos.listar` devolve só equipamentos do tenant da sessão, por cursor.
+  Entrada: `{ categoria?, somenteDisponiveis?, cursor?, limite? }`. Saída:
+  `{ itens[{ patrimonio, nome, categoria, imagemUrl, disponibilidade }], proximoCursor, resumo{ total, disponiveis } }`.
+- **RF-CATALOGO-02** — `imagemUrl` é montada na leitura, a partir de `NEXT_PUBLIC_SUPABASE_URL` e
+  do caminho gravado.
+- **RF-CATALOGO-03** — A fotografia, de 40×40, ocupa o lugar do ícone. Sem ela, ou se não carregar,
+  o card usa o ícone da categoria.
+- **RF-CATALOGO-04** — Chips filtram por categoria, e "Só disponíveis" filtra pela disponibilidade.
 - **RF-CATALOGO-05** — O cabeçalho mostra o total e quantos estão disponíveis.
-- **RF-CATALOGO-06** — Card disponível é clicável, e os demais não têm ação.
+- **RF-CATALOGO-06** — Card disponível é clicável, e os demais não têm ação. Exceção: `operacoes`
+  abre o detalhe de item indisponível.
+- **RF-CATALOGO-07** — Item emprestado mostra "Emprestado · devolve {data}".
 
 ## Regras de negócio
 
-- **RN-CATALOGO-01** — Só `ativo` pode ser disponível (RN-DADOS-06). Enquanto a Spec 005 não
-  existir, não há estado emprestado.
-- **RN-CATALOGO-02** — `em_manutencao` nunca aparece como disponível (PRD).
+- **RN-CATALOGO-01** — `disponibilidade` é a união `disponivel`, `emprestado{ devolverAte }`,
+  `manutencao` e `fora_de_uso`. A variante `emprestado` só é retornada a partir da Spec 005.
+- **RN-CATALOGO-02** — `em_manutencao` aparece com pill e sem ação, nunca como disponível.
+- **RN-CATALOGO-03** — `fora_de_uso` é oculto para colaboradores e visível para Operações.
 
 ## Segurança e autorização
 
-- **RS-CATALOGO-01** — O procedimento usa `tenantProcedure`, e o tenant nunca vem do input.
-- **RS-CATALOGO-02** — O input é validado com Zod.
+- **RS-CATALOGO-01** — `tenantProcedure`, e o tenant nunca vem do input.
+- **RS-CATALOGO-02** — Input validado com Zod.
+- **RS-CATALOGO-03** — `equipamentos.listar` nunca devolve o nome do tomador, para nenhum papel.
 
 ## Contrato afetado
 
-`equipamentos.listar` e rota `/catalogo`. Sem migration prevista.
+`equipamentos.listar` e rota `/catalogo`. Sem migration.
 
 ## Critérios de aceitação
 
 - **CA-CATALOGO-01** — Com a carga inicial, a lista traz os 12 equipamentos.
 - **CA-CATALOGO-02** — Usuário do tenant A não recebe equipamento do tenant B.
 - **CA-CATALOGO-03** — Sem sessão ou sem membership, o procedimento recusa.
-- **CA-CATALOGO-04** — TI-0004 e TI-0007 não aparecem como disponíveis nem têm ação.
+- **CA-CATALOGO-04** — TI-0004 e TI-0007 aparecem em manutenção e sem ação.
 - **CA-CATALOGO-05** — A URL da fotografia é montada a partir do caminho gravado.
 - **CA-CATALOGO-06** — Fotografia ausente exibe o ícone da categoria.
 - **CA-CATALOGO-07** — Cada chip e "Só disponíveis" filtram corretamente.
 - **CA-CATALOGO-08** — A paginação por cursor não duplica nem perde itens.
-- **CA-CATALOGO-09** — Lint, typecheck, testes, E2E e build passam.
+- **CA-CATALOGO-09** — `fora_de_uso` não aparece para `colaborador` e aparece para `operacoes`.
+- **CA-CATALOGO-10** — A saída não contém nome do tomador, para nenhum papel.
+- **CA-CATALOGO-11** — Lint, typecheck, testes, E2E e build passam, com a validação integrada real
+  obrigatória antes da entrega.
 
 ## Dependências
 
@@ -72,17 +81,12 @@ Specs 002 e 003. Fotografias acessíveis no bucket `equipamentos`.
 
 ## Riscos
 
-- As fotos remotas não foram conferidas (IMG-16). RF-CATALOGO-03 cobre a falha.
-- A CSP prevista no ADR, quando existir, precisa permitir o host do Storage.
+- Fotos remotas não conferidas (IMG-16): RF-CATALOGO-03 cobre a falha.
+- A CSP, quando existir, precisa permitir o host do Storage.
 
-## Decisões pendentes
+## Decisões tomadas
 
-- **D-CATALOGO-01 — Item em manutenção no catálogo.** O layout tem o card com pill âmbar e também
-  a nota "não aparece no catálogo". O PRD só diz "não aparece como disponível". **Recomendação:**
-  mostrar com pill e sem ação, o que também atende Operações.
-- **D-CATALOGO-02 — `fora_de_uso`.** **Recomendação:** não mostrar ao colaborador.
-- **D-CATALOGO-03 — Fotografia no card.** O layout usa ícone de 40×40 no card. **Recomendação:**
-  fotografia no lugar do ícone, que fica como fallback.
-- **D-CATALOGO-04 — Busca no cabeçalho.** Está no layout, mas não no PRD. **Recomendação:** adiar.
-- **D-CATALOGO-05 — Nome de quem pegou.** O layout mostra "Com {pessoa}" a todos, com impacto em
-  LGPD. **Recomendação:** seguir o layout, por ser sistema interno, se você confirmar.
+- **D-CATALOGO-01 e 02 (DF-6):** manutenção com pill e sem ação; `fora_de_uso` só para Operações.
+- **D-CATALOGO-03 (DF-17):** foto 40×40 no card, ícone como fallback.
+- **D-CATALOGO-04 (DF-11):** busca adiada.
+- **D-CATALOGO-05 (DF-5):** nome do tomador nunca sai em `equipamentos.listar`.
