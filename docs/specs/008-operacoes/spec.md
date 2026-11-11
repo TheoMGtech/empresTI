@@ -91,3 +91,8 @@ Specs 003, 005 e 007. Conta `operacoes` (DF-9).
 - **D-OPER-03 (DF-18):** quatro categorias. **D-OPER-04 (DF-17):** sem upload.
 - **DF-11:** sem busca. **DF-20:** "Vencem esta semana" = 7 dias. **DF-21:** formato de patrimônio.
 - **DF-23:** últimos cadastros. **DF-4:** diálogo na devolução. **DF-5:** nome só para Operações.
+- **D-OPER-05 (responsável, 2026-11-11):** janelas de vencimento. "Vencendo em 3 dias" vai de hoje
+  até hoje + 3 dias, e "Vencem esta semana" (`vencem_7_dias`) de hoje até hoje + 7 dias, inclusive
+  nas duas pontas. Contam só empréstimos em aberto, incluindo os que vencem hoje; os já atrasados
+  ficam fora das duas janelas. As datas seguem o fuso America/Sao_Paulo. `pessoa` mantém só
+  `nomeExibicao`.
