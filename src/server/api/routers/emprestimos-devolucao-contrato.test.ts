@@ -144,13 +144,9 @@ describe("registro no AppRouter", () => {
     }
   });
 
-  it("T-DEVOL-01 — com sessão respondem NOT_IMPLEMENTED sem inventar dados", async () => {
+  it("T-DEVOL-01 — com sessão, meus e historico respondem NOT_IMPLEMENTED sem inventar dados", async () => {
     const comSessao = caller(USUARIO).emprestimos;
-    for (const chamada of [
-      () => comSessao.meus(),
-      () => comSessao.historico({}),
-      () => comSessao.devolver({ emprestimoId: EMPRESTIMO }),
-    ]) {
+    for (const chamada of [() => comSessao.meus(), () => comSessao.historico({})]) {
       await expect(chamada()).rejects.toMatchObject({
         code: "NOT_IMPLEMENTED",
         message: MENSAGEM_DEVOLUCAO_NAO_IMPLEMENTADA,

@@ -2,7 +2,7 @@
 
 ## Estado
 
-**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-DEVOL-01 concluída.
+**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-DEVOL-01 e T-DEVOL-02 concluídas.
 
 Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
 `rules/checks.md` ao concluir; todo teste cita no nome o CA que evidencia; sem alteração no
@@ -14,7 +14,7 @@ Supabase remoto, deploy de produção ou merge em `main`.
   - Avisar o FE.
   - Atende: RF-DEVOL-01, 02, 03.
   - Commit: `feat(emprestimos): publicar contrato de devolução e histórico`.
-- [ ] **T-DEVOL-02 — Serviço de encerramento e `devolver`**
+- [x] **T-DEVOL-02 — Serviço de encerramento e `devolver`**
   - Atende: CA-DEVOL-02, 03, 04, 05, 07, 08.
   - Commit: `feat(emprestimos): encerrar empréstimo em aberto`.
 - [ ] **T-DEVOL-03 — `meus` e `historico`**
