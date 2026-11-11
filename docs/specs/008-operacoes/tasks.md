@@ -2,7 +2,7 @@
 
 ## Estado
 
-**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-OPER-01, T-OPER-03, T-OPER-04 e T-OPER-05 concluídas.
+**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-OPER-01 a T-OPER-05 concluídas.
 
 Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
 `rules/checks.md` ao concluir; todo teste cita no nome o CA que evidencia; sem alteração no
@@ -14,7 +14,7 @@ Supabase remoto, deploy de produção ou merge em `main`.
   - Avisar o FE.
   - Atende: CA-OPER-04 (formato e `adminProcedure`).
   - Commit: `feat(operacoes): publicar contrato de operações`.
-- [ ] **T-OPER-02 — Lista, resumo e últimos cadastros**
+- [x] **T-OPER-02 — Lista, resumo e últimos cadastros**
   - Atende: CA-OPER-01, 02, 04, 07, 10, 11.
   - Commit: `feat(operacoes): listar empréstimos em aberto e resumo`.
 - [x] **T-OPER-03 — `registrarDevolucao`**

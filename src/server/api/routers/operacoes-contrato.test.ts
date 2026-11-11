@@ -24,20 +24,12 @@ import {
   type UltimoCadastro,
 } from "@/lib/esquemas/operacoes";
 import { routerAplicacao, type RouterAplicacao } from "@/server/api/raiz";
-import { MENSAGEM_OPERACOES_NAO_IMPLEMENTADO } from "@/server/api/routers/operacoes";
 import { MENSAGENS_AUTORIZACAO } from "@/server/api/trpc";
 import type { ClienteSupabaseAutenticacao } from "@/server/services/autenticacao";
 
 const TENANT = "00000000-0000-4000-8000-00000000000a";
 const USUARIO = "00000000-0000-4000-8000-000000000001";
 const ID = "00000000-0000-4000-8000-0000000000a1";
-
-/** Procedimentos já implementados, provados com banco real nos próprios arquivos de teste. */
-const IMPLEMENTADOS: readonly string[] = [
-  "operacoes.registrarDevolucao",
-  "equipamentos.cadastrar",
-  "equipamentos.alterarSituacao",
-];
 
 const CADASTRO = {
   nome: "Notebook Lenovo ThinkPad",
@@ -194,16 +186,6 @@ describe("registro e autorização", () => {
       await expect(chamar()).rejects.toMatchObject({
         code: "FORBIDDEN",
         message: MENSAGENS_AUTORIZACAO.restritoOperacoes,
-      });
-    },
-  );
-
-  it.each(chamadas("operacoes").filter(([nome]) => !IMPLEMENTADOS.includes(nome)))(
-    "T-OPER-01 — Operações chega a %s, que responde NOT_IMPLEMENTED",
-    async (_n, chamar) => {
-      await expect(chamar()).rejects.toMatchObject({
-        code: "NOT_IMPLEMENTED",
-        message: MENSAGEM_OPERACOES_NAO_IMPLEMENTADO,
       });
     },
   );
