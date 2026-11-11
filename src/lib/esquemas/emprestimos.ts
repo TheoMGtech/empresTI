@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { LIMITE_MAXIMO_LISTAGEM, esquemaCategoria } from "@/lib/esquemas/equipamentos";
+
 // Entrada de `emprestimos.solicitar` (RF-SOLIC-02): só o equipamento. Usuário, tenant e prazo vêm
 // do servidor; campos desconhecidos são descartados.
 export const esquemaEntradaSolicitarEmprestimo = z.object({
@@ -43,3 +45,73 @@ export type MotivoSolicitacao = (typeof MOTIVOS_SOLICITACAO)[number];
 export type MeuResumo = z.infer<typeof esquemaMeuResumo>;
 export type EntradaSolicitarEmprestimo = z.infer<typeof esquemaEntradaSolicitarEmprestimo>;
 export type SaidaSolicitarEmprestimo = z.infer<typeof esquemaSaidaSolicitarEmprestimo>;
+
+// ---------------------------------------------------------------------------------------------
+// Spec 007 — meus empréstimos, devolução e histórico.
+
+/** Equipamento resumido dentro de um empréstimo da própria pessoa. */
+export const esquemaEquipamentoDoEmprestimo = z.strictObject({
+  patrimonio: z.string().min(1),
+  nome: z.string().min(1),
+  categoria: esquemaCategoria,
+  imagemUrl: z.url().nullable(),
+});
+
+// Item de `emprestimos.meus` (RF-DEVOL-01): empréstimo em aberto da própria pessoa.
+export const esquemaEmprestimoAberto = z.strictObject({
+  id: z.uuid(),
+  equipamento: esquemaEquipamentoDoEmprestimo,
+  retiradoEm: z.date(),
+  /** Data de devolução (AAAA-MM-DD, calendário de São Paulo). */
+  devolverAte: z.iso.date(),
+  /** Atraso calculado no servidor, no fuso de São Paulo (RN-REGRAS-06). */
+  emAtraso: z.boolean(),
+});
+
+export const esquemaSaidaMeusEmprestimos = z.array(esquemaEmprestimoAberto);
+
+// Entrada e saída de `emprestimos.historico` (RF-DEVOL-02): encerrados da própria pessoa, do mais
+// recente para o mais antigo, por cursor (ADR-001 §4).
+export const esquemaEntradaHistorico = z.object({
+  /** `id` do último empréstimo da página anterior. */
+  cursor: z.uuid().optional(),
+  limite: z.number().int().min(1).max(LIMITE_MAXIMO_LISTAGEM).optional(),
+});
+
+export const esquemaEmprestimoEncerrado = z.strictObject({
+  id: z.uuid(),
+  equipamento: esquemaEquipamentoDoEmprestimo,
+  retiradoEm: z.date(),
+  devolverAte: z.iso.date(),
+  devolvidoEm: z.date(),
+  /** Devolvido até o fim do dia `devolverAte` em São Paulo (RF-DEVOL-05). */
+  noPrazo: z.boolean(),
+});
+
+export const esquemaSaidaHistorico = z.strictObject({
+  itens: z.array(esquemaEmprestimoEncerrado),
+  /** `null` na última página. */
+  proximoCursor: z.uuid().nullable(),
+});
+
+// Entrada e saída de `emprestimos.devolver` (RF-DEVOL-03): só o empréstimo; pessoa e tenant vêm da
+// sessão (RS-DEVOL-01).
+export const esquemaEntradaDevolver = z.object({
+  emprestimoId: z.uuid(),
+});
+
+export const esquemaSaidaDevolver = z.strictObject({
+  id: z.uuid(),
+  devolvidoEm: z.date(),
+});
+
+/** Motivos de recusa da devolução, em `error.data.motivo` (RF-DEVOL-07). */
+export const MOTIVOS_DEVOLUCAO = ["EMPRESTIMO_JA_ENCERRADO"] as const;
+
+export type EmprestimoAberto = z.infer<typeof esquemaEmprestimoAberto>;
+export type EmprestimoEncerrado = z.infer<typeof esquemaEmprestimoEncerrado>;
+export type EntradaHistorico = z.infer<typeof esquemaEntradaHistorico>;
+export type SaidaHistorico = z.infer<typeof esquemaSaidaHistorico>;
+export type EntradaDevolver = z.infer<typeof esquemaEntradaDevolver>;
+export type SaidaDevolver = z.infer<typeof esquemaSaidaDevolver>;
+export type MotivoDevolucao = (typeof MOTIVOS_DEVOLUCAO)[number];
