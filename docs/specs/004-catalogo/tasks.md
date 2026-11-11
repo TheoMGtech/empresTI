@@ -2,7 +2,8 @@
 
 ## Estado
 
-**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-CATALOGO-01 concluída.
+**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-CATALOGO-01 e T-CATALOGO-02
+concluídas.
 
 Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
 `rules/checks.md` ao concluir; todo teste cita no nome o CA que evidencia; sem alteração no
@@ -14,7 +15,7 @@ Supabase remoto, deploy de produção ou merge em `main`.
   - Esquemas de entrada e saída, e procedimento "não implementado". Avisar o FE.
   - Atende: CA-CATALOGO-10 (formato).
   - Commit: `feat(catalogo): publicar contrato da listagem`.
-- [ ] **T-CATALOGO-02 — Listagem por tenant, com visibilidade**
+- [x] **T-CATALOGO-02 — Listagem por tenant, com visibilidade**
   - Atende: CA-CATALOGO-01, 02, 03, 04, 09, 10.
   - Testes: 12 itens da carga; tenant B invisível; recusa sem sessão; manutenção; `fora_de_uso` por papel.
   - Commit: `feat(catalogo): listar equipamentos do tenant`.

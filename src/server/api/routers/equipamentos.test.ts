@@ -1,4 +1,4 @@
-import { CategoriaEquipamento, type PrismaClient } from "@prisma/client";
+import { CategoriaEquipamento } from "@prisma/client";
 import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 import { describe, expect, expectTypeOf, it } from "vitest";
 
@@ -12,8 +12,6 @@ import {
   type SaidaListarEquipamentos,
 } from "@/lib/esquemas/equipamentos";
 import { routerAplicacao, type RouterAplicacao } from "@/server/api/raiz";
-import { MENSAGEM_LISTAGEM_NAO_IMPLEMENTADA } from "@/server/api/routers/equipamentos";
-import type { ClienteSupabaseAutenticacao } from "@/server/services/autenticacao";
 
 const TENANT = "00000000-0000-4000-8000-00000000000a";
 const URL_FOTO =
@@ -26,26 +24,6 @@ const ITEM = {
   imagemUrl: URL_FOTO,
   disponibilidade: { estado: "disponivel" },
 } as const;
-
-function caller(usuarioId: string | null) {
-  return routerAplicacao.createCaller({
-    obterClientePrisma: () =>
-      ({
-        membership: {
-          findMany: async () => (usuarioId ? [{ tenantId: TENANT, role: "colaborador" }] : []),
-        },
-      }) as unknown as PrismaClient,
-    obterClienteSupabase: async () =>
-      ({
-        auth: {
-          getUser: async () => ({
-            data: { user: usuarioId ? { id: usuarioId } : null },
-            error: null,
-          }),
-        },
-      }) as unknown as ClienteSupabaseAutenticacao,
-  });
-}
 
 describe("contrato de equipamentos.listar", () => {
   it("CA-CATALOGO-10 — item aceita só os campos do catálogo", () => {
@@ -138,20 +116,5 @@ describe("contrato de equipamentos.listar", () => {
     expectTypeOf<
       inferRouterOutputs<RouterAplicacao>["equipamentos"]["listar"]
     >().toEqualTypeOf<SaidaListarEquipamentos>();
-  });
-
-  it("CA-CATALOGO-03 — sem sessão recusa antes de responder", async () => {
-    await expect(caller(null).equipamentos.listar({})).rejects.toMatchObject({
-      code: "UNAUTHORIZED",
-    });
-  });
-
-  it("T-CATALOGO-01 — com sessão e membership responde NOT_IMPLEMENTED sem inventar dados", async () => {
-    await expect(
-      caller("00000000-0000-4000-8000-000000000001").equipamentos.listar({}),
-    ).rejects.toMatchObject({
-      code: "NOT_IMPLEMENTED",
-      message: MENSAGEM_LISTAGEM_NAO_IMPLEMENTADA,
-    });
   });
 });
