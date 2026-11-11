@@ -53,9 +53,11 @@ export function renderizarComTRPC(interface_: ReactNode, manipuladores: Manipula
   });
   const clienteTRPC = trpc.createClient({ links: [criarLinkDeTeste(manipuladores)] });
 
-  return render(
+  const resultado = render(
     <trpc.Provider client={clienteTRPC} queryClient={clienteConsulta}>
       <QueryClientProvider client={clienteConsulta}>{interface_}</QueryClientProvider>
     </trpc.Provider>,
   );
+
+  return { ...resultado, clienteConsulta };
 }
