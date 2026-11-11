@@ -2,10 +2,11 @@
 
 ## Estado
 
-**Status:** APROVADA — pelo responsável, em 2026-11-10.
+**Status:** Implementada — spec vigente (descreve o comportamento atual).
 
-Plano e tarefas dependem de aprovação própria. Nenhum schema, migration, seed ou código
-deriva deste texto antes dela.
+Aprovada pelo responsável em 2026-11-10. T-DADOS-01 a T-DADOS-11 concluídas em
+`feature/002-dados-iniciais`, ainda sem integração. Nada foi aplicado em produção.
+Pendente de evidência: verificação formal (T-DADOS-12) e CI em PR (Node 22 e Gitleaks).
 
 ## Objetivo
 

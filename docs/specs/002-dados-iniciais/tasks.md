@@ -2,8 +2,8 @@
 
 ## Estado
 
-**Status:** APROVADAS COM CONDIÇÕES — pelo responsável, em 2026-11-10. Só `T-DADOS-01`
-está autorizada. Cada tarefa seguinte depende de autorização própria.
+**Status:** Aprovadas com condições pelo responsável em 2026-11-10. `T-DADOS-01` a `11`
+concluídas. `T-DADOS-12` depende de autorização própria.
 
 Regras de execução:
 
@@ -19,7 +19,7 @@ Regras de execução:
 
 ## Estrutura de dados
 
-- [ ] **T-DADOS-01 — Banco real de teste e execução TypeScript**
+- [x] **T-DADOS-01 — Banco real de teste e execução TypeScript**
   - Criar `src/test/banco-real.ts`, seus testes e a sonda de execução TypeScript, todos em
     `src/test/`, sem mudança em configuração global.
   - Atende: CA-DADOS-01 (migration do andar zero), CA-DADOS-26.
@@ -30,14 +30,14 @@ Regras de execução:
   - Não cria nem aplica migrations do domínio.
   - Commit: `chore(testes): subir Postgres isolado e provar execução TypeScript`.
 
-- [ ] **T-DADOS-02 — Guarda contra banco remoto**
+- [x] **T-DADOS-02 — Guarda contra banco remoto**
   - Criar `prisma/rotinas/guarda-banco.ts`.
   - Atende: CA-DADOS-24.
   - Testes: aceita hosts locais; recusa remoto sem confirmação; recusa confirmação com
     host diferente; recusa URL ausente ou malformada; a mensagem não repete a URL.
   - Commit: `feat(banco): recusar banco remoto sem confirmação explícita`.
 
-- [ ] **T-DADOS-03 — Migration da estrutura do domínio**
+- [x] **T-DADOS-03 — Migration da estrutura do domínio**
   - Atualizar `prisma/schema.prisma` com tenants, memberships e equipamentos.
   - Gerar a migration, com RLS e policies no SQL gerado.
   - Atende: CA-DADOS-01, CA-DADOS-03, CA-DADOS-04, CA-DADOS-05, CA-DADOS-06, CA-DADOS-07.
@@ -51,14 +51,14 @@ Regras de execução:
 
 ## Segurança e auditoria
 
-- [ ] **T-DADOS-04 — Provas de RLS deny by default**
+- [x] **T-DADOS-04 — Provas de RLS deny by default**
   - Atende: CA-DADOS-02, nas três tabelas da T-DADOS-03.
   - Testes: `relrowsecurity` ligado e policies em `pg_policies`; com `SET ROLE anon` e
     `authenticated`, leitura sem linhas e escrita rejeitada por RLS, com privilégios
     concedidos para não confundir com permissão negada.
   - Commit: `test(banco): provar RLS deny by default nas tabelas de domínio`.
 
-- [ ] **T-DADOS-05 — Migration da auditoria append-only**
+- [x] **T-DADOS-05 — Migration da auditoria append-only**
   - Atualizar `prisma/schema.prisma`, gerar a migration e acrescentar triggers, RLS e
     policies.
   - Atende: CA-DADOS-02 (auditoria), CA-DADOS-03 (auditoria), CA-DADOS-20, CA-DADOS-21.
@@ -71,7 +71,7 @@ Regras de execução:
 
 ## Carga inicial
 
-- [ ] **T-DADOS-06 — Validação do manifesto**
+- [x] **T-DADOS-06 — Validação do manifesto**
   - Criar `prisma/rotinas/manifesto.ts`, com Zod e sem importar `skills/`.
   - Atende: CA-DADOS-16, CA-DADOS-17.
   - Testes: aceita `aprovado` sem `publicacao`; aceita o manifesto versionado; rejeita
@@ -79,7 +79,7 @@ Regras de execução:
     arquivo não é alterado.
   - Commit: `feat(seed): validar manifesto aprovado de fotografias`.
 
-- [ ] **T-DADOS-07 — Carga em banco vazio**
+- [x] **T-DADOS-07 — Carga em banco vazio**
   - Criar `prisma/rotinas/carga-inicial.ts` e `prisma/seed.ts`.
   - Atende: CA-DADOS-08, CA-DADOS-09, CA-DADOS-15, CA-DADOS-22 (carga),
     CA-DADOS-23 (carga).
@@ -89,7 +89,7 @@ Regras de execução:
     continua vazia; saída só com contagens.
   - Commit: `feat(seed): carregar tenant e 12 equipamentos do manifesto`.
 
-- [ ] **T-DADOS-08 — Reexecução não destrutiva**
+- [x] **T-DADOS-08 — Reexecução não destrutiva**
   - Completar `prisma/seed.ts` com a comparação de fotografia e a transação única.
   - Atende: CA-DADOS-10, CA-DADOS-11, CA-DADOS-12, CA-DADOS-13, CA-DADOS-14.
   - Testes: duas execuções idênticas; `nome` e `situacao` preservados; equipamentos fora
@@ -100,7 +100,7 @@ Regras de execução:
 
 ## Vínculo do professor
 
-- [ ] **T-DADOS-09 — Verificação de identidade**
+- [x] **T-DADOS-09 — Verificação de identidade**
   - Criar `prisma/rotinas/identidade.ts`, com a porta `ConsultaIdentidade` e a consulta a
     `auth.users`.
   - Atende: CA-DADOS-C1 (validação), CA-DADOS-19 (leitura sem escrita).
@@ -109,7 +109,7 @@ Regras de execução:
     permissão resultam em `IDENTIDADE_INDETERMINADA`; a consulta não seleciona e-mail.
   - Commit: `feat(vinculo): verificar identidade do professor sem credenciais`.
 
-- [ ] **T-DADOS-10 — Rotina de vínculo**
+- [x] **T-DADOS-10 — Rotina de vínculo**
   - Criar `prisma/vincular-professor.ts`.
   - Atende: CA-DADOS-C1, CA-DADOS-18 (vínculo), CA-DADOS-22 (vínculo),
     CA-DADOS-23 (vínculo).
@@ -120,7 +120,7 @@ Regras de execução:
 
 ## Verificações
 
-- [ ] **T-DADOS-11 — Provas finais e estado da spec**
+- [x] **T-DADOS-11 — Provas finais e estado da spec**
   - Adicionar os testes estáticos restantes e atualizar o `## Estado` da spec para
     `Implementada`, marcando estas tarefas.
   - Atende: CA-DADOS-18, CA-DADOS-19, CA-DADOS-22, CA-DADOS-23, CA-DADOS-25, CA-DADOS-26,
