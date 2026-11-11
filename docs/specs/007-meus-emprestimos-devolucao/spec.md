@@ -2,8 +2,11 @@
 
 ## Estado
 
-**Status:** APROVADA — pelo responsável em 2026-11-11, com `plan.md` e `tasks.md`. Ainda não
-implementada.
+**Status:** Implementada — aprovada pelo responsável em 2026-11-11, com `plan.md` e `tasks.md`;
+T-DEVOL-01 a T-DEVOL-05 concluídas. Verificação formal V-01 (2026-11-11, commit `9a421a2`):
+`Veredito: PRONTA` (`verificacao.md`). Aguarda a validação final do responsável para ser declarada
+PRONTA. A validação integrada real (DF-14) continua obrigatória antes da publicação em `main` e na
+Vercel.
 
 ## Objetivo
 

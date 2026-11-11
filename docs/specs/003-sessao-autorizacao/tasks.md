@@ -2,9 +2,9 @@
 
 ## Estado
 
-**Status:** Aprovadas pelo responsável em 2026-11-11. T-SESSAO-01 a T-SESSAO-09 concluídas.
-T-SESSAO-10 em andamento: provas finais no commit `cf90302`; verificação V-01 NÃO PRONTA
-(`verificacao.md`), aguardando decisão do responsável sobre CA-SESSAO-14.
+**Status:** Aprovadas pelo responsável em 2026-11-11. T-SESSAO-01 a T-SESSAO-10 concluídas.
+Verificação V-01 (commit `cf90302`) NÃO PRONTA; V-02 (commit `9a421a2`) com `Veredito: PRONTA`
+(`verificacao.md`), aguardando a validação final do responsável.
 
 Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
 `rules/checks.md` ao concluir; todo teste cita no nome o CA que evidencia; DDL de migration com
@@ -63,6 +63,6 @@ de produção ou merge em `main`.
 
 ## Bloco D — fechamento
 
-- [ ] **T-SESSAO-10 — Provas finais (BE)**
+- [x] **T-SESSAO-10 — Provas finais (BE)**
   - Atende: CA-SESSAO-14. Verificação formal conforme `rules/spec-flow.md`.
   - Commit: `test(sessao): provar critérios finais da spec 003`.
