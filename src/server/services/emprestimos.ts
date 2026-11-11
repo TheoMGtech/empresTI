@@ -1,6 +1,10 @@
 import { Prisma, type PrismaClient } from "@prisma/client";
 
-import type { MotivoSolicitacao, SaidaSolicitarEmprestimo } from "@/lib/esquemas/emprestimos";
+import {
+  LIMITE_ITENS_POR_PESSOA,
+  type MotivoSolicitacao,
+  type SaidaSolicitarEmprestimo,
+} from "@/lib/esquemas/emprestimos";
 import type { Papel } from "@/lib/esquemas/sessao";
 import { calcularDevolverAte } from "@/lib/prazos";
 
@@ -27,7 +31,8 @@ function eViolacaoDeUnicidade(erro: unknown) {
  * Empréstimo imediato de um equipamento do tenant da sessão (RF-SOLIC-02, RN-SOLIC-05). Leitura do
  * equipamento, inserção e auditoria ocorrem na mesma transação (RS-SOLIC-04): se a auditoria
  * falhar, nada é gravado (CA-SOLIC-07). O índice único parcial garante um único empréstimo aberto
- * por equipamento, mesmo com solicitações simultâneas (RN-SOLIC-02, CA-SOLIC-03).
+ * por equipamento, mesmo com solicitações simultâneas (RN-SOLIC-02, CA-SOLIC-03). O limite de
+ * itens por pessoa (RN-REGRAS-01) é contado depois de bloquear o membership (CA-REGRAS-02).
  * `agora` é o momento da confirmação: retirada e prazo saem dele (RN-SOLIC-03).
  */
 export async function solicitarEmprestimo(
@@ -40,6 +45,20 @@ export async function solicitarEmprestimo(
 
   try {
     return await prisma.$transaction(async (transacao) => {
+      // Serializa as solicitações da mesma pessoa antes de contar (plano da Spec 006): sem o
+      // bloqueio, pedidos simultâneos leriam a mesma contagem e ultrapassariam o limite.
+      await transacao.$queryRaw`
+        SELECT 1 FROM "memberships"
+         WHERE "user_id" = ${escopo.usuarioId}::uuid AND "tenant_id" = ${escopo.tenantId}::uuid
+         FOR UPDATE`;
+
+      // Ordem da Spec 006: atraso (T-REGRAS-03), limite, depois as recusas da Spec 005.
+      const itensAbertos = await transacao.emprestimo.count({
+        where: { tenantId: escopo.tenantId, userId: escopo.usuarioId, devolvidoEm: null },
+      });
+      // Atrasados continuam contando (RN-REGRAS-05).
+      if (itensAbertos >= LIMITE_ITENS_POR_PESSOA) throw new ErroSolicitacao("LIMITE_ATINGIDO");
+
       const equipamento = await transacao.equipamento.findFirst({
         where: { id: equipamentoId, tenantId: escopo.tenantId },
         select: { situacao: true },
