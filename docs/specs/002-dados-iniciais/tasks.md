@@ -45,7 +45,7 @@ Regras de execução:
     tenant; consulta por tenant A não devolve B; valores inválidos de situação e papel;
     ausência das colunas de D7; ausência de FK para `auth.users`.
   - Parada 1: apresentar o DDL final para revisão específica e parar.
-  - Parada 2: com `scripts/banco-local.mjs` autorizado, o responsável confere o destino,
+  - Parada 2: em PostgreSQL local descartável, pelo roteiro manual, o responsável confere o destino,
     gera a migration e, depois do SQL de RLS, executa `prisma:reset`.
   - Commit: `feat(banco): criar tenants, memberships e equipamentos com RLS`.
 

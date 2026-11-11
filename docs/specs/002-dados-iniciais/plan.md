@@ -55,7 +55,7 @@ O comando previsto é `node prisma/seed.ts`, sem `tsx`. Consequências:
 |---|---|---|
 | `src/test/banco-real.ts` e `.test.ts` | Sobe Postgres descartável e aplica migrations | 01 |
 | `src/test/sonda-typescript.ts` e auxiliar | Provam a execução TypeScript com `node` | 01 |
-| `scripts/banco-local.mjs` | Roda `prisma:migrate` e `prisma:reset` contra container local, com conferência do destino | Antes da 03, com autorização própria |
+| Roteiro manual, fora do Git | Procedimento do responsável para rodar `prisma:migrate` e `prisma:reset` em PostgreSQL local descartável, com conferência do destino | 03 e 05 |
 | `tsconfig.json`, `vitest.config.ts`, `package.json` | Extensão `.ts`, inclusão de `prisma/`, lint e scripts | Na tarefa que exigir, com demonstração e autorização |
 | `prisma/rotinas/guarda-banco.ts` | Recusa banco remoto sem confirmação | 02 |
 | `prisma/schema.prisma` | Modelos e enums | 03, 05 |
@@ -279,7 +279,7 @@ senha e sem acesso remoto.
 | Testes | `banco-real.ts` remove as variáveis herdadas, gera a própria URL e recusa host não local |
 | Rotinas | `garantirBancoPermitido` só aceita `localhost`, `127.0.0.1` e `::1`. Remoto exige `--confirmar-remoto=<host exato>` |
 | Variáveis | Rotinas leem só `process.env`, sem carregar arquivos. O `.env.local` nunca é lido |
-| `banco-local.mjs` | Sobrescreve `DATABASE_URL` e `DIRECT_URL` com a URL do container |
+| Roteiro manual | Define `DATABASE_URL` e `DIRECT_URL` com a URL do container e confere o destino antes de cada comando |
 | Agente | O hook já barra `prisma migrate`, `prisma db` e a CLI do Supabase. O agente nunca passa `--confirmar-remoto` |
 | CI | `Application quality` não recebe segredos de banco |
 
@@ -298,10 +298,10 @@ específica das tarefas 03 e 05:
 | Passo da regra | Como será cumprido |
 |---|---|
 | 1. DDL antes, e parar | A tarefa apresenta o DDL final e para |
-| 2. `npm run prisma:migrate -- --name <nome>` | Responsável: `node scripts/banco-local.mjs prisma:migrate -- --name <nome> --create-only` |
+| 2. `npm run prisma:migrate -- --name <nome>` | Responsável, em PostgreSQL local descartável: `npm run prisma:migrate -- --name <nome> --create-only` |
 | 3. RLS e policy na migration gerada | Agente acrescenta o SQL ao arquivo gerado, antes de qualquer aplicação |
 | 4. Linhas existentes | Tabelas novas, sem linhas |
-| 5. `npm run prisma:reset` no banco local e `npm test` | Responsável: `node scripts/banco-local.mjs prisma:reset`, e cola a última linha. O agente roda `npm test` |
+| 5. `npm run prisma:reset` no banco local e `npm test` | Responsável, no mesmo PostgreSQL descartável e depois de conferir o destino: `npm run prisma:reset`. O agente roda `npm test` |
 | Verificação: reset em banco limpo | O container nasce vazio a cada execução |
 
 **Decisão embutida:** isto trata o container descartável como "banco local". As regras
@@ -347,7 +347,7 @@ Ainda necessárias:
 1. Autorização de cada tarefa a partir de `T-DADOS-02`.
 2. Revisão específica do DDL de `T-DADOS-03` e `T-DADOS-05` antes de criar ou aplicar as
    migrations (`rules/operacao.md`: pedir antes).
-3. Autorização de `scripts/banco-local.mjs`, que permite ao responsável rodar os comandos
+3. Execução do roteiro manual em PostgreSQL local descartável, pelo qual o responsável roda os comandos
    protegidos contra o container, com conferência do destino.
 4. Demonstração e autorização de cada mudança global: `allowImportingTsExtensions`,
    `engines`, inclusão de `prisma/` no lint e no Vitest, e scripts `seed` e
