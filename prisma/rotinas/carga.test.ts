@@ -312,7 +312,328 @@ describe("recusas sem escrita", () => {
   });
 });
 
+const OUTRO_TENANT = "00000000-0000-4000-8000-00000000000b";
+const SHA_OUTRO = "f".repeat(64);
+const CAMINHO_OUTRO = "equipamentos/outra-foto.jpg";
+
+/** Retrato completo, com identificadores e datas: revela qualquer escrita indevida. */
+async function retrato(cliente: Client, tabela = "equipamentos") {
+  const { rows } = await cliente.query<{ linha: string }>(
+    `SELECT t::text AS linha FROM ${tabela} t ORDER BY 1`,
+  );
+  return rows.map((item) => item.linha);
+}
+
+async function equipamento(cliente: Client, patrimonio: string) {
+  const linhas = await equipamentos(cliente);
+  return linhas.find((linha) => linha.patrimonio === patrimonio);
+}
+
+async function criarOutroTenant(cliente: Client) {
+  await cliente.query("INSERT INTO tenants (id, slug) VALUES ($1, 'outro_tenant')", [OUTRO_TENANT]);
+}
+
+describe("reexecução idêntica", () => {
+  it("CA-DADOS-10 — a segunda execução cria 0 e preserva os 12", async () => {
+    await comBanco(async (prisma) => {
+      expect(await executarCargaDoManifesto(prisma)).toEqual({ criados: 12, preservados: 0 });
+      expect(await executarCargaDoManifesto(prisma)).toEqual({ criados: 0, preservados: 12 });
+    });
+  });
+
+  it("CA-DADOS-10 — execuções repetidas não mudam nenhuma linha", async () => {
+    await comBanco(async (prisma, cliente) => {
+      await executarCargaDoManifesto(prisma);
+      const equipamentosAntes = await retrato(cliente);
+      const tenantsAntes = await retrato(cliente, "tenants");
+
+      for (let vez = 0; vez < 3; vez += 1) await executarCargaDoManifesto(prisma);
+
+      expect(await retrato(cliente)).toEqual(equipamentosAntes);
+      expect(await retrato(cliente, "tenants")).toEqual(tenantsAntes);
+    });
+  });
+
+  it("CA-DADOS-10 — execuções simultâneas não duplicam registros", async () => {
+    await comBanco(async (prisma, cliente) => {
+      const resultados = await Promise.allSettled([
+        executarCargaDoManifesto(prisma),
+        executarCargaDoManifesto(prisma),
+      ]);
+
+      expect(resultados.some((item) => item.status === "fulfilled")).toBe(true);
+      expect(await contar(cliente, "tenants")).toBe(1);
+      expect((await equipamentos(cliente)).map((linha) => linha.patrimonio)).toEqual(
+        PATRIMONIOS_ESPERADOS,
+      );
+    });
+  });
+
+  it("CA-DADOS-10 — reexecuções não criam memberships nem auditoria", async () => {
+    await comBanco(async (prisma, cliente) => {
+      await executarCargaDoManifesto(prisma);
+      await executarCargaDoManifesto(prisma);
+
+      expect(await contar(cliente, "memberships")).toBe(0);
+      expect(await contar(cliente, "auditoria")).toBe(0);
+    });
+  });
+});
+
+describe("preservação de alterações", () => {
+  it.each([
+    ["nome", "nome = 'Nome alterado'", "nome", "Nome alterado"],
+    ["categoria", "categoria = 'cabo'", "categoria", "cabo"],
+    ["situação", "situacao = 'fora_de_uso'", "situacao", "fora_de_uso"],
+  ] as const)("CA-DADOS-11 — preserva %s alterado depois da carga", async (_nome, alteracao, coluna, valor) => {
+    await comBanco(async (prisma, cliente) => {
+      await executarCargaDoManifesto(prisma);
+      await cliente.query(`UPDATE equipamentos SET ${alteracao} WHERE patrimonio = 'TI-0001'`);
+
+      const resultado = await executarCargaDoManifesto(prisma);
+
+      expect(resultado).toEqual({ criados: 0, preservados: 12 });
+      expect((await equipamento(cliente, "TI-0001"))?.[coluna]).toBe(valor);
+    });
+  });
+
+  it("CA-DADOS-11 — item que saiu da manutenção não volta a ela", async () => {
+    await comBanco(async (prisma, cliente) => {
+      await executarCargaDoManifesto(prisma);
+      await cliente.query("UPDATE equipamentos SET situacao = 'ativo' WHERE patrimonio = 'TI-0004'");
+
+      await executarCargaDoManifesto(prisma);
+
+      expect((await equipamento(cliente, "TI-0004"))?.situacao).toBe("ativo");
+    });
+  });
+
+  it("CA-DADOS-11 — a reexecução não toca em nenhuma linha alterada", async () => {
+    await comBanco(async (prisma, cliente) => {
+      await executarCargaDoManifesto(prisma);
+      await cliente.query("UPDATE equipamentos SET nome = nome || ' alterado'");
+      const antes = await retrato(cliente);
+
+      await executarCargaDoManifesto(prisma);
+
+      expect(await retrato(cliente)).toEqual(antes);
+    });
+  });
+
+  it("CA-DADOS-11 — o código não atualiza nem remove equipamentos", () => {
+    const fonte = readFileSync(new URL("./carga.ts", import.meta.url), "utf8");
+
+    expect(fonte).not.toMatch(/equipamento\s*\.\s*(update|updateMany|upsert|delete|deleteMany)\b/);
+  });
+});
+
+describe("outros equipamentos e tenants", () => {
+  it("CA-DADOS-12 — equipamentos fora dos 12, com e sem foto, ficam intactos", async () => {
+    await comBanco(async (prisma, cliente) => {
+      await executarCargaDoManifesto(prisma);
+      const { rows } = await cliente.query<{ id: string }>("SELECT id FROM tenants");
+      await cliente.query(
+        `INSERT INTO equipamentos (tenant_id, patrimonio, nome, categoria)
+         VALUES ($1, 'OP-0001', 'Sem foto', 'cabo')`,
+        [rows[0]?.id],
+      );
+      await cliente.query(
+        `INSERT INTO equipamentos (tenant_id, patrimonio, nome, categoria, imagem_caminho, imagem_sha256)
+         VALUES ($1, 'OP-0002', 'Com foto', 'monitor', $2, $3)`,
+        [rows[0]?.id, CAMINHO_OUTRO, SHA_OUTRO],
+      );
+      const antes = await retrato(cliente);
+
+      const resultado = await executarCargaDoManifesto(prisma);
+
+      expect(resultado).toEqual({ criados: 0, preservados: 12 });
+      expect(await retrato(cliente)).toEqual(antes);
+      expect(await contar(cliente, "equipamentos")).toBe(14);
+    });
+  });
+
+  it("CA-DADOS-12 — o mesmo patrimônio em outro tenant, com outra foto, não interfere", async () => {
+    await comBanco(async (prisma, cliente) => {
+      await criarOutroTenant(cliente);
+      await cliente.query(
+        `INSERT INTO equipamentos (tenant_id, patrimonio, nome, categoria, imagem_caminho, imagem_sha256)
+         VALUES ($1, 'TI-0001', 'De outro tenant', 'cabo', $2, $3)`,
+        [OUTRO_TENANT, CAMINHO_OUTRO, SHA_OUTRO],
+      );
+      const antes = await cliente.query("SELECT e::text FROM equipamentos e");
+
+      expect(await executarCargaDoManifesto(prisma)).toEqual({ criados: 12, preservados: 0 });
+      expect(await executarCargaDoManifesto(prisma)).toEqual({ criados: 0, preservados: 12 });
+
+      const { rows } = await cliente.query(
+        "SELECT e::text FROM equipamentos e WHERE tenant_id = $1",
+        [OUTRO_TENANT],
+      );
+      expect(rows).toEqual(antes.rows);
+      expect(await contar(cliente, "equipamentos")).toBe(13);
+    });
+  });
+});
+
+describe("recriação do que falta", () => {
+  it("CA-DADOS-13 — recria só o patrimônio ausente", async () => {
+    await comBanco(async (prisma, cliente) => {
+      await executarCargaDoManifesto(prisma);
+      await cliente.query("DELETE FROM equipamentos WHERE patrimonio = 'TI-0005'");
+      const antes = await retrato(cliente);
+
+      const resultado = await executarCargaDoManifesto(prisma);
+      const depois = await retrato(cliente);
+
+      expect(resultado).toEqual({ criados: 1, preservados: 11 });
+      expect(depois).toHaveLength(12);
+      expect(depois).toEqual(expect.arrayContaining(antes));
+    });
+  });
+
+  it.each([
+    ["TI-0004", "em_manutencao"],
+    ["TI-0005", "ativo"],
+  ])("CA-DADOS-13 — %s recriado volta com a situação %s da tabela", async (patrimonio, situacao) => {
+    await comBanco(async (prisma, cliente) => {
+      await executarCargaDoManifesto(prisma);
+      await cliente.query("DELETE FROM equipamentos WHERE patrimonio = $1", [patrimonio]);
+
+      await executarCargaDoManifesto(prisma);
+
+      expect((await equipamento(cliente, patrimonio))?.situacao).toBe(situacao);
+    });
+  });
+});
+
+describe("divergências impeditivas", () => {
+  it.each([
+    ["caminho divergente", "imagem_caminho = $1", [CAMINHO_OUTRO]],
+    ["SHA-256 divergente", "imagem_sha256 = $1", [SHA_OUTRO]],
+    ["caminho e SHA-256 divergentes", "imagem_caminho = $1, imagem_sha256 = $2", [CAMINHO_OUTRO, SHA_OUTRO]],
+    ["fotografia ausente", "imagem_caminho = NULL, imagem_sha256 = NULL", []],
+  ] as const)("CA-DADOS-14 — %s aborta sem corrigir", async (_nome, alteracao, parametros) => {
+    await comBanco(async (prisma, cliente) => {
+      await executarCargaDoManifesto(prisma);
+      await cliente.query(`UPDATE equipamentos SET ${alteracao} WHERE patrimonio = 'TI-0003'`, [
+        ...parametros,
+      ]);
+      const antes = await retrato(cliente);
+
+      await expect(executarCargaDoManifesto(prisma)).rejects.toMatchObject({
+        codigo: "FOTOGRAFIA_DIVERGENTE",
+      });
+
+      expect(await retrato(cliente)).toEqual(antes);
+    });
+  });
+
+  it("CA-DADOS-14 — divergência impede criar outro patrimônio ausente", async () => {
+    await comBanco(async (prisma, cliente) => {
+      await executarCargaDoManifesto(prisma);
+      await cliente.query("DELETE FROM equipamentos WHERE patrimonio = 'TI-0001'");
+      await cliente.query(
+        "UPDATE equipamentos SET imagem_sha256 = $1 WHERE patrimonio = 'TI-0012'",
+        [SHA_OUTRO],
+      );
+      const antes = await retrato(cliente);
+
+      await expect(executarCargaDoManifesto(prisma)).rejects.toBeInstanceOf(ErroCargaInvalida);
+
+      expect(await retrato(cliente)).toEqual(antes);
+      expect(await contar(cliente, "equipamentos")).toBe(11);
+    });
+  });
+
+  it("CA-DADOS-14 — falha depois das escritas desfaz tenant e equipamentos", async () => {
+    await comBanco(async (prisma, cliente) => {
+      const falha = new Error("falha simulada depois das escritas");
+      const clienteComFalha = {
+        $transaction: ((acao: (transacao: never) => Promise<unknown>) =>
+          prisma.$transaction(async (transacao) => {
+            await acao(transacao as never);
+            throw falha;
+          })) as unknown as PrismaClient["$transaction"],
+      };
+
+      await expect(executarCarga(clienteComFalha, lerManifesto())).rejects.toBe(falha);
+
+      await esperarVazio(cliente);
+    });
+  });
+
+  it("CA-DADOS-14 — a mensagem não repete dados do registro", async () => {
+    await comBanco(async (prisma, cliente) => {
+      await executarCargaDoManifesto(prisma);
+      await cliente.query(
+        "UPDATE equipamentos SET imagem_caminho = $1 WHERE patrimonio = 'TI-0003'",
+        [CAMINHO_OUTRO],
+      );
+
+      const erro = await executarCargaDoManifesto(prisma).catch((falha: Error) => falha);
+
+      expect((erro as Error).message).not.toContain("TI-0003");
+      expect((erro as Error).message).not.toContain(CAMINHO_OUTRO);
+    });
+  });
+
+  it("CA-DADOS-16 — manifesto com patrimônio repetido é recusado sem escrita", async () => {
+    const repetido = {
+      ...MANIFESTO,
+      estado: "aprovado",
+      itens: [MANIFESTO.itens[0], ...MANIFESTO.itens.slice(0, 11)],
+    };
+
+    await comBanco(async (prisma, cliente) => {
+      await comManifesto(repetido, async (caminho) => {
+        await expect(executarCargaDoManifesto(prisma, caminho)).rejects.toMatchObject({
+          codigo: "PATRIMONIO_REPETIDO",
+        });
+      });
+      await esperarVazio(cliente);
+    });
+  });
+});
+
 describe("comando TypeScript", () => {
+  it(
+    "CA-DADOS-10 — o seed reexecutado informa 0 criados e 12 preservados",
+    async () => {
+      await comBanco(async (_prisma, cliente, url) => {
+        rodarSeed({ DIRECT_URL: url });
+        const { status, stdout } = rodarSeed({ DIRECT_URL: url });
+
+        expect({ status, stdout }).toEqual({
+          status: 0,
+          stdout: "Carga concluída: criados=0 preservados=12\n",
+        });
+        expect(await contar(cliente, "equipamentos")).toBe(12);
+      });
+    },
+    TEMPO_DO_COMANDO_MS,
+  );
+
+  it(
+    "CA-DADOS-14 — o seed aborta na divergência, com código e sem detalhes",
+    async () => {
+      await comBanco(async (prisma, cliente, url) => {
+        await executarCargaDoManifesto(prisma);
+        await cliente.query(
+          "UPDATE equipamentos SET imagem_caminho = $1 WHERE patrimonio = 'TI-0003'",
+          [CAMINHO_OUTRO],
+        );
+
+        const { status, stdout, stderr } = rodarSeed({ DIRECT_URL: url });
+
+        expect(status).toBe(1);
+        expect(stdout).toBe("");
+        expect(stderr).toContain("FOTOGRAFIA_DIVERGENTE");
+        expect(stderr).not.toContain(CAMINHO_OUTRO);
+      });
+    },
+    TEMPO_DO_COMANDO_MS,
+  );
+
   it(
     "CA-DADOS-23 — o seed roda com node e imprime só contagens",
     async () => {

@@ -8,12 +8,18 @@ import { lerManifesto, MANIFESTO_PADRAO, type ItemManifesto } from "./manifesto.
 
 export const SLUG_TENANT_INICIAL = "suporte_ti";
 
-export class ErroCargaInvalida extends Error {
-  readonly codigo = "PATRIMONIO_SEM_SITUACAO";
+const MENSAGENS = {
+  PATRIMONIO_SEM_SITUACAO: "Um patrimônio do manifesto não consta na tabela de carga inicial.",
+  FOTOGRAFIA_DIVERGENTE: "A fotografia de um patrimônio existente diverge do manifesto.",
+} as const;
 
-  constructor() {
-    super("Um patrimônio do manifesto não consta na tabela de carga inicial.");
+export class ErroCargaInvalida extends Error {
+  readonly codigo: keyof typeof MENSAGENS;
+
+  constructor(codigo: keyof typeof MENSAGENS) {
+    super(MENSAGENS[codigo]);
     this.name = "ErroCargaInvalida";
+    this.codigo = codigo;
   }
 }
 
@@ -22,7 +28,7 @@ export type ResultadoCarga = { criados: number; preservados: number };
 function montarRegistros(itens: readonly ItemManifesto[]) {
   return itens.map((item) => {
     const situacao = SITUACOES_INICIAIS[item.patrimonio];
-    if (situacao === undefined) throw new ErroCargaInvalida();
+    if (situacao === undefined) throw new ErroCargaInvalida("PATRIMONIO_SEM_SITUACAO");
 
     return {
       patrimonio: item.patrimonio,
@@ -47,6 +53,26 @@ export async function executarCarga(
       create: { slug: SLUG_TENANT_INICIAL },
       update: {},
     });
+
+    // Lê só os patrimônios da carga, neste tenant: outros equipamentos nem entram na comparação.
+    // Divergência nunca é corrigida: lançar aqui desfaz a transação inteira.
+    const existentes = await transacao.equipamento.findMany({
+      where: {
+        tenantId: tenant.id,
+        patrimonio: { in: registros.map((registro) => registro.patrimonio) },
+      },
+      select: { patrimonio: true, imagemCaminho: true, imagemSha256: true },
+    });
+    const porPatrimonio = new Map(registros.map((item) => [item.patrimonio, item]));
+    for (const existente of existentes) {
+      const esperado = porPatrimonio.get(existente.patrimonio);
+      if (
+        existente.imagemCaminho !== esperado?.imagemCaminho ||
+        existente.imagemSha256 !== esperado?.imagemSha256
+      ) {
+        throw new ErroCargaInvalida("FOTOGRAFIA_DIVERGENTE");
+      }
+    }
 
     const { count } = await transacao.equipamento.createMany({
       data: registros.map((registro) => ({ ...registro, tenantId: tenant.id })),
