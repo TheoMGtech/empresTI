@@ -61,8 +61,9 @@ Três procedimentos novos e rota `/meus-emprestimos`. Sem migration.
 - **CA-DEVOL-06** — O histórico marca corretamente no prazo e em atraso, com datas fixas.
 - **CA-DEVOL-07** — A devolução grava auditoria, e falha nela desfaz a devolução.
 - **CA-DEVOL-08** — Devolver o item atrasado libera novas solicitações.
-- **CA-DEVOL-09** — Lint, typecheck, testes, E2E e build passam, com a validação integrada real
-  obrigatória antes da entrega.
+- **CA-DEVOL-09** — Lint, typecheck, testes, E2E e build passam. E2E com tRPC simulado vale no
+  desenvolvimento e basta para declarar esta spec PRONTA; a validação integrada real é obrigatória
+  antes da entrega final, isto é, antes da publicação em `main` e na Vercel (DF-14).
 
 ## Dependências
 
@@ -76,3 +77,8 @@ Devolução concorrente com Operações: a atualização condiciona a empréstim
 
 - **D-DEVOL-01 (DF-7):** registro de defeito fica fora; Operações marca a manutenção depois.
 - **D-DEVOL-02 (DF-4):** encerra na hora, com diálogo de confirmação.
+- **DF-14 (responsável, 2026-11-11):** a validação integrada real é obrigatória antes da entrega
+  final (publicação em `main` e na Vercel), mas não é pré-condição para declarar esta spec PRONTA.
+  A spec pode ser PRONTA com os critérios comprovados, lint, typecheck, testes e build aprovados, o
+  E2E previsto aprovado (tRPC simulado vale no desenvolvimento) e `Veredito: PRONTA` do
+  `verificador-spec` no commit exato. Roteiro: `docs/VALIDACAO-INTEGRADA.md`.

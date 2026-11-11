@@ -78,8 +78,10 @@ Spec 002, sem removê-las.
 - **CA-SOLIC-08** — `fora_de_uso` responde `NOT_FOUND` para colaborador.
 - **CA-SOLIC-09** — Colaborador não recebe `numeroSerie`, `observacoes` nem `historico`.
 - **CA-SOLIC-10** — `devolverAtePrevisto` coincide com o prazo gravado, com datas fixas.
-- **CA-SOLIC-11** — Lint, typecheck, testes, E2E e build passam, a migration aplica do zero, e a
-  validação integrada real é obrigatória antes da entrega.
+- **CA-SOLIC-11** — Lint, typecheck, testes, E2E e build passam, e a migration aplica do zero. E2E
+  com tRPC simulado vale no desenvolvimento e basta para declarar esta spec PRONTA; a validação
+  integrada real é obrigatória antes da entrega final, isto é, antes da publicação em `main` e na
+  Vercel (DF-14).
 
 ## Dependências
 
@@ -98,3 +100,8 @@ Regra checada só na aplicação perde para concorrência: RN-SOLIC-02 exige ín
 - **D-SOLIC-04 (DF-19):** ator é o UUID.
 - **DF-17:** imagem maior no detalhe. **DF-10:** Radix Dialog autorizado, só na primeira tarefa
   que precisar.
+- **DF-14 (responsável, 2026-11-11):** a validação integrada real é obrigatória antes da entrega
+  final (publicação em `main` e na Vercel), mas não é pré-condição para declarar esta spec PRONTA.
+  A spec pode ser PRONTA com os critérios comprovados, lint, typecheck, testes e build aprovados, o
+  E2E previsto aprovado (tRPC simulado vale no desenvolvimento) e `Veredito: PRONTA` do
+  `verificador-spec` no commit exato. Roteiro: `docs/VALIDACAO-INTEGRADA.md`.

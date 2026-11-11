@@ -72,8 +72,9 @@ publicação ou conferência remota de fotografias.
 - **CA-CATALOGO-08** — A paginação por cursor não duplica nem perde itens.
 - **CA-CATALOGO-09** — `fora_de_uso` não aparece para `colaborador` e aparece para `operacoes`.
 - **CA-CATALOGO-10** — A saída não contém nome do tomador, para nenhum papel.
-- **CA-CATALOGO-11** — Lint, typecheck, testes, E2E e build passam, com a validação integrada real
-  obrigatória antes da entrega.
+- **CA-CATALOGO-11** — Lint, typecheck, testes, E2E e build passam. E2E com tRPC simulado vale no
+  desenvolvimento e basta para declarar esta spec PRONTA; a validação integrada real é obrigatória
+  antes da entrega final, isto é, antes da publicação em `main` e na Vercel (DF-14).
 
 ## Dependências
 
@@ -90,3 +91,8 @@ Specs 002 e 003. Fotografias acessíveis no bucket `equipamentos`.
 - **D-CATALOGO-03 (DF-17):** foto 40×40 no card, ícone como fallback.
 - **D-CATALOGO-04 (DF-11):** busca adiada.
 - **D-CATALOGO-05 (DF-5):** nome do tomador nunca sai em `equipamentos.listar`.
+- **DF-14 (responsável, 2026-11-11):** a validação integrada real é obrigatória antes da entrega
+  final (publicação em `main` e na Vercel), mas não é pré-condição para declarar esta spec PRONTA.
+  A spec pode ser PRONTA com os critérios comprovados, lint, typecheck, testes e build aprovados, o
+  E2E previsto aprovado (tRPC simulado vale no desenvolvimento) e `Veredito: PRONTA` do
+  `verificador-spec` no commit exato. Roteiro: `docs/VALIDACAO-INTEGRADA.md`.

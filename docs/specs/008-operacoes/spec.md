@@ -72,8 +72,9 @@ Seis procedimentos e duas rotas. Sem migration: as colunas opcionais vêm da Spe
 - **CA-OPER-09** — Alterar a situação com empréstimo em aberto responde `EMPRESTIMO_EM_ABERTO`.
 - **CA-OPER-10** — `operacoes.ultimosCadastros` traz os 3 mais recentes do tenant.
 - **CA-OPER-11** — "Vencem esta semana" inclui exatamente os próximos 7 dias, com datas fixas.
-- **CA-OPER-12** — Lint, typecheck, testes, E2E e build passam, com a validação integrada real
-  obrigatória antes da entrega.
+- **CA-OPER-12** — Lint, typecheck, testes, E2E e build passam. E2E com tRPC simulado vale no
+  desenvolvimento e basta para declarar esta spec PRONTA; a validação integrada real é obrigatória
+  antes da entrega final, isto é, antes da publicação em `main` e na Vercel (DF-14).
 
 ## Dependências
 
@@ -96,3 +97,8 @@ Specs 003, 005 e 007. Conta `operacoes` (DF-9).
   nas duas pontas. Contam só empréstimos em aberto, incluindo os que vencem hoje; os já atrasados
   ficam fora das duas janelas. As datas seguem o fuso America/Sao_Paulo. `pessoa` mantém só
   `nomeExibicao`.
+- **DF-14 (responsável, 2026-11-11):** a validação integrada real é obrigatória antes da entrega
+  final (publicação em `main` e na Vercel), mas não é pré-condição para declarar esta spec PRONTA.
+  A spec pode ser PRONTA com os critérios comprovados, lint, typecheck, testes e build aprovados, o
+  E2E previsto aprovado (tRPC simulado vale no desenvolvimento) e `Veredito: PRONTA` do
+  `verificador-spec` no commit exato. Roteiro: `docs/VALIDACAO-INTEGRADA.md`.
