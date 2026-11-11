@@ -2,6 +2,7 @@
 
 import { ArrowRight } from "@phosphor-icons/react";
 import { TRPCClientError } from "@trpc/client";
+import Link from "next/link";
 import { useState } from "react";
 
 import { bloqueioDoResumo, useMeuResumo } from "@/components/emprestimos/resumo";
@@ -140,9 +141,14 @@ export function CardSolicitacao({ detalhe }: { detalhe: DetalheEquipamento }) {
       </dl>
 
       {registrado ? (
-        <p className="text-[12.5px] text-[#5FD3AA]" role="status">
-          Empréstimo registrado. Devolva até {formatarDataCurta(registrado)}.
-        </p>
+        <div className="flex flex-col gap-1">
+          <p className="text-[12.5px] text-[#5FD3AA]" role="status">
+            Empréstimo registrado. Devolva até {formatarDataCurta(registrado)}.
+          </p>
+          <Link className="text-[12.5px]" href="/meus-emprestimos">
+            Ver meus empréstimos
+          </Link>
+        </div>
       ) : null}
 
       <Dialogo onOpenChange={mudarAbertura} open={aberto}>
