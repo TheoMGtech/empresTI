@@ -54,6 +54,10 @@ Itens sob responsabilidade do responsável:
 11. Avaliar tornar o job `Application quality` um status check obrigatório em
     `develop` e `main`; hoje só `Documentation and secret guard` é exigido, e o
     CI não roda `npm run test:e2e`.
+12. Investigar, antes da primeira migration em produção, a tabela técnica
+    `_prisma_migrations`, que o Prisma cria em `public` sem RLS. A exposição depende da
+    Data API e dos privilégios de `anon` e `authenticated`, e o ADR-001 §7 pede RLS em
+    todas as tabelas. Nenhuma alteração até decisão específica do responsável.
 
 O workflow de migrations não dispara automaticamente. Ele só é executável manualmente, com confirmação literal `APPLY`, e usa o Environment protegido. Ele ainda não foi executado; o Environment `production` precisa existir com proteção antes da primeira execução, pois o GitHub criaria um Environment sem proteção se o workflow rodasse antes.
 

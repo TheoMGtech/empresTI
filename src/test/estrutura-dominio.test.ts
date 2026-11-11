@@ -104,7 +104,13 @@ describe("migrations do zero", () => {
         "tablename",
       );
 
-      expect(tabelas).toEqual(["equipamentos", "memberships", "saude_sistema", "tenants"]);
+      expect(tabelas).toEqual([
+        "auditoria",
+        "equipamentos",
+        "memberships",
+        "saude_sistema",
+        "tenants",
+      ]);
     });
   });
 

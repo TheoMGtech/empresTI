@@ -46,6 +46,7 @@ model Tenant {
   criadoEm     DateTime      @default(now()) @map("criado_em") @db.Timestamptz(6)
   memberships  Membership[]
   equipamentos Equipamento[]
+  auditorias   Auditoria[]
 
   @@map("tenants")
 }
@@ -78,4 +79,17 @@ model Equipamento {
   @@unique([tenantId, patrimonio], map: "equipamentos_tenant_patrimonio_key")
   @@index([tenantId, situacao], map: "equipamentos_tenant_situacao_idx")
   @@map("equipamentos")
+}
+
+model Auditoria {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId   String   @map("tenant_id") @db.Uuid
+  ator       String
+  acao       String
+  recurso    String
+  ocorridoEm DateTime @default(now()) @map("ocorrido_em") @db.Timestamptz(6)
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([tenantId, ocorridoEm], map: "auditoria_tenant_ocorrido_idx")
+  @@map("auditoria")
 }

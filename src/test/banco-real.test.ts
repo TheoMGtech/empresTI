@@ -127,7 +127,13 @@ describe("banco real descartável", () => {
       return rows.map((linha) => linha.tablename);
     });
 
-    expect(tabelas).toEqual(["equipamentos", "memberships", "saude_sistema", "tenants"]);
+    expect(tabelas).toEqual([
+      "auditoria",
+      "equipamentos",
+      "memberships",
+      "saude_sistema",
+      "tenants",
+    ]);
   });
 
   it.each(["anon", "authenticated"])(
