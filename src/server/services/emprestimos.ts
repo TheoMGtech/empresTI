@@ -2,12 +2,22 @@ import { Prisma, type PrismaClient } from "@prisma/client";
 
 import {
   LIMITE_ITENS_POR_PESSOA,
+  type EmprestimoAberto,
+  type EntradaHistorico,
   type MeuResumo,
   type MotivoSolicitacao,
+  type SaidaHistorico,
   type SaidaSolicitarEmprestimo,
 } from "@/lib/esquemas/emprestimos";
+import { LIMITE_PADRAO_LISTAGEM, type Categoria } from "@/lib/esquemas/equipamentos";
 import type { Papel } from "@/lib/esquemas/sessao";
-import { PRAZO_PADRAO_DIAS, calcularDevolverAte, dataEmSaoPaulo } from "@/lib/prazos";
+import {
+  PRAZO_PADRAO_DIAS,
+  calcularDevolverAte,
+  dataEmSaoPaulo,
+  formatarDataDoBanco,
+} from "@/lib/prazos";
+import { montarUrlImagem } from "@/server/services/equipamentos";
 
 /** Ação gravada na auditoria pela solicitação (RS-SOLIC-04). */
 export const ACAO_SOLICITAR = "emprestimo.solicitar";
@@ -143,4 +153,121 @@ export async function solicitarEmprestimo(
     if (eViolacaoDeUnicidade(erro)) throw new ErroSolicitacao("EQUIPAMENTO_INDISPONIVEL");
     throw erro;
   }
+}
+
+// ---------------------------------------------------------------------------------------------
+// Spec 007 — consultas da própria pessoa.
+
+const EQUIPAMENTO_RESUMIDO = {
+  select: { patrimonio: true, nome: true, categoria: true, imagemCaminho: true },
+} as const;
+
+function resumirEquipamento(
+  equipamento: {
+    patrimonio: string;
+    nome: string;
+    categoria: Categoria;
+    imagemCaminho: string | null;
+  },
+  urlSupabase: string,
+) {
+  return {
+    patrimonio: equipamento.patrimonio,
+    nome: equipamento.nome,
+    categoria: equipamento.categoria,
+    imagemUrl: montarUrlImagem(urlSupabase, equipamento.imagemCaminho),
+  };
+}
+
+/**
+ * Empréstimos em aberto da própria pessoa no tenant da sessão (RF-DEVOL-01), do vencimento mais
+ * próximo para o mais distante. `emAtraso` segue a regra da Spec 006, no fuso de São Paulo.
+ */
+export async function listarMeusEmprestimos(
+  prisma: Pick<PrismaClient, "emprestimo">,
+  pessoa: Pessoa,
+  opcoes: { agora: Date; urlSupabase: string },
+): Promise<EmprestimoAberto[]> {
+  const hoje = dataEmSaoPaulo(opcoes.agora);
+  const abertos = await prisma.emprestimo.findMany({
+    where: { tenantId: pessoa.tenantId, userId: pessoa.usuarioId, devolvidoEm: null },
+    orderBy: [{ devolverAte: "asc" }, { retiradoEm: "asc" }, { id: "asc" }],
+    select: { id: true, retiradoEm: true, devolverAte: true, equipamento: EQUIPAMENTO_RESUMIDO },
+  });
+
+  return abertos.map((emprestimo) => {
+    const devolverAte = formatarDataDoBanco(emprestimo.devolverAte);
+    return {
+      id: emprestimo.id,
+      equipamento: resumirEquipamento(emprestimo.equipamento, opcoes.urlSupabase),
+      retiradoEm: emprestimo.retiradoEm,
+      devolverAte,
+      emAtraso: devolverAte < hoje,
+    };
+  });
+}
+
+/**
+ * Empréstimos encerrados da própria pessoa (RF-DEVOL-02), do mais recente para o mais antigo, por
+ * cursor no `id` do último item. O cursor só vale dentro do histórico da própria pessoa: um cursor
+ * de outra pessoa ou de outro tenant devolve página vazia. `noPrazo` compara a data da devolução
+ * em São Paulo com `devolverAte` (RF-DEVOL-05).
+ */
+export async function listarHistorico(
+  prisma: Pick<PrismaClient, "emprestimo">,
+  pessoa: Pessoa,
+  entrada: EntradaHistorico,
+  opcoes: { urlSupabase: string },
+): Promise<SaidaHistorico> {
+  const limite = entrada.limite ?? LIMITE_PADRAO_LISTAGEM;
+  const encerrados = {
+    tenantId: pessoa.tenantId,
+    userId: pessoa.usuarioId,
+    devolvidoEm: { not: null },
+  };
+
+  let depoisDoCursor = {};
+  if (entrada.cursor) {
+    const ancora = await prisma.emprestimo.findFirst({
+      where: { ...encerrados, id: entrada.cursor },
+      select: { id: true, devolvidoEm: true },
+    });
+    if (!ancora?.devolvidoEm) return { itens: [], proximoCursor: null };
+    depoisDoCursor = {
+      OR: [
+        { devolvidoEm: { lt: ancora.devolvidoEm } },
+        { devolvidoEm: ancora.devolvidoEm, id: { lt: ancora.id } },
+      ],
+    };
+  }
+
+  const registros = await prisma.emprestimo.findMany({
+    where: { AND: [encerrados, depoisDoCursor] },
+    orderBy: [{ devolvidoEm: "desc" }, { id: "desc" }],
+    take: limite + 1,
+    select: {
+      id: true,
+      retiradoEm: true,
+      devolverAte: true,
+      devolvidoEm: true,
+      equipamento: EQUIPAMENTO_RESUMIDO,
+    },
+  });
+
+  const pagina = registros.slice(0, limite);
+  return {
+    itens: pagina.map((emprestimo) => {
+      const devolverAte = formatarDataDoBanco(emprestimo.devolverAte);
+      const devolvidoEm = emprestimo.devolvidoEm as Date;
+      return {
+        id: emprestimo.id,
+        equipamento: resumirEquipamento(emprestimo.equipamento, opcoes.urlSupabase),
+        retiradoEm: emprestimo.retiradoEm,
+        devolverAte,
+        devolvidoEm,
+        noPrazo: dataEmSaoPaulo(devolvidoEm) <= devolverAte,
+      };
+    }),
+    proximoCursor: registros.length > limite ? (pagina.at(-1)?.id ?? null) : null,
+  };
 }

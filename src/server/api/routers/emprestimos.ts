@@ -1,5 +1,7 @@
 import { TRPCError } from "@trpc/server";
 
+import { lerAmbientePublico } from "@/env";
+
 import {
   esquemaEntradaDevolver,
   esquemaEntradaHistorico,
@@ -15,6 +17,8 @@ import { ErroComMotivo, criarRouterTRPC, tenantProcedure } from "@/server/api/tr
 import {
   ErroSolicitacao,
   consultarMeuResumo,
+  listarHistorico,
+  listarMeusEmprestimos,
   solicitarEmprestimo,
 } from "@/server/services/emprestimos";
 import {
@@ -55,21 +59,28 @@ export function traduzirErroEncerramento(erro: unknown): unknown {
   return erro;
 }
 
-export const MENSAGEM_DEVOLUCAO_NAO_IMPLEMENTADA =
-  "Meus empréstimos e histórico ainda não disponíveis.";
-
-const naoImplementado = (): never => {
-  throw new TRPCError({ code: "NOT_IMPLEMENTED", message: MENSAGEM_DEVOLUCAO_NAO_IMPLEMENTADA });
-};
-
 export const routerEmprestimos = criarRouterTRPC({
-  // Contratos publicados na T-DEVOL-01 (Spec 007). Já exigem sessão e membership (RS-DEVOL-01);
-  // `meus` e `historico` respondem `NOT_IMPLEMENTED` até a T-DEVOL-03.
-  meus: tenantProcedure.output(esquemaSaidaMeusEmprestimos).query(naoImplementado),
+  // RF-DEVOL-01 e RF-DEVOL-02: só da própria pessoa, no tenant da sessão (RS-DEVOL-01, RS-DEVOL-02).
+  meus: tenantProcedure
+    .output(esquemaSaidaMeusEmprestimos)
+    .query(({ ctx }) =>
+      listarMeusEmprestimos(
+        ctx.obterClientePrisma(),
+        { tenantId: ctx.tenantId, usuarioId: ctx.usuarioId },
+        { agora: new Date(), urlSupabase: lerAmbientePublico().NEXT_PUBLIC_SUPABASE_URL },
+      ),
+    ),
   historico: tenantProcedure
     .input(esquemaEntradaHistorico)
     .output(esquemaSaidaHistorico)
-    .query(naoImplementado),
+    .query(({ ctx, input }) =>
+      listarHistorico(
+        ctx.obterClientePrisma(),
+        { tenantId: ctx.tenantId, usuarioId: ctx.usuarioId },
+        input,
+        { urlSupabase: lerAmbientePublico().NEXT_PUBLIC_SUPABASE_URL },
+      ),
+    ),
   // RF-DEVOL-03: a própria pessoa encerra um empréstimo dela, em aberto (RS-DEVOL-02).
   devolver: tenantProcedure
     .input(esquemaEntradaDevolver)

@@ -17,7 +17,6 @@ import {
   type SaidaHistorico,
 } from "@/lib/esquemas/emprestimos";
 import { routerAplicacao, type RouterAplicacao } from "@/server/api/raiz";
-import { MENSAGEM_DEVOLUCAO_NAO_IMPLEMENTADA } from "@/server/api/routers/emprestimos";
 import type { ClienteSupabaseAutenticacao } from "@/server/services/autenticacao";
 
 const TENANT = "00000000-0000-4000-8000-00000000000a";
@@ -141,16 +140,6 @@ describe("registro no AppRouter", () => {
       () => semSessao.devolver({ emprestimoId: EMPRESTIMO }),
     ]) {
       await expect(chamada()).rejects.toMatchObject({ code: "UNAUTHORIZED" });
-    }
-  });
-
-  it("T-DEVOL-01 — com sessão, meus e historico respondem NOT_IMPLEMENTED sem inventar dados", async () => {
-    const comSessao = caller(USUARIO).emprestimos;
-    for (const chamada of [() => comSessao.meus(), () => comSessao.historico({})]) {
-      await expect(chamada()).rejects.toMatchObject({
-        code: "NOT_IMPLEMENTED",
-        message: MENSAGEM_DEVOLUCAO_NAO_IMPLEMENTADA,
-      });
     }
   });
 });
