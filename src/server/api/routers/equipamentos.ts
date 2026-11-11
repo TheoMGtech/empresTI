@@ -15,11 +15,14 @@ import { naoImplementadoOperacoes } from "@/server/api/routers/operacoes";
 import { ErroComMotivo, adminProcedure, criarRouterTRPC, tenantProcedure } from "@/server/api/trpc";
 import {
   ErroEquipamentoNaoEncontrado,
+  ErroPatrimonioDuplicado,
+  cadastrarEquipamento,
   detalharEquipamento,
   listarEquipamentos,
 } from "@/server/services/equipamentos";
 
 export const MENSAGEM_EQUIPAMENTO_NAO_ENCONTRADO = "Equipamento não encontrado.";
+export const MENSAGEM_PATRIMONIO_DUPLICADO = "Já existe equipamento com este patrimônio.";
 
 export const routerEquipamentos = criarRouterTRPC({
   // RF-CATALOGO-01, RS-CATALOGO-01: tenant e papel vêm do contexto, nunca do input.
@@ -59,12 +62,29 @@ export const routerEquipamentos = criarRouterTRPC({
       }
     }),
 
-  // Spec 008 (T-OPER-01): só Operações (RS-OPER-01). Respondem `NOT_IMPLEMENTED` até as T-OPER-04
-  // e T-OPER-05.
+  // Spec 008: só Operações (RS-OPER-01). RF-OPER-05: o mesmo esquema do formulário valida aqui.
   cadastrar: adminProcedure
     .input(esquemaCadastroEquipamento)
     .output(esquemaSaidaCadastroEquipamento)
-    .mutation(naoImplementadoOperacoes),
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await cadastrarEquipamento(
+          ctx.obterClientePrisma(),
+          { tenantId: ctx.tenantId, ator: ctx.usuarioId },
+          input,
+        );
+      } catch (erro) {
+        if (erro instanceof ErroPatrimonioDuplicado) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: MENSAGEM_PATRIMONIO_DUPLICADO,
+            cause: new ErroComMotivo("PATRIMONIO_DUPLICADO"),
+          });
+        }
+        throw erro;
+      }
+    }),
+  // Responde `NOT_IMPLEMENTED` até a T-OPER-05.
   alterarSituacao: adminProcedure
     .input(esquemaEntradaAlterarSituacao)
     .output(esquemaSaidaAlterarSituacao)

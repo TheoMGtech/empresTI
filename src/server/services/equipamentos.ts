@@ -1,10 +1,12 @@
-import type { PrismaClient, SituacaoEquipamento } from "@prisma/client";
+import { Prisma, type PrismaClient, type SituacaoEquipamento } from "@prisma/client";
 
 import {
   LIMITE_PADRAO_LISTAGEM,
+  type CadastroEquipamento,
   type DetalheEquipamento,
   type Disponibilidade,
   type EntradaListarEquipamentos,
+  type SaidaCadastroEquipamento,
   type SaidaListarEquipamentos,
 } from "@/lib/esquemas/equipamentos";
 import type { Papel } from "@/lib/esquemas/sessao";
@@ -199,4 +201,61 @@ export async function detalharEquipamento(
       tomadorNome: textoOuNulo(emprestimo.membership.nomeExibicao),
     })),
   };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Spec 008 — cadastro e situação (Operações).
+
+/** Ação gravada na auditoria pelo cadastro (RS-OPER-03). */
+export const ACAO_CADASTRAR_EQUIPAMENTO = "equipamento.cadastrar";
+
+/** Recurso auditado: o equipamento. */
+export const recursoEquipamento = (id: string) => `equipamento:${id}`;
+
+export class ErroPatrimonioDuplicado extends Error {}
+
+/**
+ * Cadastra um equipamento no tenant da sessão (RF-OPER-05, CA-OPER-05): um registro por unidade
+ * física (RN-OPER-01), com a situação inicial escolhida (RN-OPER-03) e sem fotografia (D-OPER-04).
+ * Patrimônio repetido no tenant vira `ErroPatrimonioDuplicado` (RN-OPER-02). A auditoria entra na
+ * mesma transação: se falhar, nada é cadastrado (CA-OPER-08).
+ */
+export async function cadastrarEquipamento(
+  prisma: Pick<PrismaClient, "$transaction">,
+  escopo: { tenantId: string; ator: string },
+  dados: CadastroEquipamento,
+): Promise<SaidaCadastroEquipamento> {
+  try {
+    return await prisma.$transaction(async (transacao) => {
+      const equipamento = await transacao.equipamento.create({
+        data: {
+          tenantId: escopo.tenantId,
+          patrimonio: dados.patrimonio,
+          nome: dados.nome,
+          categoria: dados.categoria,
+          situacao: dados.situacao,
+          numeroSerie: dados.numeroSerie ?? null,
+          local: dados.local ?? null,
+          observacoes: dados.observacoes ?? null,
+        },
+        select: { id: true, patrimonio: true },
+      });
+
+      await transacao.auditoria.create({
+        data: {
+          tenantId: escopo.tenantId,
+          ator: escopo.ator,
+          acao: ACAO_CADASTRAR_EQUIPAMENTO,
+          recurso: recursoEquipamento(equipamento.id),
+        },
+      });
+
+      return equipamento;
+    });
+  } catch (erro) {
+    if (erro instanceof Prisma.PrismaClientKnownRequestError && erro.code === "P2002") {
+      throw new ErroPatrimonioDuplicado();
+    }
+    throw erro;
+  }
 }
