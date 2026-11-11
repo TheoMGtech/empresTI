@@ -101,6 +101,14 @@ export async function solicitarEmprestimo(
       if (emAtraso > 0) throw new ErroSolicitacao("ITEM_EM_ATRASO");
       if (itensAbertos >= LIMITE_ITENS_POR_PESSOA) throw new ErroSolicitacao("LIMITE_ATINGIDO");
 
+      // Trava compartilhada na linha do equipamento: uma alteração de situação simultânea
+      // (`equipamentos.alterarSituacao`, que usa FOR UPDATE) espera esta transação, e vice-versa.
+      // Assim, item em manutenção nunca termina com empréstimo aberto (CA-OPER-07, CA-OPER-09).
+      await transacao.$queryRaw`
+        SELECT 1 FROM "equipamentos"
+         WHERE "id" = ${equipamentoId}::uuid AND "tenant_id" = ${escopo.tenantId}::uuid
+         FOR SHARE`;
+
       const equipamento = await transacao.equipamento.findFirst({
         where: { id: equipamentoId, tenantId: escopo.tenantId },
         select: { situacao: true },
