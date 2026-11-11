@@ -4,6 +4,7 @@ import { ArrowRight } from "@phosphor-icons/react";
 import { TRPCClientError } from "@trpc/client";
 import { useState } from "react";
 
+import { bloqueioDoResumo, useMeuResumo } from "@/components/emprestimos/resumo";
 import { Botao } from "@/components/ui/botao";
 import {
   AcoesDialogo,
@@ -83,13 +84,19 @@ function Linha({
 export function CardSolicitacao({ detalhe }: { detalhe: DetalheEquipamento }) {
   const utilitarios = trpc.useUtils();
   const solicitar = trpc.emprestimos.solicitar.useMutation();
+  const { data: resumo } = useMeuResumo();
   const [aberto, setAberto] = useState(false);
   const [recusa, setRecusa] = useState<Recusa | null>(null);
   const [registrado, setRegistrado] = useState<string | null>(null);
 
   const disponivel = detalhe.disponibilidade.estado === "disponivel";
+  const bloqueio = bloqueioDoResumo(resumo);
+  const podeSolicitar = disponivel && !bloqueio;
   const prazo = formatarDataCurta(detalhe.devolverAtePrevisto);
-  const nota = notaIndisponivel(detalhe);
+  const nota =
+    notaIndisponivel(detalhe) ?? bloqueio?.nota ?? "A retirada é registrada ao confirmar.";
+  // RF-REGRAS-03: aviso quando esta solicitação leva ao último item permitido.
+  const chegaAoLimite = resumo ? resumo.itensAbertos + 1 === resumo.limite : false;
 
   function mudarAbertura(proximo: boolean) {
     if (solicitar.isPending) return;
@@ -111,6 +118,8 @@ export function CardSolicitacao({ detalhe }: { detalhe: DetalheEquipamento }) {
       await Promise.all([
         utilitarios.equipamentos.detalhar.invalidate({ patrimonio: detalhe.patrimonio }),
         utilitarios.equipamentos.listar.invalidate(),
+        utilitarios.emprestimos.meuResumo.invalidate(),
+        utilitarios.emprestimos.meus.invalidate(),
       ]);
     }
   }
@@ -127,7 +136,7 @@ export function CardSolicitacao({ detalhe }: { detalhe: DetalheEquipamento }) {
       <dl className="flex flex-col gap-[10px]">
         <Linha rotulo="Retirada" valor="Ao confirmar" />
         <Linha rotulo="Prazo padrão" valor="14 dias corridos" />
-        {disponivel ? <Linha destaque rotulo="Devolver até" valor={prazo} /> : null}
+        {podeSolicitar ? <Linha destaque rotulo="Devolver até" valor={prazo} /> : null}
       </dl>
 
       {registrado ? (
@@ -137,7 +146,7 @@ export function CardSolicitacao({ detalhe }: { detalhe: DetalheEquipamento }) {
       ) : null}
 
       <Dialogo onOpenChange={mudarAbertura} open={aberto}>
-        <Botao className="w-full" disabled={!disponivel} onClick={() => mudarAbertura(true)}>
+        <Botao className="w-full" disabled={!podeSolicitar} onClick={() => mudarAbertura(true)}>
           Solicitar empréstimo
           <ArrowRight aria-hidden="true" size={16} />
         </Botao>
@@ -148,6 +157,12 @@ export function CardSolicitacao({ detalhe }: { detalhe: DetalheEquipamento }) {
           </DescricaoDialogo>
           <ConsequenciaDialogo>
             Devolver até {prazo}. A retirada é registrada agora.
+            {chegaAoLimite && resumo ? (
+              <>
+                {" "}
+                Com este item você chega a {resumo.limite} de {resumo.limite}.
+              </>
+            ) : null}
           </ConsequenciaDialogo>
           <div aria-live="assertive" role="alert">
             {recusa ? <p className="text-[12.5px] text-[#F0A0A5]">{recusa.mensagem}</p> : null}
@@ -170,8 +185,14 @@ export function CardSolicitacao({ detalhe }: { detalhe: DetalheEquipamento }) {
         </ConteudoDialogo>
       </Dialogo>
 
-      <p className="text-[11.5px] text-(--text-faint)">
-        {disponivel ? "A retirada é registrada ao confirmar." : nota}
+      <p
+        className={
+          disponivel && bloqueio
+            ? "text-[11.5px] text-[#F0A0A5]"
+            : "text-[11.5px] text-(--text-faint)"
+        }
+      >
+        {nota}
       </p>
     </section>
   );
