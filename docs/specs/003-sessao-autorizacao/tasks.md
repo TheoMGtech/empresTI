@@ -2,7 +2,7 @@
 
 ## Estado
 
-**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-SESSAO-01 a T-SESSAO-07
+**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-SESSAO-01 a T-SESSAO-08
 concluídas.
 
 Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
@@ -52,7 +52,7 @@ de produção ou merge em `main`.
 
 ## Bloco C — interface (FE)
 
-- [ ] **T-SESSAO-08 — Shell responsivo**
+- [x] **T-SESSAO-08 — Shell responsivo**
   - Instala `@phosphor-icons/react` (DF-10).
   - Atende: CA-SESSAO-06, CA-SESSAO-13.
   - Commit: `feat(shell): criar área autenticada responsiva`.
