@@ -32,8 +32,17 @@ async function abrirCatalogo(page: Page, papel: "colaborador" | "operacoes" = "c
   await simularTRPC(page, {
     "autenticacao.sessao": { dados: { autenticado: true } },
     "sessao.atual": { dados: { nomeExibicao: "Marina Alves", papel } },
-    "equipamentos.listar": {
-      dados: { itens: ITENS, proximoCursor: null, resumo: { total: 12, disponiveis: 10 } },
+    "equipamentos.listar": (entrada) => {
+      const { categoria, somenteDisponiveis } = (entrada ?? {}) as {
+        categoria?: string;
+        somenteDisponiveis?: boolean;
+      };
+      const itens = ITENS.filter(
+        (item) =>
+          (!categoria || item.categoria === categoria) &&
+          (!somenteDisponiveis || item.disponibilidade.estado === "disponivel"),
+      );
+      return { dados: { itens, proximoCursor: null, resumo: { total: 12, disponiveis: 10 } } };
     },
   });
   await page.goto("/catalogo");
@@ -94,6 +103,27 @@ test("CA-SESSAO-13 — a partir de 1024px a sidebar fica fixa", async ({ page })
   await page.mouse.wheel(0, 2000);
   await expect(lateral).toBeInViewport();
   expect(await lateral.evaluate((elemento) => getComputedStyle(elemento).position)).toBe("sticky");
+});
+
+test("CA-CATALOGO-07 — chips e Só disponíveis filtram a grade", async ({ page }) => {
+  await abrirCatalogo(page);
+  await expect(page.getByRole("article")).toHaveCount(12);
+
+  await page
+    .getByRole("group", { name: "Categoria" })
+    .getByRole("button", { name: "Notebooks" })
+    .click();
+  await expect(page.getByRole("article")).toHaveCount(4);
+
+  await page.getByRole("button", { name: "Só disponíveis" }).click();
+  await expect(page.getByRole("article")).toHaveCount(3);
+  await expect(page.locator('[data-patrimonio="TI-0004"]')).toHaveCount(0);
+
+  await page
+    .getByRole("group", { name: "Categoria" })
+    .getByRole("button", { name: "Todos" })
+    .click();
+  await expect(page.getByRole("article")).toHaveCount(10);
 });
 
 test("CA-SESSAO-06 — colaborador não vê o grupo Operações no navegador", async ({ page }) => {

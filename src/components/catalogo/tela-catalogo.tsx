@@ -1,9 +1,14 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { keepPreviousData } from "@tanstack/react-query";
+import { useState, type ReactNode } from "react";
 
 import { CartaoEquipamento } from "@/components/catalogo/cartao-equipamento";
 import { FaixaRegras } from "@/components/catalogo/faixa-regras";
+import {
+  FiltrosCatalogo,
+  type FiltrosCatalogo as Filtros,
+} from "@/components/catalogo/filtros-catalogo";
 import { ConteudoPagina } from "@/components/shell/pagina";
 import { useSessaoAplicacao } from "@/components/shell/sessao";
 import { trpc } from "@/trpc/cliente";
@@ -11,6 +16,9 @@ import { trpc } from "@/trpc/cliente";
 export const TAMANHO_PAGINA_CATALOGO = 24;
 export const MENSAGEM_FALHA_CATALOGO = "Não foi possível carregar o catálogo.";
 export const MENSAGEM_CATALOGO_VAZIO = "Nenhum equipamento cadastrado.";
+export const MENSAGEM_FILTRO_VAZIO = "Nenhum equipamento para este filtro.";
+
+const SEM_FILTROS: Filtros = { categoria: undefined, somenteDisponiveis: false };
 
 const BOTAO_SECUNDARIO =
   "flex h-9 items-center justify-center rounded-[8px] border border-(--border-strong) bg-transparent px-4 text-[13px] text-(--text-nav) transition-[border-color,color,transform] duration-[140ms] ease-out hover:enabled:border-(--border-hover) hover:enabled:text-(--color-text) active:enabled:translate-y-px disabled:cursor-not-allowed disabled:opacity-45 motion-reduce:transition-none motion-reduce:active:translate-y-0";
@@ -42,14 +50,25 @@ function Esqueleto() {
 /** Tela 02 · Catálogo (RF-CATALOGO-03 a 07). */
 export function TelaCatalogo() {
   const sessao = useSessaoAplicacao();
+  const [filtros, setFiltros] = useState<Filtros>(SEM_FILTROS);
+  const filtrando = filtros.categoria !== undefined || filtros.somenteDisponiveis;
   const consulta = trpc.equipamentos.listar.useInfiniteQuery(
-    { limite: TAMANHO_PAGINA_CATALOGO },
-    { getNextPageParam: (pagina) => pagina.proximoCursor ?? undefined },
+    {
+      limite: TAMANHO_PAGINA_CATALOGO,
+      ...(filtros.categoria ? { categoria: filtros.categoria } : {}),
+      ...(filtros.somenteDisponiveis ? { somenteDisponiveis: true } : {}),
+    },
+    {
+      getNextPageParam: (pagina) => pagina.proximoCursor ?? undefined,
+      // Ao trocar o filtro, a grade anterior fica na tela até a nova chegar.
+      placeholderData: keepPreviousData,
+    },
   );
 
   const paginas = consulta.data?.pages ?? [];
   const itens = paginas.flatMap((pagina) => pagina.itens);
   const resumo = paginas[0]?.resumo;
+  const atualizandoFiltro = consulta.isPlaceholderData && consulta.isFetching;
 
   return (
     <ConteudoPagina>
@@ -67,6 +86,8 @@ export function TelaCatalogo() {
 
       <FaixaRegras />
 
+      <FiltrosCatalogo aoMudar={setFiltros} filtros={filtros} />
+
       {consulta.isPending ? <Esqueleto /> : null}
 
       {consulta.isError && itens.length === 0 ? (
@@ -83,20 +104,42 @@ export function TelaCatalogo() {
         </div>
       ) : null}
 
-      {consulta.isSuccess && itens.length === 0 ? (
+      {consulta.isSuccess && itens.length === 0 && !filtrando ? (
         <p className="text-[13.5px] text-(--text-muted)">{MENSAGEM_CATALOGO_VAZIO}</p>
       ) : null}
 
+      {consulta.isSuccess && itens.length === 0 && filtrando ? (
+        <div className="flex flex-col items-start gap-3">
+          <p className="text-[13.5px] text-(--text-muted)">{MENSAGEM_FILTRO_VAZIO}</p>
+          <button
+            className={BOTAO_SECUNDARIO}
+            onClick={() => setFiltros(SEM_FILTROS)}
+            type="button"
+          >
+            Limpar filtros
+          </button>
+        </div>
+      ) : null}
+
       {itens.length > 0 ? (
-        <Grade>
-          {itens.map((item) => (
-            <CartaoEquipamento
-              abreIndisponivel={sessao.papel === "operacoes"}
-              item={item}
-              key={item.patrimonio}
-            />
-          ))}
-        </Grade>
+        <div
+          aria-busy={atualizandoFiltro || undefined}
+          className={
+            atualizandoFiltro
+              ? "opacity-60 transition-opacity motion-reduce:transition-none"
+              : undefined
+          }
+        >
+          <Grade>
+            {itens.map((item) => (
+              <CartaoEquipamento
+                abreIndisponivel={sessao.papel === "operacoes"}
+                item={item}
+                key={item.patrimonio}
+              />
+            ))}
+          </Grade>
+        </div>
       ) : null}
 
       {consulta.hasNextPage ? (
