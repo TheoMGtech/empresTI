@@ -5,7 +5,12 @@ import { PrismaClient } from "@prisma/client";
 import { Client } from "pg";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { esquemaSaidaListarEquipamentos } from "@/lib/esquemas/equipamentos";
+import {
+  CATEGORIAS,
+  esquemaSaidaListarEquipamentos,
+  type EntradaListarEquipamentos,
+  type ItemCatalogo,
+} from "@/lib/esquemas/equipamentos";
 import { routerAplicacao } from "@/server/api/raiz";
 import type { ClienteSupabaseAutenticacao } from "@/server/services/autenticacao";
 import { montarUrlImagem } from "@/server/services/equipamentos";
@@ -208,5 +213,151 @@ describe("montarUrlImagem", () => {
 
   it("RF-CATALOGO-03 — sem caminho, não há URL", () => {
     expect(montarUrlImagem(URL_SUPABASE, null)).toBeNull();
+  });
+});
+
+describe("filtros, cursor e fotografia", () => {
+  async function todasAsPaginas(usuario: string, entrada: EntradaListarEquipamentos) {
+    const itens: ItemCatalogo[] = [];
+    const cursores: (string | null)[] = [];
+    let cursor: string | undefined;
+
+    for (let pagina = 0; pagina < 50; pagina += 1) {
+      const saida = await como(usuario).equipamentos.listar({ ...entrada, cursor });
+      itens.push(...saida.itens);
+      cursores.push(saida.proximoCursor);
+      if (saida.proximoCursor === null) return { itens, cursores };
+      cursor = saida.proximoCursor;
+    }
+    throw new Error("A paginação não terminou.");
+  }
+
+  it.each(CATEGORIAS)("CA-CATALOGO-07 — o chip %s filtra pela categoria", async (categoria) => {
+    const todos = (await como(COLABORADOR_A).equipamentos.listar({})).itens;
+    const filtrados = await como(COLABORADOR_A).equipamentos.listar({ categoria });
+
+    expect(filtrados.itens).toEqual(todos.filter((item) => item.categoria === categoria));
+    expect(filtrados.itens.length).toBeGreaterThan(0);
+  });
+
+  it("CA-CATALOGO-07 — Só disponíveis devolve só itens disponíveis", async () => {
+    const { itens } = await como(COLABORADOR_A).equipamentos.listar({ somenteDisponiveis: true });
+
+    expect(itens).toHaveLength(10);
+    expect(itens.every((item) => item.disponibilidade.estado === "disponivel")).toBe(true);
+    expect(itens.map((item) => item.patrimonio)).not.toContain("TI-0004");
+    expect(itens.map((item) => item.patrimonio)).not.toContain("TI-0007");
+  });
+
+  it("CA-CATALOGO-07 — Só disponíveis exclui fora_de_uso também para operacoes", async () => {
+    const { itens } = await como(OPERACOES_A).equipamentos.listar({ somenteDisponiveis: true });
+
+    expect(itens.map((item) => item.patrimonio)).not.toContain("TI-9001");
+    expect(itens).toHaveLength(10);
+  });
+
+  it("CA-CATALOGO-07 — categoria e Só disponíveis se combinam", async () => {
+    const todos = (await como(COLABORADOR_A).equipamentos.listar({})).itens;
+
+    for (const categoria of CATEGORIAS) {
+      const { itens } = await como(COLABORADOR_A).equipamentos.listar({
+        categoria,
+        somenteDisponiveis: true,
+      });
+      expect(itens).toEqual(
+        todos.filter(
+          (item) => item.categoria === categoria && item.disponibilidade.estado === "disponivel",
+        ),
+      );
+    }
+  });
+
+  it("RF-CATALOGO-05 — o resumo não muda com os filtros", async () => {
+    for (const entrada of [
+      { categoria: "cabo" as const },
+      { somenteDisponiveis: true },
+      { limite: 1 },
+    ]) {
+      expect((await como(COLABORADOR_A).equipamentos.listar(entrada)).resumo).toEqual({
+        total: 12,
+        disponiveis: 10,
+      });
+    }
+  });
+
+  it.each([1, 2, 3, 5, 7, 11])(
+    "CA-CATALOGO-08 — páginas de %i itens não duplicam nem perdem itens",
+    async (limite) => {
+      const { itens, cursores } = await todasAsPaginas(COLABORADOR_A, { limite });
+
+      expect(itens.map((item) => item.patrimonio)).toEqual(PATRIMONIOS_DA_CARGA);
+      expect(cursores).toHaveLength(Math.ceil(12 / limite));
+      expect(cursores.at(-1)).toBeNull();
+    },
+  );
+
+  it("CA-CATALOGO-08 — a paginação também vale com filtros e para operacoes", async () => {
+    const completo = (await como(OPERACOES_A).equipamentos.listar({ limite: 50 })).itens;
+    const { itens } = await todasAsPaginas(OPERACOES_A, { limite: 2 });
+
+    expect(itens).toEqual(completo);
+    expect(new Set(itens.map((item) => item.patrimonio)).size).toBe(13);
+
+    const disponiveis = await todasAsPaginas(COLABORADOR_A, {
+      limite: 3,
+      somenteDisponiveis: true,
+    });
+    expect(disponiveis.itens).toHaveLength(10);
+  });
+
+  it("CA-CATALOGO-08 — página exata não deixa página vazia", async () => {
+    const saida = await como(COLABORADOR_A).equipamentos.listar({ limite: 12 });
+
+    expect(saida.itens).toHaveLength(12);
+    expect(saida.proximoCursor).toBeNull();
+  });
+
+  it("CA-CATALOGO-08 — o cursor é o patrimônio do último item da página", async () => {
+    const saida = await como(COLABORADOR_A).equipamentos.listar({ limite: 4 });
+
+    expect(saida.proximoCursor).toBe("TI-0004");
+    expect(
+      (await como(COLABORADOR_A).equipamentos.listar({ limite: 4, cursor: "TI-0004" })).itens[0]
+        ?.patrimonio,
+    ).toBe("TI-0005");
+  });
+
+  it("CA-CATALOGO-08 — sem limite, a página tem 20 itens no máximo", async () => {
+    const saida = await como(OPERACOES_A).equipamentos.listar({});
+
+    expect(saida.itens.length).toBeLessThanOrEqual(20);
+    expect(saida.proximoCursor).toBeNull();
+  });
+
+  it("CA-CATALOGO-08 — cursor depois do fim devolve página vazia", async () => {
+    await expect(
+      como(COLABORADOR_A).equipamentos.listar({ cursor: "TI-9999" }),
+    ).resolves.toMatchObject({ itens: [], proximoCursor: null });
+  });
+
+  it("RS-CATALOGO-01 — cursor não atravessa para outro tenant", async () => {
+    const { itens } = await como(COLABORADOR_B).equipamentos.listar({ cursor: "TB-0001" });
+
+    expect(itens.map((item) => item.nome)).toEqual(["Notebook do tenant B"]);
+  });
+
+  it("CA-CATALOGO-05 — a URL da fotografia é montada a partir do caminho gravado", async () => {
+    const gravados = await prisma.equipamento.findMany({
+      where: { tenant: { slug: "suporte_ti" }, imagemCaminho: { not: null } },
+      select: { patrimonio: true, imagemCaminho: true },
+    });
+    const { itens } = await como(COLABORADOR_A).equipamentos.listar({});
+
+    expect(gravados).toHaveLength(12);
+    for (const { patrimonio, imagemCaminho } of gravados) {
+      expect(itens.find((item) => item.patrimonio === patrimonio)?.imagemUrl).toBe(
+        `${URL_SUPABASE}/storage/v1/object/public/${imagemCaminho}`,
+      );
+    }
   });
 });
