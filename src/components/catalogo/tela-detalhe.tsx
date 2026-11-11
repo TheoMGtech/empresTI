@@ -11,6 +11,8 @@ import {
   ROTULO_CATEGORIA_PLURAL,
 } from "@/components/catalogo/categorias";
 import { PillSituacao } from "@/components/catalogo/pill-situacao";
+import { CardSeusItens } from "@/components/emprestimos/card-seus-itens";
+import { ContadorItens } from "@/components/emprestimos/contador-itens";
 import { CabecalhoPagina, ConteudoPagina } from "@/components/shell/pagina";
 import { Trilha } from "@/components/shell/trilha";
 import { Botao } from "@/components/ui/botao";
@@ -138,6 +140,7 @@ export function TelaDetalhe({ patrimonio }: { patrimonio: string }) {
     <>
       <CabecalhoPagina>
         <Trilha itens={trilha} />
+        <ContadorItens />
       </CabecalhoPagina>
       <ConteudoPagina>
         {consulta.isPending ? (
@@ -197,6 +200,7 @@ export function TelaDetalhe({ patrimonio }: { patrimonio: string }) {
             </div>
             <aside aria-label="Solicitação" className="flex flex-col gap-4">
               <CardSolicitacao detalhe={detalhe} />
+              <CardSeusItens />
             </aside>
           </div>
         ) : null}

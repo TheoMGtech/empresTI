@@ -6,6 +6,7 @@ test("CA-LOGIN-05 — sessão válida ao abrir / vai para /catalogo", async ({ p
   await simularTRPC(page, {
     "autenticacao.sessao": { dados: { autenticado: true } },
     "sessao.atual": { dados: { nomeExibicao: "Marina Alves", papel: "colaborador" } },
+    "emprestimos.meuResumo": { dados: { itensAbertos: 0, limite: 3, emAtraso: 0, prazoDias: 14 } },
     "equipamentos.listar": {
       dados: { itens: [], proximoCursor: null, resumo: { total: 0, disponiveis: 0 } },
     },
