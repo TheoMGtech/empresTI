@@ -32,6 +32,7 @@ async function abrirCatalogo(page: Page, papel: "colaborador" | "operacoes" = "c
   await simularTRPC(page, {
     "autenticacao.sessao": { dados: { autenticado: true } },
     "sessao.atual": { dados: { nomeExibicao: "Marina Alves", papel } },
+    "emprestimos.meuResumo": { dados: { itensAbertos: 2, limite: 3, emAtraso: 0, prazoDias: 14 } },
     "equipamentos.listar": (entrada) => {
       const { categoria, somenteDisponiveis } = (entrada ?? {}) as {
         categoria?: string;
