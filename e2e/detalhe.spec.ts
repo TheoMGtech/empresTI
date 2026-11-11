@@ -15,11 +15,21 @@ const DETALHE = {
   devolverAtePrevisto: "2026-11-25",
 };
 
-async function abrirDetalhe(page: Page, solicitar: () => RespostaSimulada) {
+type Resumo = { itensAbertos: number; limite: number; emAtraso: number; prazoDias: number };
+
+async function abrirDetalhe(
+  page: Page,
+  solicitar: () => RespostaSimulada,
+  resumo: Resumo = { itensAbertos: 2, limite: 3, emAtraso: 0, prazoDias: 14 },
+) {
   let emprestado = false;
   await simularTRPC(page, {
     "autenticacao.sessao": { dados: { autenticado: true } },
     "sessao.atual": { dados: { nomeExibicao: "Marina Alves", papel: "colaborador" } },
+    "emprestimos.meuResumo": () => ({
+      dados: emprestado ? { ...resumo, itensAbertos: resumo.itensAbertos + 1 } : resumo,
+    }),
+    "emprestimos.meus": { dados: [] },
     "equipamentos.detalhar": () => ({
       dados: emprestado
         ? { ...DETALHE, disponibilidade: { estado: "emprestado", devolverAte: "2026-11-25" } }
@@ -89,4 +99,36 @@ test("CA-SESSAO-13 — detalhe em 375px sem rolagem horizontal", async ({ page }
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   );
   expect(excedente).toBeLessThanOrEqual(0);
+});
+
+test("CA-REGRAS-07 — com item em atraso, o navegador mostra o motivo e não deixa solicitar", async ({
+  page,
+}) => {
+  await abrirDetalhe(page, () => ({ dados: { id: DETALHE.id, devolverAte: "2026-11-25" } }), {
+    itensAbertos: 1,
+    limite: 3,
+    emAtraso: 1,
+    prazoDias: 14,
+  });
+
+  await expect(page.getByRole("button", { name: "Solicitar empréstimo" })).toBeDisabled();
+  await expect(
+    page.getByText("Você tem item em atraso. Devolva antes de solicitar outro."),
+  ).toBeVisible();
+  await expect(page.getByText("1 de 3", { exact: true }).first()).toBeVisible();
+});
+
+test("RF-REGRAS-03 — confirmar o terceiro item atualiza o contador para 3 de 3", async ({
+  page,
+}) => {
+  await abrirDetalhe(page, () => ({
+    dados: { id: "0b1c2d3e-4f50-4a61-8b72-c3d4e5f60718", devolverAte: "2026-11-25" },
+  }));
+
+  await page.getByRole("button", { name: "Solicitar empréstimo" }).click();
+  const dialogo = page.getByRole("dialog", { name: "Confirmar empréstimo" });
+  await expect(dialogo.getByText(/Com este item você chega a 3 de 3\./)).toBeVisible();
+  await dialogo.getByRole("button", { name: "Confirmar" }).click();
+
+  await expect(page.getByRole("img", { name: "3 de 3 itens" })).toBeVisible();
 });

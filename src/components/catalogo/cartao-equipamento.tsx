@@ -7,13 +7,20 @@ import { PillSituacao } from "@/components/catalogo/pill-situacao";
 import { formatarDataCurta } from "@/lib/datas";
 import { cn } from "@/lib/utils";
 
-function Rodape({ item }: { item: ItemCatalogo }) {
+function Rodape({ item, bloqueada }: { item: ItemCatalogo; bloqueada: boolean }) {
   const { disponibilidade } = item;
 
   switch (disponibilidade.estado) {
     case "disponivel":
+      // RF-REGRAS-02: com atraso ou no limite, "Solicitar" aparece desabilitado (§9.3).
       return (
-        <span className="flex items-center gap-[5px] text-(--accent-400)">
+        <span
+          aria-disabled={bloqueada || undefined}
+          className={cn(
+            "flex items-center gap-[5px] text-(--accent-400)",
+            bloqueada && "opacity-45",
+          )}
+        >
           Solicitar
           <ArrowRight aria-hidden="true" size={12} />
         </span>
@@ -36,10 +43,16 @@ type PropsCartao = {
   item: ItemCatalogo;
   /** RF-CATALOGO-06: Operações abre o detalhe de item indisponível. */
   abreIndisponivel: boolean;
+  /** RF-REGRAS-02: atraso ou limite atingido. O card continua abrindo o detalhe. */
+  solicitacaoBloqueada?: boolean;
 };
 
 /** Card do catálogo (layout §5.4). */
-export function CartaoEquipamento({ item, abreIndisponivel }: PropsCartao) {
+export function CartaoEquipamento({
+  item,
+  abreIndisponivel,
+  solicitacaoBloqueada = false,
+}: PropsCartao) {
   const disponivel = item.disponibilidade.estado === "disponivel";
   const clicavel = disponivel || abreIndisponivel;
 
@@ -58,7 +71,7 @@ export function CartaoEquipamento({ item, abreIndisponivel }: PropsCartao) {
         </p>
       </div>
       <div className="text-[12px]">
-        <Rodape item={item} />
+        <Rodape bloqueada={solicitacaoBloqueada} item={item} />
       </div>
     </>
   );

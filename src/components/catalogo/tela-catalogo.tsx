@@ -9,7 +9,9 @@ import {
   FiltrosCatalogo,
   type FiltrosCatalogo as Filtros,
 } from "@/components/catalogo/filtros-catalogo";
-import { ConteudoPagina } from "@/components/shell/pagina";
+import { ContadorItens } from "@/components/emprestimos/contador-itens";
+import { bloqueioDoResumo, useMeuResumo } from "@/components/emprestimos/resumo";
+import { CabecalhoPagina, ConteudoPagina } from "@/components/shell/pagina";
 import { useSessaoAplicacao } from "@/components/shell/sessao";
 import { trpc } from "@/trpc/cliente";
 
@@ -69,89 +71,102 @@ export function TelaCatalogo() {
   const itens = paginas.flatMap((pagina) => pagina.itens);
   const resumo = paginas[0]?.resumo;
   const atualizandoFiltro = consulta.isPlaceholderData && consulta.isFetching;
+  const bloqueio = bloqueioDoResumo(useMeuResumo().data);
 
   return (
-    <ConteudoPagina>
-      <div className="flex flex-col gap-1" data-screen-label="02 Catálogo">
-        <h1 className="text-[24px] font-semibold tracking-[-0.01em] text-(--color-text)">
-          Catálogo
-        </h1>
-        {resumo ? (
-          <p className="text-[13px] text-(--text-muted)">
-            {plural(resumo.total, "equipamento", "equipamentos")} ·{" "}
-            {plural(resumo.disponiveis, "disponível agora", "disponíveis agora")}
+    <>
+      <CabecalhoPagina>
+        <ContadorItens />
+      </CabecalhoPagina>
+      <ConteudoPagina>
+        <div className="flex flex-col gap-1" data-screen-label="02 Catálogo">
+          <h1 className="text-[24px] font-semibold tracking-[-0.01em] text-(--color-text)">
+            Catálogo
+          </h1>
+          {resumo ? (
+            <p className="text-[13px] text-(--text-muted)">
+              {plural(resumo.total, "equipamento", "equipamentos")} ·{" "}
+              {plural(resumo.disponiveis, "disponível agora", "disponíveis agora")}
+            </p>
+          ) : null}
+        </div>
+
+        <FaixaRegras />
+
+        {bloqueio ? (
+          <p className="text-[12.5px] text-[#F0A0A5]" role="note">
+            {bloqueio.nota}
           </p>
         ) : null}
-      </div>
 
-      <FaixaRegras />
+        <FiltrosCatalogo aoMudar={setFiltros} filtros={filtros} />
 
-      <FiltrosCatalogo aoMudar={setFiltros} filtros={filtros} />
+        {consulta.isPending ? <Esqueleto /> : null}
 
-      {consulta.isPending ? <Esqueleto /> : null}
+        {consulta.isError && itens.length === 0 ? (
+          <div className="flex flex-col items-start gap-3" role="alert">
+            <p className="text-[13.5px] text-(--color-text)">{MENSAGEM_FALHA_CATALOGO}</p>
+            <button
+              className={BOTAO_SECUNDARIO}
+              disabled={consulta.isFetching}
+              onClick={() => void consulta.refetch()}
+              type="button"
+            >
+              Tentar novamente
+            </button>
+          </div>
+        ) : null}
 
-      {consulta.isError && itens.length === 0 ? (
-        <div className="flex flex-col items-start gap-3" role="alert">
-          <p className="text-[13.5px] text-(--color-text)">{MENSAGEM_FALHA_CATALOGO}</p>
+        {consulta.isSuccess && itens.length === 0 && !filtrando ? (
+          <p className="text-[13.5px] text-(--text-muted)">{MENSAGEM_CATALOGO_VAZIO}</p>
+        ) : null}
+
+        {consulta.isSuccess && itens.length === 0 && filtrando ? (
+          <div className="flex flex-col items-start gap-3">
+            <p className="text-[13.5px] text-(--text-muted)">{MENSAGEM_FILTRO_VAZIO}</p>
+            <button
+              className={BOTAO_SECUNDARIO}
+              onClick={() => setFiltros(SEM_FILTROS)}
+              type="button"
+            >
+              Limpar filtros
+            </button>
+          </div>
+        ) : null}
+
+        {itens.length > 0 ? (
+          <div
+            aria-busy={atualizandoFiltro || undefined}
+            className={
+              atualizandoFiltro
+                ? "opacity-60 transition-opacity motion-reduce:transition-none"
+                : undefined
+            }
+          >
+            <Grade>
+              {itens.map((item) => (
+                <CartaoEquipamento
+                  abreIndisponivel={sessao.papel === "operacoes"}
+                  item={item}
+                  key={item.patrimonio}
+                  solicitacaoBloqueada={bloqueio !== null}
+                />
+              ))}
+            </Grade>
+          </div>
+        ) : null}
+
+        {consulta.hasNextPage ? (
           <button
-            className={BOTAO_SECUNDARIO}
-            disabled={consulta.isFetching}
-            onClick={() => void consulta.refetch()}
+            className={`${BOTAO_SECUNDARIO} self-start`}
+            disabled={consulta.isFetchingNextPage}
+            onClick={() => void consulta.fetchNextPage()}
             type="button"
           >
-            Tentar novamente
+            {consulta.isFetchingNextPage ? "Carregando..." : "Mostrar mais"}
           </button>
-        </div>
-      ) : null}
-
-      {consulta.isSuccess && itens.length === 0 && !filtrando ? (
-        <p className="text-[13.5px] text-(--text-muted)">{MENSAGEM_CATALOGO_VAZIO}</p>
-      ) : null}
-
-      {consulta.isSuccess && itens.length === 0 && filtrando ? (
-        <div className="flex flex-col items-start gap-3">
-          <p className="text-[13.5px] text-(--text-muted)">{MENSAGEM_FILTRO_VAZIO}</p>
-          <button
-            className={BOTAO_SECUNDARIO}
-            onClick={() => setFiltros(SEM_FILTROS)}
-            type="button"
-          >
-            Limpar filtros
-          </button>
-        </div>
-      ) : null}
-
-      {itens.length > 0 ? (
-        <div
-          aria-busy={atualizandoFiltro || undefined}
-          className={
-            atualizandoFiltro
-              ? "opacity-60 transition-opacity motion-reduce:transition-none"
-              : undefined
-          }
-        >
-          <Grade>
-            {itens.map((item) => (
-              <CartaoEquipamento
-                abreIndisponivel={sessao.papel === "operacoes"}
-                item={item}
-                key={item.patrimonio}
-              />
-            ))}
-          </Grade>
-        </div>
-      ) : null}
-
-      {consulta.hasNextPage ? (
-        <button
-          className={`${BOTAO_SECUNDARIO} self-start`}
-          disabled={consulta.isFetchingNextPage}
-          onClick={() => void consulta.fetchNextPage()}
-          type="button"
-        >
-          {consulta.isFetchingNextPage ? "Carregando..." : "Mostrar mais"}
-        </button>
-      ) : null}
-    </ConteudoPagina>
+        ) : null}
+      </ConteudoPagina>
+    </>
   );
 }
