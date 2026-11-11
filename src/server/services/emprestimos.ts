@@ -1,8 +1,13 @@
 import { Prisma, type PrismaClient } from "@prisma/client";
 
-import type { MotivoSolicitacao, SaidaSolicitarEmprestimo } from "@/lib/esquemas/emprestimos";
+import {
+  LIMITE_ITENS_POR_PESSOA,
+  type MeuResumo,
+  type MotivoSolicitacao,
+  type SaidaSolicitarEmprestimo,
+} from "@/lib/esquemas/emprestimos";
 import type { Papel } from "@/lib/esquemas/sessao";
-import { calcularDevolverAte } from "@/lib/prazos";
+import { PRAZO_PADRAO_DIAS, calcularDevolverAte, dataEmSaoPaulo } from "@/lib/prazos";
 
 /** Ação gravada na auditoria pela solicitação (RS-SOLIC-04). */
 export const ACAO_SOLICITAR = "emprestimo.solicitar";
@@ -23,11 +28,45 @@ function eViolacaoDeUnicidade(erro: unknown) {
   return erro instanceof Prisma.PrismaClientKnownRequestError && erro.code === "P2002";
 }
 
+type Pessoa = { tenantId: string; usuarioId: string };
+
+/**
+ * Empréstimos abertos da pessoa no tenant e quantos estão em atraso (RS-REGRAS-02). O atraso começa
+ * depois do fim da data de vencimento no calendário de São Paulo (RN-REGRAS-06): está atrasado o
+ * empréstimo aberto com `devolver_ate` anterior à data de hoje. Atrasados contam no limite
+ * (RN-REGRAS-05).
+ */
+async function situacaoDaPessoa(
+  cliente: Pick<PrismaClient, "emprestimo">,
+  pessoa: Pessoa,
+  agora: Date,
+) {
+  const abertos = { tenantId: pessoa.tenantId, userId: pessoa.usuarioId, devolvidoEm: null };
+  const hoje = new Date(`${dataEmSaoPaulo(agora)}T00:00:00Z`);
+
+  const itensAbertos = await cliente.emprestimo.count({ where: abertos });
+  const emAtraso = await cliente.emprestimo.count({
+    where: { ...abertos, devolverAte: { lt: hoje } },
+  });
+  return { itensAbertos, emAtraso };
+}
+
+/** Resumo da própria pessoa para a interface (RF-REGRAS-01). `agora` é injetado (CA-REGRAS-09). */
+export async function consultarMeuResumo(
+  prisma: Pick<PrismaClient, "emprestimo">,
+  pessoa: Pessoa,
+  opcoes: { agora: Date },
+): Promise<MeuResumo> {
+  const { itensAbertos, emAtraso } = await situacaoDaPessoa(prisma, pessoa, opcoes.agora);
+  return { itensAbertos, limite: LIMITE_ITENS_POR_PESSOA, emAtraso, prazoDias: PRAZO_PADRAO_DIAS };
+}
+
 /**
  * Empréstimo imediato de um equipamento do tenant da sessão (RF-SOLIC-02, RN-SOLIC-05). Leitura do
  * equipamento, inserção e auditoria ocorrem na mesma transação (RS-SOLIC-04): se a auditoria
  * falhar, nada é gravado (CA-SOLIC-07). O índice único parcial garante um único empréstimo aberto
- * por equipamento, mesmo com solicitações simultâneas (RN-SOLIC-02, CA-SOLIC-03).
+ * por equipamento, mesmo com solicitações simultâneas (RN-SOLIC-02, CA-SOLIC-03). O limite de
+ * itens por pessoa (RN-REGRAS-01) é contado depois de bloquear o membership (CA-REGRAS-02).
  * `agora` é o momento da confirmação: retirada e prazo saem dele (RN-SOLIC-03).
  */
 export async function solicitarEmprestimo(
@@ -40,6 +79,18 @@ export async function solicitarEmprestimo(
 
   try {
     return await prisma.$transaction(async (transacao) => {
+      // Serializa as solicitações da mesma pessoa antes de contar (plano da Spec 006): sem o
+      // bloqueio, pedidos simultâneos leriam a mesma contagem e ultrapassariam o limite.
+      await transacao.$queryRaw`
+        SELECT 1 FROM "memberships"
+         WHERE "user_id" = ${escopo.usuarioId}::uuid AND "tenant_id" = ${escopo.tenantId}::uuid
+         FOR UPDATE`;
+
+      // Ordem da Spec 006: atraso, limite, depois as recusas da Spec 005.
+      const { itensAbertos, emAtraso } = await situacaoDaPessoa(transacao, escopo, opcoes.agora);
+      if (emAtraso > 0) throw new ErroSolicitacao("ITEM_EM_ATRASO");
+      if (itensAbertos >= LIMITE_ITENS_POR_PESSOA) throw new ErroSolicitacao("LIMITE_ATINGIDO");
+
       const equipamento = await transacao.equipamento.findFirst({
         where: { id: equipamentoId, tenantId: escopo.tenantId },
         select: { situacao: true },

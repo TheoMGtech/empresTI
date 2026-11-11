@@ -2,7 +2,7 @@
 
 ## Estado
 
-**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-REGRAS-01 concluída.
+**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-REGRAS-01 a T-REGRAS-03 concluídas.
 
 Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
 `rules/checks.md` ao concluir; todo teste cita no nome o CA que evidencia; sem alteração no
@@ -14,10 +14,10 @@ Supabase remoto, deploy de produção ou merge em `main`.
   - Avisar o FE.
   - Atende: RF-REGRAS-01, RF-REGRAS-04.
   - Commit: `feat(emprestimos): publicar contrato do resumo`.
-- [ ] **T-REGRAS-02 — Limite de 3, serializado por pessoa**
+- [x] **T-REGRAS-02 — Limite de 3, serializado por pessoa**
   - Atende: CA-REGRAS-01, 02, 08.
   - Commit: `feat(emprestimos): aplicar limite de itens por pessoa`.
-- [ ] **T-REGRAS-03 — Bloqueio por atraso e `meuResumo`**
+- [x] **T-REGRAS-03 — Bloqueio por atraso e `meuResumo`**
   - Atende: CA-REGRAS-04, 05, 08, 09.
   - Commit: `feat(emprestimos): bloquear solicitação com item em atraso`.
 
