@@ -305,11 +305,14 @@ describe("controles: a causa do bloqueio é a RLS", () => {
 
 describe("bloqueio de TRUNCATE, que a RLS não cobre", () => {
   const EXCECAO_DO_TRIGGER = "P0001";
-  const TABELAS_DE_DOMINIO = '"tenants", "memberships", "equipamentos"';
 
-  // `tenants` é referenciada por FK e só chega ao trigger com CASCADE.
-  const truncar = (nome: string) =>
-    nome === "tenants" ? "TRUNCATE tenants CASCADE" : `TRUNCATE ${nome}`;
+  // As três tabelas são referenciadas por FK (`memberships` e `equipamentos` a partir da Spec 005,
+  // por `emprestimos`) e só chegam ao trigger com CASCADE; sem ele, o PostgreSQL recusa antes.
+  const truncar = (nome: string) => `TRUNCATE ${nome} CASCADE`;
+  // O CASCADE alcança as tabelas que referenciam as de domínio, inclusive as de specs
+  // posteriores: o GRANT temporário cobre todas, para o teste chegar ao trigger.
+  const concederTruncate = (cliente: Client, papel: Papel) =>
+    cliente.query(`GRANT TRUNCATE ON ALL TABLES IN SCHEMA public TO ${papel}`);
   const retratos = (cliente: Client) =>
     Promise.all(TABELAS.map((tabela) => retrato(cliente, tabela.nome)));
 
@@ -362,7 +365,7 @@ describe("bloqueio de TRUNCATE, que a RLS não cobre", () => {
     "CA-DADOS-02 — %s: mesmo com GRANT temporário, o trigger barra %s",
     async (nome, papel) => {
       await comDados(async (cliente) => {
-        await cliente.query(`GRANT TRUNCATE ON ${TABELAS_DE_DOMINIO} TO ${papel}`);
+        await concederTruncate(cliente, papel);
         const antes = await retratos(cliente);
 
         await comoPapel(cliente, papel, async () => {
