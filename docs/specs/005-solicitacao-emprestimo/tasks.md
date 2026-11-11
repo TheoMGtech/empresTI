@@ -2,7 +2,7 @@
 
 ## Estado
 
-**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-SOLIC-01 a T-SOLIC-05
+**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-SOLIC-01 a T-SOLIC-06
 concluídas.
 
 Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
@@ -36,7 +36,7 @@ de produção ou merge em `main`.
   - Atende: CA-SOLIC-01, 02, 03, 04, 07.
   - Testes: prazo; manutenção; concorrência; isolamento; rollback sem auditoria.
   - Commit: `feat(emprestimos): solicitar equipamento disponível`.
-- [ ] **T-SOLIC-06 — Estado "emprestado" na listagem**
+- [x] **T-SOLIC-06 — Estado "emprestado" na listagem**
   - Atende: CA-CATALOGO-10; RF-SOLIC-04.
   - Commit: `feat(catalogo): refletir empréstimo na disponibilidade`.
 
