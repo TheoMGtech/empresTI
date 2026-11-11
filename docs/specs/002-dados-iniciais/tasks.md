@@ -3,7 +3,7 @@
 ## Estado
 
 **Status:** Aprovadas com condições pelo responsável em 2026-11-10. `T-DADOS-01` a `12`
-concluídas. V-03 com `Veredito: PRONTA`, aguardando a validação final do responsável.
+concluídas. V-03 com `Veredito: PRONTA`, validada pelo responsável em 2026-11-11.
 
 Regras de execução:
 

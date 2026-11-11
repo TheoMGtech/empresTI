@@ -413,3 +413,4 @@ Veredito: PRONTA — os 28 CAs estão ATENDIDO, todos os checks aplicáveis pass
 - 2026-11-11: a execução foi interrompida por limite de uso da API antes de responder e retomada no mesmo subagente com a mensagem transcrita acima, sem novas entradas. O relatório chegou com um recuo de transporte em todas as linhas, removido na transcrição; o texto não foi alterado.
 - 2026-11-11: o bloqueio de TRUNCATE para o papel dono, citado em CA-DADOS-02, decorre do `ENABLE ALWAYS` aprovado pelo responsável na correção. A migration `reforcar_bloqueio_truncate` passa a constar em `tasks.md`, em `T-DADOS-12`, neste commit de registro. `plan.md` não muda, porque a regra limita este commit a `verificacao.md`, ao `## Estado` da spec e a `tasks.md`.
 - `PRONTA` ainda exige a validação final do responsável (`rules/spec-flow.md`).
+- 2026-11-11: validação final do responsável, com autorização para integrar o PR #43 em `develop`.
