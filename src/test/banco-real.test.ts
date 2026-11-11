@@ -117,7 +117,7 @@ describe("banco real descartável", () => {
     expect(superusuario).toBe(false);
   });
 
-  it("CA-DADOS-01 — não cria tabelas de domínio", async () => {
+  it("CA-DADOS-01 — cria somente as tabelas das migrations", async () => {
     const url = await banco.criarBanco();
 
     const tabelas = await comCliente(url, async (cliente) => {
@@ -127,7 +127,7 @@ describe("banco real descartável", () => {
       return rows.map((linha) => linha.tablename);
     });
 
-    expect(tabelas).toEqual(["saude_sistema"]);
+    expect(tabelas).toEqual(["equipamentos", "memberships", "saude_sistema", "tenants"]);
   });
 
   it.each(["anon", "authenticated"])(

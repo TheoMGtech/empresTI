@@ -7,11 +7,75 @@ datasource db {
 }
 
 model SaudeSistema {
-  id           String   @id @default(uuid()) @db.Uuid
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   tenantId     String   @map("tenant_id") @db.Uuid
   componente   String
   verificadoEm DateTime @default(now()) @map("verificado_em") @db.Timestamptz(6)
 
   @@index([tenantId], map: "saude_sistema_tenant_id_idx")
   @@map("saude_sistema")
+}
+
+enum CategoriaEquipamento {
+  notebook
+  monitor
+  cabo
+  camera
+
+  @@map("categoria_equipamento")
+}
+
+enum SituacaoEquipamento {
+  ativo
+  em_manutencao
+  fora_de_uso
+
+  @@map("situacao_equipamento")
+}
+
+enum PapelMembership {
+  colaborador
+  operacoes
+
+  @@map("papel_membership")
+}
+
+model Tenant {
+  id           String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug         String        @unique(map: "tenants_slug_key")
+  criadoEm     DateTime      @default(now()) @map("criado_em") @db.Timestamptz(6)
+  memberships  Membership[]
+  equipamentos Equipamento[]
+
+  @@map("tenants")
+}
+
+model Membership {
+  userId   String          @map("user_id") @db.Uuid
+  tenantId String          @map("tenant_id") @db.Uuid
+  role     PapelMembership
+  criadoEm DateTime        @default(now()) @map("criado_em") @db.Timestamptz(6)
+  tenant   Tenant          @relation(fields: [tenantId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@id([userId, tenantId])
+  @@index([tenantId], map: "memberships_tenant_id_idx")
+  @@map("memberships")
+}
+
+model Equipamento {
+  id            String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId      String               @map("tenant_id") @db.Uuid
+  patrimonio    String
+  nome          String
+  categoria     CategoriaEquipamento
+  situacao      SituacaoEquipamento  @default(ativo)
+  imagemCaminho String?              @map("imagem_caminho")
+  imagemSha256  String?              @map("imagem_sha256")
+  criadoEm      DateTime             @default(now()) @map("criado_em") @db.Timestamptz(6)
+  atualizadoEm  DateTime             @default(now()) @updatedAt @map("atualizado_em") @db.Timestamptz(6)
+  tenant        Tenant               @relation(fields: [tenantId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([tenantId, patrimonio], map: "equipamentos_tenant_patrimonio_key")
+  @@index([tenantId, situacao], map: "equipamentos_tenant_situacao_idx")
+  @@map("equipamentos")
 }
