@@ -2,7 +2,8 @@
 
 ## Estado
 
-**Status:** Aprovadas pelo responsável em 2026-11-11. Nenhuma tarefa iniciada.
+**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-SESSAO-01 e T-SESSAO-02
+concluídas.
 
 Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
 `rules/checks.md` ao concluir; todo teste cita no nome o CA que evidencia; DDL de migration com
@@ -19,7 +20,7 @@ de produção ou merge em `main`.
     os arquivos.
   - Atende: pré-condição de CA-SESSAO-14.
   - Commit: `test(dados): delimitar provas históricas à spec 002`.
-- [ ] **T-SESSAO-02 — Contrato de `sessao.atual`**
+- [x] **T-SESSAO-02 — Contrato de `sessao.atual`**
   - Esquema Zod de saída e procedimento registrado, ainda "não implementado". Avisar o FE.
   - Atende: CA-SESSAO-05 (formato).
   - Commit: `feat(sessao): publicar contrato de sessao.atual`.
