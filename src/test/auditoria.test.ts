@@ -112,9 +112,14 @@ describe("migrations", () => {
 
   it("CA-DADOS-01 — não altera as demais tabelas", async () => {
     await comDados(async (cliente) => {
+      // Triggers nas tabelas da spec 002; tabelas de specs posteriores têm os próprios
+      // (T-SOLIC-01). `saude_sistema` continua sem trigger.
       const { rows: triggers } = await cliente.query<{ tabela: string }>(
         `SELECT DISTINCT tgrelid::regclass::text AS tabela FROM pg_trigger
-          WHERE NOT tgisinternal ORDER BY 1`,
+          WHERE NOT tgisinternal
+            AND tgrelid::regclass::text IN
+                ('auditoria', 'equipamentos', 'memberships', 'saude_sistema', 'tenants')
+          ORDER BY 1`,
       );
 
       expect(triggers).toEqual([
@@ -182,7 +187,13 @@ describe("estrutura da auditoria", () => {
       );
 
       expect(restricoes).toEqual([
-        { conname: "auditoria_pkey", contype: "p", destino: "-", confdeltype: " ", confupdtype: " " },
+        {
+          conname: "auditoria_pkey",
+          contype: "p",
+          destino: "-",
+          confdeltype: " ",
+          confupdtype: " ",
+        },
         {
           conname: "auditoria_tenant_id_fkey",
           contype: "f",
@@ -263,9 +274,11 @@ describe("estrutura da auditoria", () => {
 
   it("CA-DADOS-03 — tenant com auditoria não pode ser excluído", async () => {
     await comDados(async (cliente) => {
-      expect(await falhaDe(cliente, "DELETE FROM tenants WHERE id = $1", [TENANT_A])).toMatchObject({
-        code: VIOLACAO_FK,
-      });
+      expect(await falhaDe(cliente, "DELETE FROM tenants WHERE id = $1", [TENANT_A])).toMatchObject(
+        {
+          code: VIOLACAO_FK,
+        },
+      );
     });
   });
 });

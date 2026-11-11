@@ -1,5 +1,7 @@
 // @vitest-environment node
 import { spawnSync } from "node:child_process";
+import { readdir, readFile } from "node:fs/promises";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { Client } from "pg";
@@ -16,6 +18,21 @@ import {
 
 const TEMPO_DE_SUBIDA_MS = 300_000;
 const TEMPO_DE_ENCERRAMENTO_MS = 60_000;
+
+/** Tabelas declaradas com CREATE TABLE nas migrations versionadas, em ordem alfabética. */
+async function tabelasDasMigrations() {
+  const pasta = fileURLToPath(new URL("../../prisma/migrations", import.meta.url));
+  const pastas = (await readdir(pasta, { withFileTypes: true })).filter((item) =>
+    item.isDirectory(),
+  );
+  const sql = await Promise.all(
+    pastas.map((item) => readFile(path.join(pasta, item.name, "migration.sql"), "utf8")),
+  );
+
+  return [...sql.join("\n").matchAll(/CREATE TABLE\s+"?(\w+)"?/gi)]
+    .map((encontrado) => encontrado[1] as string)
+    .sort();
+}
 
 async function comCliente<T>(url: string, acao: (cliente: Client) => Promise<T>) {
   const cliente = new Client({ connectionString: url });
@@ -127,13 +144,18 @@ describe("banco real descartável", () => {
       return rows.map((linha) => linha.tablename);
     });
 
-    expect(tabelas).toEqual([
-      "auditoria",
-      "equipamentos",
-      "memberships",
-      "saude_sistema",
-      "tenants",
-    ]);
+    // As tabelas da spec 002 existem, e nenhuma tabela surge fora de um CREATE TABLE versionado
+    // (specs posteriores acrescentam tabelas: T-SOLIC-01).
+    expect(tabelas).toEqual(
+      expect.arrayContaining([
+        "auditoria",
+        "equipamentos",
+        "memberships",
+        "saude_sistema",
+        "tenants",
+      ]),
+    );
+    expect(tabelas).toEqual(await tabelasDasMigrations());
   });
 
   it.each(["anon", "authenticated"])(

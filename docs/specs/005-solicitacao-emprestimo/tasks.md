@@ -2,7 +2,7 @@
 
 ## Estado
 
-**Status:** Aprovadas pelo responsável em 2026-11-11. Nenhuma tarefa iniciada.
+**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-SOLIC-01 concluída.
 
 Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
 `rules/checks.md` ao concluir; todo teste cita no nome o CA que evidencia; DDL de migration com
@@ -12,7 +12,7 @@ de produção ou merge em `main`.
 
 ## Bloco A — contrato e dados (BE)
 
-- [ ] **T-SOLIC-01 — Delimitar provas históricas da Spec 002**
+- [x] **T-SOLIC-01 — Delimitar provas históricas da Spec 002**
   - Restringir CA-DADOS-01, 06 e 18 ao estado da Spec 002, sem remover provas.
   - Atende: pré-condição de CA-SOLIC-11.
   - Commit: `test(dados): delimitar provas de estrutura à spec 002`.

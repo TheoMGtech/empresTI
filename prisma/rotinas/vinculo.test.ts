@@ -257,14 +257,16 @@ describe("vínculo recusado sem gravar", () => {
 });
 
 describe("o que o vínculo não faz", () => {
-  it("CA-DADOS-18 — não cria empréstimos nem estrutura de empréstimos", async () => {
+  // A tabela de empréstimos passa a existir na Spec 005 (T-SOLIC-01): a prova vale para o que o
+  // vínculo grava, não para a estrutura.
+  it("CA-DADOS-18 — não cria empréstimos", async () => {
     await comAmbiente(async ({ prisma, cliente }) => {
       await vincularProfessor(prisma, await criarIdentidade(cliente));
 
-      const { rows } = await cliente.query(
-        "SELECT to_regclass('public.emprestimos') AS emprestimos",
+      const { rows } = await cliente.query<{ emprestimos: string | null }>(
+        "SELECT to_regclass('public.emprestimos')::text AS emprestimos",
       );
-      expect(rows).toEqual([{ emprestimos: null }]);
+      if (rows[0]?.emprestimos) expect(await retrato(cliente, "emprestimos")).toEqual([]);
     });
   });
 
