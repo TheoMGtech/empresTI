@@ -60,6 +60,7 @@ model Membership {
   nomeExibicao String?         @map("nome_exibicao")
   criadoEm     DateTime        @default(now()) @map("criado_em") @db.Timestamptz(6)
   tenant       Tenant          @relation(fields: [tenantId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  emprestimos  Emprestimo[]
 
   @@id([userId, tenantId])
   @@index([tenantId], map: "memberships_tenant_id_idx")
@@ -75,13 +76,38 @@ model Equipamento {
   situacao      SituacaoEquipamento  @default(ativo)
   imagemCaminho String?              @map("imagem_caminho")
   imagemSha256  String?              @map("imagem_sha256")
+  // Opcionais (D-SOLIC-02); sem valor, a tela oculta o campo.
+  numeroSerie   String?              @map("numero_serie")
+  local         String?
+  observacoes   String?
   criadoEm      DateTime             @default(now()) @map("criado_em") @db.Timestamptz(6)
   atualizadoEm  DateTime             @default(now()) @updatedAt @map("atualizado_em") @db.Timestamptz(6)
   tenant        Tenant               @relation(fields: [tenantId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  emprestimos   Emprestimo[]
 
   @@unique([tenantId, patrimonio], map: "equipamentos_tenant_patrimonio_key")
+  // Alvo da FK composta de `emprestimos`: empréstimo e equipamento no mesmo tenant (RS-SOLIC-03).
+  @@unique([tenantId, id], map: "equipamentos_tenant_id_id_key")
   @@index([tenantId, situacao], map: "equipamentos_tenant_situacao_idx")
   @@map("equipamentos")
+}
+
+// Empréstimos (Spec 005). Ficam só no SQL da migration, porque o Prisma não os representa: os
+// índices parciais `emprestimos_equipamento_aberto_key` (um aberto por equipamento, RN-SOLIC-02)
+// e `emprestimos_tenant_user_aberto_idx`, as CHECKs, a RLS com policies e o bloqueio de TRUNCATE.
+model Emprestimo {
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId      String      @map("tenant_id") @db.Uuid
+  equipamentoId String      @map("equipamento_id") @db.Uuid
+  userId        String      @map("user_id") @db.Uuid
+  retiradoEm    DateTime    @default(now()) @map("retirado_em") @db.Timestamptz(6)
+  devolverAte   DateTime    @map("devolver_ate") @db.Date
+  devolvidoEm   DateTime?   @map("devolvido_em") @db.Timestamptz(6)
+  devolvidoPor  String?     @map("devolvido_por") @db.Uuid
+  equipamento   Equipamento @relation(fields: [tenantId, equipamentoId], references: [tenantId, id], onDelete: Restrict, onUpdate: Restrict)
+  membership    Membership  @relation(fields: [userId, tenantId], references: [userId, tenantId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@map("emprestimos")
 }
 
 model Auditoria {

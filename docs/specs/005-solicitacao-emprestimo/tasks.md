@@ -2,7 +2,8 @@
 
 ## Estado
 
-**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-SOLIC-01 e T-SOLIC-02 concluídas.
+**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-SOLIC-01 a T-SOLIC-03
+concluídas.
 
 Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
 `rules/checks.md` ao concluir; todo teste cita no nome o CA que evidencia; DDL de migration com
@@ -20,7 +21,7 @@ de produção ou merge em `main`.
   - Avisar o FE.
   - Atende: CA-SOLIC-09 (formato).
   - Commit: `feat(emprestimos): publicar contrato de detalhe e solicitação`.
-- [ ] **T-SOLIC-03 — Migration de empréstimos**
+- [x] **T-SOLIC-03 — Migration de empréstimos**
   - Paradas: DDL para revisão; geração e reset pelo responsável.
   - Atende: CA-SOLIC-05, 06, 11.
   - Testes: FK entre tenants recusada; RLS; `TRUNCATE` bloqueado; índice parcial.
