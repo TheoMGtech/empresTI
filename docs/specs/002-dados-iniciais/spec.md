@@ -4,9 +4,10 @@
 
 **Status:** Implementada — spec vigente (descreve o comportamento atual).
 
-Aprovada pelo responsável em 2026-11-10. T-DADOS-01 a T-DADOS-11 concluídas em
+Aprovada pelo responsável em 2026-11-10. T-DADOS-01 a T-DADOS-12 concluídas em
 `feature/002-dados-iniciais`, ainda sem integração. Nada foi aplicado em produção.
-Pendente de evidência: verificação formal (T-DADOS-12) e CI em PR (Node 22 e Gitleaks).
+Verificação formal V-03, no commit `f88259101a15ef1b5bc8a06904eff6319bf01506`: `Veredito: PRONTA`
+(`verificacao.md`). A spec só passa a `PRONTA` após a validação final do responsável.
 
 ## Objetivo
 

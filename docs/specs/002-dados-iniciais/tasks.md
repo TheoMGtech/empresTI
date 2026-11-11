@@ -2,8 +2,8 @@
 
 ## Estado
 
-**Status:** Aprovadas com condições pelo responsável em 2026-11-10. `T-DADOS-01` a `11`
-concluídas. `T-DADOS-12` depende de autorização própria.
+**Status:** Aprovadas com condições pelo responsável em 2026-11-10. `T-DADOS-01` a `12`
+concluídas. V-03 com `Veredito: PRONTA`, aguardando a validação final do responsável.
 
 Regras de execução:
 
@@ -131,12 +131,16 @@ Regras de execução:
   - Evidência: lint, typecheck, testes, build e `git status --short`; Gitleaks no CI.
   - Commit: `test(dados): provar critérios finais da spec 002`.
 
-- [ ] **T-DADOS-12 — Verificação formal**
+- [x] **T-DADOS-12 — Verificação formal**
   - Rodar os checks no commit exato, delegar ao `verificador-spec` e registrar em
     `verificacao.md`, conforme `rules/spec-flow.md`.
   - Atende: registro de todos os CAs, incluindo CA-DADOS-C1.
   - Evidência: `Veredito` do relatório, sem edição. Se for `NÃO PRONTA`, volta às tarefas.
   - Commit: `docs(specs): registrar verificação da spec 002`.
+  - Correção da V-02 (CA-DADOS-02), autorizada pelo responsável: migration
+    `20261111063517_reforcar_bloqueio_truncate`, gerada pelo responsável, com `REVOKE TRUNCATE`
+    e triggers `ENABLE ALWAYS` em `tenants`, `memberships` e `equipamentos` (commit `f882591`).
+  - Execuções: V-01 e V-02 `NÃO PRONTA`; V-03 `PRONTA`, em `f882591`.
 
 ## Fora destas tarefas
 
