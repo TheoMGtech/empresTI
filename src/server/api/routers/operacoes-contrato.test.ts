@@ -33,7 +33,7 @@ const USUARIO = "00000000-0000-4000-8000-000000000001";
 const ID = "00000000-0000-4000-8000-0000000000a1";
 
 /** Procedimentos já implementados, provados com banco real nos próprios arquivos de teste. */
-const IMPLEMENTADOS: readonly string[] = ["operacoes.registrarDevolucao"];
+const IMPLEMENTADOS: readonly string[] = ["operacoes.registrarDevolucao", "equipamentos.cadastrar"];
 
 const CADASTRO = {
   nome: "Notebook Lenovo ThinkPad",

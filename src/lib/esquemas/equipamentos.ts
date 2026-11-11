@@ -110,8 +110,8 @@ const textoOpcional = (maximo: number) =>
     .string()
     .trim()
     .max(maximo)
-    .optional()
-    .transform((valor) => (valor ? valor : undefined));
+    .transform((valor) => (valor ? valor : undefined))
+    .optional();
 
 // Mesmo esquema no formulário (zodResolver) e no servidor (RF-OPER-05). Limites de tamanho são
 // técnicos, para conter entrada abusiva.
