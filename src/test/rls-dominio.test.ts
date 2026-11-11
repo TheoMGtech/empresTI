@@ -303,6 +303,123 @@ describe("controles: a causa do bloqueio é a RLS", () => {
   );
 });
 
+describe("bloqueio de TRUNCATE, que a RLS não cobre", () => {
+  const EXCECAO_DO_TRIGGER = "P0001";
+  const TABELAS_DE_DOMINIO = '"tenants", "memberships", "equipamentos"';
+
+  // `tenants` é referenciada por FK e só chega ao trigger com CASCADE.
+  const truncar = (nome: string) =>
+    nome === "tenants" ? "TRUNCATE tenants CASCADE" : `TRUNCATE ${nome}`;
+  const retratos = (cliente: Client) =>
+    Promise.all(TABELAS.map((tabela) => retrato(cliente, tabela.nome)));
+
+  it.each(POR_TABELA_E_PAPEL)(
+    "CA-DADOS-02 — %s: %s não tem o privilégio TRUNCATE",
+    async (nome, papel) => {
+      await comDados(async (cliente) => {
+        const { rows } = await cliente.query(
+          "SELECT has_table_privilege($1, $2, 'TRUNCATE') AS tem",
+          [papel, nome],
+        );
+
+        expect(rows).toEqual([{ tem: false }]);
+      });
+    },
+  );
+
+  it.each(POR_TABELA)("CA-DADOS-02 — %s: PUBLIC não tem o privilégio TRUNCATE", async (nome) => {
+    await comDados(async (cliente) => {
+      const { rows } = await cliente.query(
+        "SELECT has_table_privilege('public', $1, 'TRUNCATE') AS tem",
+        [nome],
+      );
+
+      expect(rows).toEqual([{ tem: false }]);
+    });
+  });
+
+  it.each(POR_TABELA_E_PAPEL)(
+    "CA-DADOS-02 — %s: TRUNCATE como %s é negado e os registros ficam intactos",
+    async (nome, papel) => {
+      await comDados(async (cliente) => {
+        const antes = await retratos(cliente);
+
+        await comoPapel(cliente, papel, async () => {
+          const erro = await cliente.query(`TRUNCATE ${nome}`).catch((falha: unknown) => falha);
+
+          expect(erro).toMatchObject({
+            code: SEM_PRIVILEGIO,
+            message: expect.stringMatching(MENSAGEM_SEM_GRANT),
+          });
+        });
+
+        expect(await retratos(cliente)).toEqual(antes);
+      });
+    },
+  );
+
+  it.each(POR_TABELA_E_PAPEL)(
+    "CA-DADOS-02 — %s: mesmo com GRANT temporário, o trigger barra %s",
+    async (nome, papel) => {
+      await comDados(async (cliente) => {
+        await cliente.query(`GRANT TRUNCATE ON ${TABELAS_DE_DOMINIO} TO ${papel}`);
+        const antes = await retratos(cliente);
+
+        await comoPapel(cliente, papel, async () => {
+          const erro = await cliente.query(truncar(nome)).catch((falha: unknown) => falha);
+
+          expect(erro).toMatchObject({
+            code: EXCECAO_DO_TRIGGER,
+            message: expect.stringContaining(`TRUNCATE não é permitido em ${nome}`),
+          });
+        });
+
+        expect(await retratos(cliente)).toEqual(antes);
+      });
+    },
+  );
+
+  it.each(POR_TABELA)("CA-DADOS-02 — %s: o papel dono também é barrado", async (nome) => {
+    await comDados(async (cliente) => {
+      const antes = await retratos(cliente);
+
+      const erro = await cliente.query(truncar(nome)).catch((falha: unknown) => falha);
+
+      expect(erro).toMatchObject({
+        code: EXCECAO_DO_TRIGGER,
+        message: expect.stringContaining(`TRUNCATE não é permitido em ${nome}`),
+      });
+      expect(await retratos(cliente)).toEqual(antes);
+    });
+  });
+
+  it.each(POR_TABELA)("CA-DADOS-02 — %s: o trigger dispara sempre, antes do TRUNCATE", async (nome) => {
+    await comDados(async (cliente) => {
+      const { rows } = await cliente.query<{ tgname: string; tgenabled: string; definicao: string }>(
+        `SELECT tgname, tgenabled, pg_get_triggerdef(oid) AS definicao
+           FROM pg_trigger WHERE tgrelid = $1::regclass AND NOT tgisinternal`,
+        [nome],
+      );
+
+      expect(rows.map(({ tgname, tgenabled }) => ({ tgname, tgenabled }))).toEqual([
+        { tgname: `${nome}_sem_truncate`, tgenabled: "A" },
+      ]);
+      expect(rows[0]?.definicao).toContain("BEFORE TRUNCATE");
+      expect(rows[0]?.definicao).toContain("FOR EACH STATEMENT");
+    });
+  });
+
+  it("CA-DADOS-02 — a função do bloqueio não eleva privilégios", async () => {
+    await comDados(async (cliente) => {
+      const { rows } = await cliente.query(
+        "SELECT prosecdef, proconfig FROM pg_proc WHERE proname = 'bloquear_truncate'",
+      );
+
+      expect(rows).toEqual([{ prosecdef: false, proconfig: ['search_path=""'] }]);
+    });
+  });
+});
+
 describe("papel dono: limite da RLS", () => {
   it.each(POR_TABELA)(
     "CA-DADOS-02 — %s: o papel dono lê, insere, altera e exclui",

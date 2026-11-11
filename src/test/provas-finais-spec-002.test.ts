@@ -37,11 +37,12 @@ const ARQUIVOS_DE_TESTE = [
 ];
 
 describe("escopo das migrations", () => {
-  it("CA-DADOS-18 — as três migrations existem", () => {
+  it("CA-DADOS-18 — as migrations esperadas existem", () => {
     expect(MIGRATIONS.map((arquivo) => arquivo.split("/")[2]?.replace(/^\d+_/, ""))).toEqual([
       "criar_saude_sistema",
       "criar_estrutura_dominio",
       "criar_auditoria",
+      "reforcar_bloqueio_truncate",
     ]);
   });
 

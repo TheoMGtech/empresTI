@@ -104,6 +104,7 @@ describe("migrations", () => {
       "criar_saude_sistema",
       "criar_estrutura_dominio",
       "criar_auditoria",
+      "reforcar_bloqueio_truncate",
     ]);
   });
 
@@ -114,7 +115,12 @@ describe("migrations", () => {
           WHERE NOT tgisinternal ORDER BY 1`,
       );
 
-      expect(triggers).toEqual([{ tabela: "auditoria" }]);
+      expect(triggers).toEqual([
+        { tabela: "auditoria" },
+        { tabela: "equipamentos" },
+        { tabela: "memberships" },
+        { tabela: "tenants" },
+      ]);
       expect(await colunas(cliente, "tenants")).toEqual(["criado_em", "id", "slug"]);
       expect(await colunas(cliente, "memberships")).toEqual([
         "criado_em",
@@ -290,7 +296,7 @@ describe("append-only para o papel dono", () => {
     ["UPDATE", ALTERAR],
     ["DELETE", EXCLUIR],
     ["TRUNCATE", TRUNCAR],
-    ["TRUNCATE em cascata a partir de tenants", "TRUNCATE tenants CASCADE"],
+    ["TRUNCATE com CASCADE", "TRUNCATE auditoria CASCADE"],
   ])("CA-DADOS-21 — %s é bloqueado e os registros ficam intactos", async (_nome, comando) => {
     await comDados(async (cliente) => {
       const antes = await retrato(cliente);
@@ -298,6 +304,18 @@ describe("append-only para o papel dono", () => {
       expect(await falhaDe(cliente, comando)).toMatchObject({
         code: EXCECAO_DO_TRIGGER,
         message: expect.stringMatching(MENSAGEM_APPEND_ONLY),
+      });
+      expect(antes).toHaveLength(2);
+      expect(await retrato(cliente)).toEqual(antes);
+    });
+  });
+
+  it("CA-DADOS-21 — TRUNCATE em cascata a partir de tenants não apaga a auditoria", async () => {
+    await comDados(async (cliente) => {
+      const antes = await retrato(cliente);
+
+      expect(await falhaDe(cliente, "TRUNCATE tenants CASCADE")).toMatchObject({
+        code: EXCECAO_DO_TRIGGER,
       });
       expect(antes).toHaveLength(2);
       expect(await retrato(cliente)).toEqual(antes);
