@@ -32,6 +32,9 @@ const TENANT = "00000000-0000-4000-8000-00000000000a";
 const USUARIO = "00000000-0000-4000-8000-000000000001";
 const ID = "00000000-0000-4000-8000-0000000000a1";
 
+/** Procedimentos já implementados, provados com banco real nos próprios arquivos de teste. */
+const IMPLEMENTADOS: readonly string[] = ["operacoes.registrarDevolucao"];
+
 const CADASTRO = {
   nome: "Notebook Lenovo ThinkPad",
   categoria: "notebook",
@@ -191,7 +194,7 @@ describe("registro e autorização", () => {
     },
   );
 
-  it.each(chamadas("operacoes"))(
+  it.each(chamadas("operacoes").filter(([nome]) => !IMPLEMENTADOS.includes(nome)))(
     "T-OPER-01 — Operações chega a %s, que responde NOT_IMPLEMENTED",
     async (_n, chamar) => {
       await expect(chamar()).rejects.toMatchObject({

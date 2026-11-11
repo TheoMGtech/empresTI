@@ -2,7 +2,7 @@
 
 ## Estado
 
-**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-OPER-01 concluída.
+**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-OPER-01 e T-OPER-03 concluídas.
 
 Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
 `rules/checks.md` ao concluir; todo teste cita no nome o CA que evidencia; sem alteração no
@@ -17,7 +17,7 @@ Supabase remoto, deploy de produção ou merge em `main`.
 - [ ] **T-OPER-02 — Lista, resumo e últimos cadastros**
   - Atende: CA-OPER-01, 02, 04, 07, 10, 11.
   - Commit: `feat(operacoes): listar empréstimos em aberto e resumo`.
-- [ ] **T-OPER-03 — `registrarDevolucao`**
+- [x] **T-OPER-03 — `registrarDevolucao`**
   - Atende: CA-OPER-03, 04, 08.
   - Commit: `feat(operacoes): registrar devolução no balcão`.
 - [ ] **T-OPER-04 — `equipamentos.cadastrar`**
