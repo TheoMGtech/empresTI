@@ -1,15 +1,13 @@
-import { TRPCError } from "@trpc/server";
-
 import { esquemaSessaoAtual } from "@/lib/esquemas/sessao";
-import { criarRouterTRPC, procedimentoPublico } from "@/server/api/trpc";
-
-export const MENSAGEM_NAO_IMPLEMENTADO = "Sessão ainda não disponível.";
+import { criarRouterTRPC, tenantProcedure } from "@/server/api/trpc";
+import { consultarSessaoAtual } from "@/server/services/sessao";
 
 export const routerSessao = criarRouterTRPC({
-  // Contrato publicado na T-SESSAO-02. Até a T-SESSAO-06, o procedimento responde sempre
-  // `NOT_IMPLEMENTED` e não lê identidade nem banco. A T-SESSAO-06 troca o procedimento por
-  // `tenantProcedure` (T-SESSAO-04) e passa a devolver os dados reais do membership.
-  atual: procedimentoPublico.output(esquemaSessaoAtual).query((): never => {
-    throw new TRPCError({ code: "NOT_IMPLEMENTED", message: MENSAGEM_NAO_IMPLEMENTADO });
-  }),
+  // RF-SESSAO-06: exige sessão e membership; devolve só nome de exibição e papel.
+  atual: tenantProcedure.output(esquemaSessaoAtual).query(({ ctx }) =>
+    consultarSessaoAtual(ctx.obterClientePrisma(), {
+      usuarioId: ctx.usuarioId,
+      tenantId: ctx.tenantId,
+    }),
+  ),
 });

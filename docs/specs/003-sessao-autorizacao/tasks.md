@@ -2,7 +2,7 @@
 
 ## Estado
 
-**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-SESSAO-01 a T-SESSAO-05
+**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-SESSAO-01 a T-SESSAO-06
 concluídas.
 
 Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
@@ -41,7 +41,7 @@ de produção ou merge em `main`.
   - Atende: CA-SESSAO-11.
   - Testes: erro Zod com `campos`; erro de regra com `motivo`; sem vazamento de detalhe interno.
   - Commit: `feat(api): padronizar motivo e campos nos erros`.
-- [ ] **T-SESSAO-06 — Implementar `sessao.atual`**
+- [x] **T-SESSAO-06 — Implementar `sessao.atual`**
   - Atende: CA-SESSAO-05.
   - Testes: devolve só `nomeExibicao` e `papel`; `null` sem nome.
   - Commit: `feat(sessao): devolver nome e papel da sessão`.
