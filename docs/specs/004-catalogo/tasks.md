@@ -2,7 +2,7 @@
 
 ## Estado
 
-**Status:** Aprovadas pelo responsável em 2026-11-11. Nenhuma tarefa iniciada.
+**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-CATALOGO-01 concluída.
 
 Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
 `rules/checks.md` ao concluir; todo teste cita no nome o CA que evidencia; sem alteração no
@@ -10,7 +10,7 @@ Supabase remoto, deploy de produção ou merge em `main`.
 
 ## Bloco A — servidor (BE)
 
-- [ ] **T-CATALOGO-01 — Contrato de `equipamentos.listar`**
+- [x] **T-CATALOGO-01 — Contrato de `equipamentos.listar`**
   - Esquemas de entrada e saída, e procedimento "não implementado". Avisar o FE.
   - Atende: CA-CATALOGO-10 (formato).
   - Commit: `feat(catalogo): publicar contrato da listagem`.
