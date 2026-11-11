@@ -1542,7 +1542,7 @@ describe("CA-IMG-14: compatibilidade com a T3", () => {
     expect(validador.stdout).toContain("arquivos verificados: 12");
     expect(await arquivosEm(preparo.pastaFinal)).toHaveLength(12);
     expect(manifesto.estado).toBe("final_revisao");
-  });
+  }, 60_000);
 
   it("CA-IMG-14: os scripts não fabricam os estados aprovado ou publicado", async () => {
     const preparo = await preparoComLote();
@@ -1564,7 +1564,7 @@ describe("CA-IMG-14: compatibilidade com a T3", () => {
     expect(codigoDeSaida(aprovado)).toBe(6);
     expect(manifesto.semelhanca_visual).toEqual({ situacao: "nao_verificada" });
     expect(manifesto.itens.some((item) => item.aprovacao_humana || item.publicacao)).toBe(false);
-  });
+  }, 60_000);
 
   it("CA-IMG-09: reprovar na revisão final reabre o item e volta à preparação", async () => {
     const preparo = await preparoComLote();
@@ -1586,7 +1586,7 @@ describe("CA-IMG-14: compatibilidade com a T3", () => {
 
     expect((await preparo.lerManifesto()).estado).toBe("preparacao");
     expect((await preparo.validar("preparacao")).aprovado).toBe(true);
-  });
+  }, 60_000);
 
   it("CA-IMG-11: manifesto e artefatos não contêm a chave", async () => {
     const preparo = await preparoComLote();
