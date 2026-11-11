@@ -1,0 +1,114 @@
+"use client";
+
+import type { ReactNode } from "react";
+
+import { CartaoEquipamento } from "@/components/catalogo/cartao-equipamento";
+import { FaixaRegras } from "@/components/catalogo/faixa-regras";
+import { ConteudoPagina } from "@/components/shell/pagina";
+import { useSessaoAplicacao } from "@/components/shell/sessao";
+import { trpc } from "@/trpc/cliente";
+
+export const TAMANHO_PAGINA_CATALOGO = 24;
+export const MENSAGEM_FALHA_CATALOGO = "Não foi possível carregar o catálogo.";
+export const MENSAGEM_CATALOGO_VAZIO = "Nenhum equipamento cadastrado.";
+
+const BOTAO_SECUNDARIO =
+  "flex h-9 items-center justify-center rounded-[8px] border border-(--border-strong) bg-transparent px-4 text-[13px] text-(--text-nav) transition-[border-color,color,transform] duration-[140ms] ease-out hover:enabled:border-(--border-hover) hover:enabled:text-(--color-text) active:enabled:translate-y-px disabled:cursor-not-allowed disabled:opacity-45 motion-reduce:transition-none motion-reduce:active:translate-y-0";
+
+function plural(quantidade: number, singular: string, pluralTexto: string) {
+  return `${quantidade} ${quantidade === 1 ? singular : pluralTexto}`;
+}
+
+function Grade({ children }: { children: ReactNode }) {
+  return <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">{children}</div>;
+}
+
+function Esqueleto() {
+  return (
+    <div aria-busy="true" role="status">
+      <span className="sr-only">Carregando catálogo</span>
+      <Grade>
+        {Array.from({ length: 6 }, (_, indice) => (
+          <div
+            className="h-[150px] rounded-[12px] border border-(--border-card) bg-(--color-surface)"
+            key={indice}
+          />
+        ))}
+      </Grade>
+    </div>
+  );
+}
+
+/** Tela 02 · Catálogo (RF-CATALOGO-03 a 07). */
+export function TelaCatalogo() {
+  const sessao = useSessaoAplicacao();
+  const consulta = trpc.equipamentos.listar.useInfiniteQuery(
+    { limite: TAMANHO_PAGINA_CATALOGO },
+    { getNextPageParam: (pagina) => pagina.proximoCursor ?? undefined },
+  );
+
+  const paginas = consulta.data?.pages ?? [];
+  const itens = paginas.flatMap((pagina) => pagina.itens);
+  const resumo = paginas[0]?.resumo;
+
+  return (
+    <ConteudoPagina>
+      <div className="flex flex-col gap-1" data-screen-label="02 Catálogo">
+        <h1 className="text-[24px] font-semibold tracking-[-0.01em] text-(--color-text)">
+          Catálogo
+        </h1>
+        {resumo ? (
+          <p className="text-[13px] text-(--text-muted)">
+            {plural(resumo.total, "equipamento", "equipamentos")} ·{" "}
+            {plural(resumo.disponiveis, "disponível agora", "disponíveis agora")}
+          </p>
+        ) : null}
+      </div>
+
+      <FaixaRegras />
+
+      {consulta.isPending ? <Esqueleto /> : null}
+
+      {consulta.isError && itens.length === 0 ? (
+        <div className="flex flex-col items-start gap-3" role="alert">
+          <p className="text-[13.5px] text-(--color-text)">{MENSAGEM_FALHA_CATALOGO}</p>
+          <button
+            className={BOTAO_SECUNDARIO}
+            disabled={consulta.isFetching}
+            onClick={() => void consulta.refetch()}
+            type="button"
+          >
+            Tentar novamente
+          </button>
+        </div>
+      ) : null}
+
+      {consulta.isSuccess && itens.length === 0 ? (
+        <p className="text-[13.5px] text-(--text-muted)">{MENSAGEM_CATALOGO_VAZIO}</p>
+      ) : null}
+
+      {itens.length > 0 ? (
+        <Grade>
+          {itens.map((item) => (
+            <CartaoEquipamento
+              abreIndisponivel={sessao.papel === "operacoes"}
+              item={item}
+              key={item.patrimonio}
+            />
+          ))}
+        </Grade>
+      ) : null}
+
+      {consulta.hasNextPage ? (
+        <button
+          className={`${BOTAO_SECUNDARIO} self-start`}
+          disabled={consulta.isFetchingNextPage}
+          onClick={() => void consulta.fetchNextPage()}
+          type="button"
+        >
+          {consulta.isFetchingNextPage ? "Carregando..." : "Mostrar mais"}
+        </button>
+      ) : null}
+    </ConteudoPagina>
+  );
+}
