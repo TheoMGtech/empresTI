@@ -1,6 +1,11 @@
 import type { PrismaClient, SituacaoEquipamento } from "@prisma/client";
 
-import type { Disponibilidade, SaidaListarEquipamentos } from "@/lib/esquemas/equipamentos";
+import {
+  LIMITE_PADRAO_LISTAGEM,
+  type Disponibilidade,
+  type EntradaListarEquipamentos,
+  type SaidaListarEquipamentos,
+} from "@/lib/esquemas/equipamentos";
 import type { Papel } from "@/lib/esquemas/sessao";
 
 type ClientePrisma = Pick<PrismaClient, "equipamento">;
@@ -32,20 +37,34 @@ function filtroDeVisibilidade({ tenantId, papel }: Escopo) {
 }
 
 /**
- * Equipamentos do tenant da sessão, por patrimônio (RF-CATALOGO-01). Nunca lê nem devolve quem
- * está com o item (RS-CATALOGO-03).
+ * Equipamentos do tenant da sessão, por patrimônio (RF-CATALOGO-01), com filtros (RF-CATALOGO-04)
+ * e cursor no último patrimônio devolvido (plano da Spec 004). O `resumo` usa só o recorte de
+ * visibilidade, sem os filtros da tela (RF-CATALOGO-05). Nunca lê nem devolve quem está com o item
+ * (RS-CATALOGO-03).
  */
 export async function listarEquipamentos(
   prisma: ClientePrisma,
   escopo: Escopo,
+  entrada: EntradaListarEquipamentos,
   opcoes: { urlSupabase: string },
 ): Promise<SaidaListarEquipamentos> {
   const visiveis = filtroDeVisibilidade(escopo);
+  const limite = entrada.limite ?? LIMITE_PADRAO_LISTAGEM;
 
   const [registros, total, disponiveis] = await Promise.all([
     prisma.equipamento.findMany({
-      where: visiveis,
+      where: {
+        AND: [
+          visiveis,
+          entrada.categoria ? { categoria: entrada.categoria } : {},
+          // Até a Spec 005, disponível é o mesmo que `ativo`.
+          entrada.somenteDisponiveis ? { situacao: "ativo" as const } : {},
+          entrada.cursor ? { patrimonio: { gt: entrada.cursor } } : {},
+        ],
+      },
       orderBy: { patrimonio: "asc" },
+      // Um a mais para saber se existe próxima página.
+      take: limite + 1,
       select: {
         patrimonio: true,
         nome: true,
@@ -58,15 +77,18 @@ export async function listarEquipamentos(
     prisma.equipamento.count({ where: { ...visiveis, situacao: "ativo" } }),
   ]);
 
+  const pagina = registros.slice(0, limite);
+  const haMais = registros.length > limite;
+
   return {
-    itens: registros.map((registro) => ({
+    itens: pagina.map((registro) => ({
       patrimonio: registro.patrimonio,
       nome: registro.nome,
       categoria: registro.categoria,
       imagemUrl: montarUrlImagem(opcoes.urlSupabase, registro.imagemCaminho),
       disponibilidade: DISPONIBILIDADE_POR_SITUACAO[registro.situacao],
     })),
-    proximoCursor: null,
+    proximoCursor: haMais ? (pagina.at(-1)?.patrimonio ?? null) : null,
     resumo: { total, disponiveis },
   };
 }

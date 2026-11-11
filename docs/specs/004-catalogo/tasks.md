@@ -2,7 +2,7 @@
 
 ## Estado
 
-**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-CATALOGO-01 e T-CATALOGO-02
+**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-CATALOGO-01 a T-CATALOGO-03
 concluídas.
 
 Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
@@ -19,7 +19,7 @@ Supabase remoto, deploy de produção ou merge em `main`.
   - Atende: CA-CATALOGO-01, 02, 03, 04, 09, 10.
   - Testes: 12 itens da carga; tenant B invisível; recusa sem sessão; manutenção; `fora_de_uso` por papel.
   - Commit: `feat(catalogo): listar equipamentos do tenant`.
-- [ ] **T-CATALOGO-03 — Filtros, cursor e URL da fotografia**
+- [x] **T-CATALOGO-03 — Filtros, cursor e URL da fotografia**
   - Atende: CA-CATALOGO-05, 07, 08.
   - Commit: `feat(catalogo): filtrar e paginar a listagem`.
 

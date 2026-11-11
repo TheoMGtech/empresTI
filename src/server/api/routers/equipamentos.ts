@@ -8,14 +8,14 @@ import { listarEquipamentos } from "@/server/services/equipamentos";
 
 export const routerEquipamentos = criarRouterTRPC({
   // RF-CATALOGO-01, RS-CATALOGO-01: tenant e papel vêm do contexto, nunca do input.
-  // Filtros e cursor da entrada entram na T-CATALOGO-03.
   listar: tenantProcedure
     .input(esquemaEntradaListarEquipamentos)
     .output(esquemaSaidaListarEquipamentos)
-    .query(({ ctx }) =>
+    .query(({ ctx, input }) =>
       listarEquipamentos(
         ctx.obterClientePrisma(),
         { tenantId: ctx.tenantId, papel: ctx.papel },
+        input,
         { urlSupabase: lerAmbientePublico().NEXT_PUBLIC_SUPABASE_URL },
       ),
     ),
