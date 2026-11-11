@@ -2,8 +2,8 @@
 
 ## Estado
 
-**Status:** PROPOSTA — aguardando aprovação conjunta. Decisões funcionais aprovadas pelo
-responsável em 2026-11-11. Nenhum código ou migration antes da aprovação de spec, plano e tarefas.
+**Status:** APROVADA — pelo responsável em 2026-11-11, com `plan.md` e `tasks.md`. Ainda não
+implementada.
 
 ## Objetivo
 

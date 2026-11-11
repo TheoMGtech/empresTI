@@ -9,8 +9,10 @@ Aprovada pelo responsável junto com `plan.md` e `tasks.md` (registro em
 `main`). Pendente de evidência: CA-LOGIN-04 com conta real em produção e
 RS-LOGIN-04, porque o cadastro público ainda está habilitado no Supabase Auth.
 
-**Revisão proposta, aguardando aprovação conjunta (DF-15):** o destino após o login passa a
-ser `/catalogo`, e `Sair` passa ao bloco de usuário da sidebar. Vale junto com a Spec 003.
+**Revisão aprovada pelo responsável em 2026-11-11 (DF-15):** o destino após o login passa a
+ser `/catalogo`, e `Sair` passa ao bloco de usuário da sidebar, mantendo autenticação segura,
+proteção de sessão e o tratamento de quem não tem membership. Implementação pela Spec 003; até
+lá vale em produção o comportamento anterior.
 
 ## Objetivo
 

@@ -2,8 +2,13 @@
 
 ## Estado
 
-**Status:** PROPOSTA — aguardando aprovação conjunta. Uma tarefa por vez, um commit por tarefa,
-com `rules/checks.md` ao concluir. Todo teste cita no nome o CA que evidencia.
+**Status:** Aprovadas pelo responsável em 2026-11-11. Nenhuma tarefa iniciada.
+
+Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
+`rules/checks.md` ao concluir; todo teste cita no nome o CA que evidencia; DDL de migration com
+aprovação específica e comandos protegidos executados pelo responsável; ajuste de prova histórica
+da Spec 002 não elimina teste permanente de segurança; sem alteração no Supabase remoto, deploy
+de produção ou merge em `main`.
 
 ## Bloco A — contrato e dados (BE)
 

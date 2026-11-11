@@ -2,7 +2,7 @@
 
 ## Estado
 
-**Status:** PROPOSTA — aguardando aprovação conjunta. Spec de referência: `spec.md`.
+**Status:** APROVADO — pelo responsável em 2026-11-11. Spec de referência: `spec.md`.
 
 ## Restrições e skills
 
