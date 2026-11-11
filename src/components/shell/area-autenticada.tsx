@@ -1,15 +1,20 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/client";
-import type { ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, type ReactNode } from "react";
 
+import { AvisoAcesso } from "@/components/shell/aviso-acesso";
 import { BlocoUsuario } from "@/components/shell/bloco-usuario";
 import { Marca } from "@/components/shell/marca";
 import { NavegacaoPrincipal } from "@/components/shell/navegacao";
+import { BotaoSair } from "@/components/shell/sair";
 import { ProvedorSessao, type SessaoAplicacao } from "@/components/shell/sessao";
 import { trpc } from "@/trpc/cliente";
 
 export const MENSAGEM_FALHA_SESSAO = "Não foi possível carregar a sessão.";
+export const MENSAGEM_ACESSO_NAO_LIBERADO = "Acesso não liberado.";
 
 // Erro de autorização não melhora com nova tentativa.
 const CODIGOS_SEM_NOVA_TENTATIVA = new Set(["UNAUTHORIZED", "FORBIDDEN", "BAD_REQUEST"]);
@@ -79,6 +84,14 @@ function Esqueleto() {
   );
 }
 
+function TelaAviso({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-(--color-bg) p-4">
+      {children}
+    </div>
+  );
+}
+
 function FalhaSessao({
   aoTentarNovamente,
   tentando,
@@ -87,14 +100,8 @@ function FalhaSessao({
   tentando: boolean;
 }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-(--color-bg) p-4">
-      <div
-        className="flex w-full max-w-[432px] flex-col gap-4 rounded-[14px] bg-(--color-surface) p-6 shadow-[0_0_0_1px_#454E68,0_18px_44px_rgba(0,0,0,0.7)]"
-        role="alert"
-      >
-        <h1 className="text-[19px] font-semibold tracking-[-0.01em] text-(--color-text)">
-          {MENSAGEM_FALHA_SESSAO}
-        </h1>
+    <TelaAviso>
+      <AvisoAcesso titulo={MENSAGEM_FALHA_SESSAO}>
         <p className="text-[13.5px] text-(--text-muted)">Verifique a conexão e tente novamente.</p>
         <button
           className="flex h-[38px] items-center justify-center self-end rounded-[8px] border border-(--border-strong) bg-transparent px-4 text-[13px] text-(--text-nav) transition-[border-color,color] duration-[140ms] ease-out hover:enabled:border-(--border-hover) hover:enabled:text-(--color-text) disabled:opacity-45 motion-reduce:transition-none"
@@ -104,9 +111,65 @@ function FalhaSessao({
         >
           Tentar novamente
         </button>
-      </div>
-    </div>
+      </AvisoAcesso>
+    </TelaAviso>
   );
+}
+
+/** RF-SESSAO-08 e RF-SESSAO-09: sem membership, ou com mais de um, só resta sair. */
+function AcessoNaoLiberado() {
+  return (
+    <TelaAviso>
+      <AvisoAcesso titulo={MENSAGEM_ACESSO_NAO_LIBERADO}>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <BotaoSair />
+        </div>
+      </AvisoAcesso>
+    </TelaAviso>
+  );
+}
+
+function codigoDoErro(erro: unknown) {
+  return erro instanceof TRPCClientError ? (erro.data?.code as string | undefined) : undefined;
+}
+
+/**
+ * RF-SESSAO-10: sessão ausente ou expirada em qualquer consulta ou ação da área autenticada volta
+ * a `/`, limpando o cache do cliente. O login fica fora daqui, porque credencial inválida também
+ * responde `UNAUTHORIZED`.
+ */
+function useSessaoExpirada() {
+  const roteador = useRouter();
+  const clienteConsulta = useQueryClient();
+  const encerrando = useRef(false);
+
+  const encerrar = useCallback(() => {
+    if (encerrando.current) return;
+    encerrando.current = true;
+    clienteConsulta.clear();
+    roteador.replace("/");
+  }, [clienteConsulta, roteador]);
+
+  useEffect(() => {
+    const verificar = (evento: { type: string; action?: { type: string; error?: unknown } }) => {
+      if (
+        evento.type === "updated" &&
+        evento.action?.type === "error" &&
+        codigoDoErro(evento.action.error) === "UNAUTHORIZED"
+      ) {
+        encerrar();
+      }
+    };
+    const pararConsultas = clienteConsulta.getQueryCache().subscribe(verificar);
+    const pararAcoes = clienteConsulta.getMutationCache().subscribe(verificar);
+
+    return () => {
+      pararConsultas();
+      pararAcoes();
+    };
+  }, [clienteConsulta, encerrar]);
+
+  return encerrar;
 }
 
 function Area({ sessao, children }: { sessao: SessaoAplicacao; children: ReactNode }) {
@@ -141,8 +204,16 @@ function Area({ sessao, children }: { sessao: SessaoAplicacao; children: ReactNo
 /** Shell autenticado (RF-SESSAO-07, RF-SESSAO-13): identificação, navegação por papel e Sair. */
 export function AreaAutenticada({ children }: { children: ReactNode }) {
   const sessao = trpc.sessao.atual.useQuery(undefined, { retry: deveTentarDeNovo });
+  const encerrar = useSessaoExpirada();
+  const codigo = codigoDoErro(sessao.error);
 
-  if (sessao.isPending) return <Esqueleto />;
+  useEffect(() => {
+    if (codigo === "UNAUTHORIZED") encerrar();
+  }, [codigo, encerrar]);
+
+  if (sessao.isPending || codigo === "UNAUTHORIZED") return <Esqueleto />;
+
+  if (codigo === "FORBIDDEN") return <AcessoNaoLiberado />;
 
   if (sessao.isError) {
     return (

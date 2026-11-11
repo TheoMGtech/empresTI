@@ -6,13 +6,19 @@ import {
   MENSAGEM_CREDENCIAIS_INVALIDAS,
   MENSAGEM_FALHA_INESPERADA,
 } from "@/components/login/formulario-login";
-import { MENSAGEM_FALHA_SAIDA } from "@/components/login/sessao-ativa";
 import { erroTRPC, renderizarComTRPC } from "@/test/trpc";
+
+const { substituir } = vi.hoisted(() => ({ substituir: vi.fn() }));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: substituir, push: vi.fn(), prefetch: vi.fn() }),
+}));
 
 const CREDENCIAIS = { email: "colaborador@empresa.com", senha: "senha-de-teste" };
 
 afterEach(() => {
   cleanup();
+  substituir.mockReset();
 });
 
 function preencherEEnviar({ email, senha }: { email: string; senha: string }) {
@@ -70,7 +76,7 @@ describe("CA-LOGIN-07 — tela de login", () => {
     expect(entrar).not.toHaveBeenCalled();
   });
 
-  it("RF-LOGIN-05/CA-LOGIN-04 — mostra Entrando..., impede envio duplicado e confirma o acesso", async () => {
+  it("RF-LOGIN-05/RF-LOGIN-06 — mostra Entrando..., impede envio duplicado e abre o catálogo", async () => {
     let concluirEntrada: (valor: { autenticado: true }) => void = () => {};
     const entrar = vi.fn(
       () =>
@@ -90,10 +96,9 @@ describe("CA-LOGIN-07 — tela de login", () => {
 
     concluirEntrada({ autenticado: true });
 
-    expect(
-      await screen.findByRole("heading", { level: 2, name: "Acesso confirmado" }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Sair" })).toBeInTheDocument();
+    await waitFor(() => expect(substituir).toHaveBeenCalledWith("/catalogo"));
+    expect(screen.getByRole("status")).toHaveTextContent("Abrindo o catálogo.");
+    expect(screen.queryByText("Acesso confirmado")).not.toBeInTheDocument();
   });
 
   it("CA-LOGIN-03/RF-LOGIN-04 — exibe mensagem genérica para credenciais inválidas", async () => {
@@ -126,43 +131,20 @@ describe("CA-LOGIN-07 — tela de login", () => {
     expect(screen.queryByText(/detalhe interno|postgresql/)).not.toBeInTheDocument();
   });
 
-  it("CA-LOGIN-05 — reconhece sessão existente ao carregar /", async () => {
+  it("CA-LOGIN-05 — sessão válida ao carregar / redireciona para /catalogo", async () => {
     renderizarComTRPC(<PaginaInicial />, {
       "autenticacao.sessao": () => ({ autenticado: true }),
     });
 
-    expect(
-      await screen.findByRole("heading", { level: 2, name: "Acesso confirmado" }),
-    ).toBeInTheDocument();
+    await waitFor(() => expect(substituir).toHaveBeenCalledWith("/catalogo"));
     expect(screen.queryByLabelText("E-mail")).not.toBeInTheDocument();
+    expect(screen.queryByText("Acesso confirmado")).not.toBeInTheDocument();
   });
 
-  it("CA-LOGIN-06 — Sair encerra a sessão e volta ao formulário", async () => {
-    const sair = vi.fn(() => ({ autenticado: false }));
-    renderizarComTRPC(<PaginaInicial />, {
-      "autenticacao.sessao": () => ({ autenticado: true }),
-      "autenticacao.sair": sair,
-    });
-
-    fireEvent.click(await screen.findByRole("button", { name: "Sair" }));
+  it("CA-LOGIN-06 — sem sessão, / mostra o formulário e não redireciona", async () => {
+    renderizarSemSessao();
 
     expect(await screen.findByLabelText("E-mail")).toBeInTheDocument();
-    expect(sair).toHaveBeenCalledTimes(1);
-  });
-
-  it("RF-LOGIN-08 — mantém a sessão e informa falha ao sair", async () => {
-    renderizarComTRPC(<PaginaInicial />, {
-      "autenticacao.sessao": () => ({ autenticado: true }),
-      "autenticacao.sair": () => {
-        throw erroTRPC("INTERNAL_SERVER_ERROR", "detalhe interno");
-      },
-    });
-
-    fireEvent.click(await screen.findByRole("button", { name: "Sair" }));
-
-    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent(MENSAGEM_FALHA_SAIDA));
-    expect(
-      screen.getByRole("heading", { level: 2, name: "Acesso confirmado" }),
-    ).toBeInTheDocument();
+    expect(substituir).not.toHaveBeenCalled();
   });
 });
