@@ -2,8 +2,9 @@
 
 ## Estado
 
-**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-SESSAO-01 a T-SESSAO-09
-concluídas.
+**Status:** Aprovadas pelo responsável em 2026-11-11. T-SESSAO-01 a T-SESSAO-09 concluídas.
+T-SESSAO-10 em andamento: provas finais no commit `cf90302`; verificação V-01 NÃO PRONTA
+(`verificacao.md`), aguardando decisão do responsável sobre CA-SESSAO-14.
 
 Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
 `rules/checks.md` ao concluir; todo teste cita no nome o CA que evidencia; DDL de migration com

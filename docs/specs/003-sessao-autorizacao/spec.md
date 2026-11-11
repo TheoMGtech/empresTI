@@ -2,8 +2,10 @@
 
 ## Estado
 
-**Status:** APROVADA — pelo responsável em 2026-11-11, com `plan.md` e `tasks.md`. Ainda não
-implementada.
+**Status:** Implementada — aprovada pelo responsável em 2026-11-11, com `plan.md` e `tasks.md`;
+T-SESSAO-01 a T-SESSAO-09 concluídas. Verificação formal V-01 (2026-11-11, commit `cf90302`):
+NÃO PRONTA, com CA-SESSAO-14 AMBÍGUO e o check `git status --short` sem registro
+(`verificacao.md`). Não declarar PRONTA antes de nova execução.
 
 ## Objetivo
 
