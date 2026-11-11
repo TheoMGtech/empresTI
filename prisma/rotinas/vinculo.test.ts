@@ -1,0 +1,408 @@
+// @vitest-environment node
+import { spawnSync } from "node:child_process";
+import { randomUUID } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "@prisma/client";
+import { Client } from "pg";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+
+import { iniciarBancoReal, type BancoReal } from "@/test/banco-real";
+
+import { executarCargaDoManifesto } from "./carga";
+import { ErroIdentidadeRecusada } from "./identidade";
+import { ErroVinculo, vincularProfessor } from "./vinculo";
+
+const TEMPO_DE_SUBIDA_MS = 300_000;
+const TEMPO_DE_ENCERRAMENTO_MS = 60_000;
+const TEMPO_DO_COMANDO_MS = 120_000;
+
+const RAIZ = fileURLToPath(new URL("../../", import.meta.url));
+const ROTINA = fileURLToPath(new URL("../vincular-professor.ts", import.meta.url));
+
+const PASSADO = "2000-01-01T00:00:00Z";
+const FUTURO = "2999-01-01T00:00:00Z";
+const OUTRO_TENANT = "00000000-0000-4000-8000-00000000000b";
+
+let banco: BancoReal;
+
+type Contexto = { prisma: PrismaClient; cliente: Client; url: string };
+
+async function comBanco<T>(acao: (contexto: Contexto) => Promise<T>) {
+  const url = await banco.criarBanco();
+  const prisma = new PrismaClient({ adapter: new PrismaPg(url) });
+  const cliente = new Client({ connectionString: url });
+  await cliente.connect();
+  try {
+    return await acao({ prisma, cliente, url });
+  } finally {
+    await cliente.end();
+    await prisma.$disconnect();
+  }
+}
+
+/** Banco com o tenant inicial e um `auth.users` mínimo, só no ambiente isolado. */
+function comAmbiente<T>(acao: (contexto: Contexto) => Promise<T>) {
+  return comBanco(async (contexto) => {
+    await contexto.cliente.query("INSERT INTO tenants (slug) VALUES ('suporte_ti')");
+    await criarAuthUsers(contexto.cliente);
+    return acao(contexto);
+  });
+}
+
+async function criarAuthUsers(cliente: Client) {
+  await cliente.query("CREATE SCHEMA auth");
+  await cliente.query(
+    `CREATE TABLE auth.users (
+       id UUID PRIMARY KEY,
+       email_confirmed_at TIMESTAMPTZ,
+       banned_until TIMESTAMPTZ,
+       deleted_at TIMESTAMPTZ
+     )`,
+  );
+}
+
+async function criarIdentidade(
+  cliente: Client,
+  dados: { confirmado?: string | null; banido?: string; excluido?: string } = {},
+) {
+  const id = randomUUID();
+  await cliente.query(
+    "INSERT INTO auth.users (id, email_confirmed_at, banned_until, deleted_at) VALUES ($1, $2, $3, $4)",
+    [id, dados.confirmado === undefined ? PASSADO : dados.confirmado, dados.banido, dados.excluido],
+  );
+  return id;
+}
+
+async function retrato(cliente: Client, tabela: string) {
+  const { rows } = await cliente.query<{ linha: string }>(
+    `SELECT t::text AS linha FROM ${tabela} t ORDER BY 1`,
+  );
+  return rows.map((item) => item.linha);
+}
+
+async function inserirMembership(cliente: Client, userId: string, role: string, slug = "suporte_ti") {
+  await cliente.query(
+    `INSERT INTO memberships (user_id, tenant_id, role)
+     SELECT $1, id, $2::papel_membership FROM tenants WHERE slug = $3`,
+    [userId, role, slug],
+  );
+}
+
+function rodar(argumentos: string[], env: Record<string, string>) {
+  return spawnSync(process.execPath, [ROTINA, ...argumentos], {
+    cwd: RAIZ,
+    encoding: "utf8",
+    env: { PATH: process.env.PATH, NODE_ENV: "test", ...env },
+    timeout: TEMPO_DO_COMANDO_MS - 10_000,
+  });
+}
+
+beforeAll(async () => {
+  banco = await iniciarBancoReal();
+}, TEMPO_DE_SUBIDA_MS);
+
+afterAll(async () => {
+  await banco?.encerrar();
+}, TEMPO_DE_ENCERRAMENTO_MS);
+
+describe("vínculo válido", () => {
+  it("CA-DADOS-C1 — cria o membership colaborador em suporte_ti", async () => {
+    await comAmbiente(async ({ prisma, cliente }) => {
+      const id = await criarIdentidade(cliente);
+
+      expect(await vincularProfessor(prisma, id)).toBe("criado");
+
+      const { rows } = await cliente.query(
+        `SELECT m.user_id, m.role, t.slug FROM memberships m
+           JOIN tenants t ON t.id = m.tenant_id`,
+      );
+      expect(rows).toEqual([{ user_id: id, role: "colaborador", slug: "suporte_ti" }]);
+    });
+  });
+
+  it("CA-DADOS-C1 — repetir não muda nada", async () => {
+    await comAmbiente(async ({ prisma, cliente }) => {
+      const id = await criarIdentidade(cliente);
+      await vincularProfessor(prisma, id);
+      const antes = await retrato(cliente, "memberships");
+
+      expect(await vincularProfessor(prisma, id)).toBe("ja_existente");
+      expect(await vincularProfessor(prisma, id)).toBe("ja_existente");
+
+      expect(await retrato(cliente, "memberships")).toEqual(antes);
+    });
+  });
+
+  it("CA-DADOS-C1 — identidades diferentes têm vínculos separados", async () => {
+    await comAmbiente(async ({ prisma, cliente }) => {
+      await vincularProfessor(prisma, await criarIdentidade(cliente));
+      await vincularProfessor(prisma, await criarIdentidade(cliente));
+
+      expect(await retrato(cliente, "memberships")).toHaveLength(2);
+    });
+  });
+});
+
+describe("vínculo recusado sem gravar", () => {
+  it.each<[string, (cliente: Client) => Promise<string>, string]>([
+    ["UUID malformado", async () => "nao-e-uuid", "UUID_INVALIDO"],
+    ["identidade inexistente", async () => randomUUID(), "IDENTIDADE_INEXISTENTE"],
+    [
+      "identidade excluída",
+      (cliente) => criarIdentidade(cliente, { excluido: PASSADO }),
+      "IDENTIDADE_INEXISTENTE",
+    ],
+    [
+      "e-mail não confirmado",
+      (cliente) => criarIdentidade(cliente, { confirmado: null }),
+      "EMAIL_NAO_CONFIRMADO",
+    ],
+    ["usuário banido", (cliente) => criarIdentidade(cliente, { banido: FUTURO }), "IDENTIDADE_BANIDA"],
+  ])("CA-DADOS-C1 — recusa %s", async (_nome, preparar, codigo) => {
+    await comAmbiente(async ({ prisma, cliente }) => {
+      const id = await preparar(cliente);
+      const usuariosAntes = await retrato(cliente, "auth.users");
+
+      const erro = await vincularProfessor(prisma, id).catch((falha: unknown) => falha);
+
+      expect(erro).toBeInstanceOf(ErroIdentidadeRecusada);
+      expect(erro).toMatchObject({ codigo });
+      expect(await retrato(cliente, "memberships")).toEqual([]);
+      expect(await retrato(cliente, "auth.users")).toEqual(usuariosAntes);
+    });
+  });
+
+  it("CA-DADOS-C1 — sem auth.users, a verificação fica indeterminada e nada é gravado", async () => {
+    await comBanco(async ({ prisma, cliente }) => {
+      await cliente.query("INSERT INTO tenants (slug) VALUES ('suporte_ti')");
+
+      await expect(vincularProfessor(prisma, randomUUID())).rejects.toMatchObject({
+        codigo: "IDENTIDADE_INDETERMINADA",
+      });
+      expect(await retrato(cliente, "memberships")).toEqual([]);
+    });
+  });
+
+  it("CA-DADOS-C1 — papel diferente aborta sem alterar", async () => {
+    await comAmbiente(async ({ prisma, cliente }) => {
+      const id = await criarIdentidade(cliente);
+      await inserirMembership(cliente, id, "operacoes");
+      const antes = await retrato(cliente, "memberships");
+
+      const erro = await vincularProfessor(prisma, id).catch((falha: unknown) => falha);
+
+      expect(erro).toBeInstanceOf(ErroVinculo);
+      expect(erro).toMatchObject({ codigo: "PAPEL_DIVERGENTE" });
+      expect(await retrato(cliente, "memberships")).toEqual(antes);
+    });
+  });
+
+  it("CA-DADOS-C1 — vínculo em outro tenant aborta, mantendo um único membership", async () => {
+    await comAmbiente(async ({ prisma, cliente }) => {
+      await cliente.query("INSERT INTO tenants (id, slug) VALUES ($1, 'outro_tenant')", [
+        OUTRO_TENANT,
+      ]);
+      const id = await criarIdentidade(cliente);
+      await inserirMembership(cliente, id, "colaborador", "outro_tenant");
+      const antes = await retrato(cliente, "memberships");
+
+      await expect(vincularProfessor(prisma, id)).rejects.toMatchObject({
+        codigo: "VINCULO_EM_OUTRO_TENANT",
+      });
+      expect(await retrato(cliente, "memberships")).toEqual(antes);
+    });
+  });
+
+  it("CA-DADOS-C1 — sem o tenant inicial, nada é gravado", async () => {
+    await comBanco(async ({ prisma, cliente }) => {
+      await criarAuthUsers(cliente);
+      const id = await criarIdentidade(cliente);
+
+      await expect(vincularProfessor(prisma, id)).rejects.toMatchObject({
+        codigo: "TENANT_INEXISTENTE",
+      });
+      expect(await retrato(cliente, "memberships")).toEqual([]);
+    });
+  });
+
+  it("CA-DADOS-C1 — falha depois da escrita desfaz o vínculo", async () => {
+    await comAmbiente(async ({ prisma, cliente }) => {
+      const id = await criarIdentidade(cliente);
+      const falha = new Error("falha simulada depois da escrita");
+      const clienteComFalha = {
+        $transaction: ((acao: (transacao: never) => Promise<unknown>) =>
+          prisma.$transaction(async (transacao) => {
+            await acao(transacao as never);
+            throw falha;
+          })) as unknown as PrismaClient["$transaction"],
+      };
+
+      await expect(vincularProfessor(clienteComFalha, id)).rejects.toBe(falha);
+
+      expect(await retrato(cliente, "memberships")).toEqual([]);
+    });
+  });
+});
+
+describe("o que o vínculo não faz", () => {
+  it("CA-DADOS-18 — não cria empréstimos nem estrutura de empréstimos", async () => {
+    await comAmbiente(async ({ prisma, cliente }) => {
+      await vincularProfessor(prisma, await criarIdentidade(cliente));
+
+      const { rows } = await cliente.query(
+        "SELECT to_regclass('public.emprestimos') AS emprestimos",
+      );
+      expect(rows).toEqual([{ emprestimos: null }]);
+    });
+  });
+
+  it("CA-DADOS-22 — não grava eventos de auditoria", async () => {
+    await comAmbiente(async ({ prisma, cliente }) => {
+      await vincularProfessor(prisma, await criarIdentidade(cliente));
+
+      expect(await retrato(cliente, "auditoria")).toEqual([]);
+    });
+  });
+
+  it("CA-DADOS-19 — não altera auth.users", async () => {
+    await comAmbiente(async ({ prisma, cliente }) => {
+      const id = await criarIdentidade(cliente);
+      const antes = await retrato(cliente, "auth.users");
+
+      await vincularProfessor(prisma, id);
+
+      expect(await retrato(cliente, "auth.users")).toEqual(antes);
+    });
+  });
+
+  it("CA-DADOS-C1 — não altera tenant nem equipamentos da carga", async () => {
+    await comBanco(async ({ prisma, cliente }) => {
+      await executarCargaDoManifesto(prisma);
+      await criarAuthUsers(cliente);
+      const antes = [await retrato(cliente, "tenants"), await retrato(cliente, "equipamentos")];
+
+      await vincularProfessor(prisma, await criarIdentidade(cliente));
+
+      expect([await retrato(cliente, "tenants"), await retrato(cliente, "equipamentos")]).toEqual(
+        antes,
+      );
+    });
+  });
+
+  it("CA-DADOS-19 — o código não cadastra usuário nem aceita papel por argumento", () => {
+    const fontes = [new URL("./vinculo.ts", import.meta.url), ROTINA].map((arquivo) =>
+      readFileSync(arquivo, "utf8"),
+    );
+
+    for (const fonte of fontes) {
+      expect(fonte).not.toMatch(/createUser|inviteUser|signUp|\$executeRaw|"role":/);
+    }
+  });
+});
+
+describe("rotina de linha de comando", () => {
+  it(
+    "CA-DADOS-23 — cria o vínculo sem repetir UUID nem conexão",
+    async () => {
+      await comAmbiente(async ({ cliente, url }) => {
+        const id = await criarIdentidade(cliente);
+
+        const { status, stdout, stderr } = rodar(["--user-id", id], { DIRECT_URL: url });
+        const saida = `${stdout}\n${stderr}`;
+
+        expect({ status, stdout }).toEqual({ status: 0, stdout: "Vínculo criado.\n" });
+        expect(saida).not.toContain(id);
+        expect(saida).not.toContain(new URL(url).password);
+        expect(saida).not.toContain("postgresql://");
+        expect(await retrato(cliente, "memberships")).toHaveLength(1);
+      });
+    },
+    TEMPO_DO_COMANDO_MS,
+  );
+
+  it(
+    "CA-DADOS-C1 — repetir informa que nada mudou",
+    async () => {
+      await comAmbiente(async ({ prisma, cliente, url }) => {
+        const id = await criarIdentidade(cliente);
+        await vincularProfessor(prisma, id);
+
+        const { status, stdout } = rodar(["--user-id", id], { DIRECT_URL: url });
+
+        expect({ status, stdout }).toEqual({
+          status: 0,
+          stdout: "Vínculo já existente: nada mudou.\n",
+        });
+      });
+    },
+    TEMPO_DO_COMANDO_MS,
+  );
+
+  it(
+    "CA-DADOS-23 — recusa identidade inexistente, com código e sem o UUID",
+    async () => {
+      await comAmbiente(async ({ cliente, url }) => {
+        const id = randomUUID();
+
+        const { status, stdout, stderr } = rodar(["--user-id", id], { DIRECT_URL: url });
+
+        expect(status).toBe(1);
+        expect(stdout).toBe("");
+        expect(stderr).toContain("IDENTIDADE_INEXISTENTE");
+        expect(stderr).not.toContain(id);
+        expect(await retrato(cliente, "memberships")).toEqual([]);
+      });
+    },
+    TEMPO_DO_COMANDO_MS,
+  );
+
+  it.each<[string, string[]]>([
+    ["sem --user-id", []],
+    ["com papel por argumento", ["--user-id", "valor-secreto", "--role", "operacoes"]],
+    ["com argumento desconhecido", ["--valor-secreto"]],
+  ])(
+    "CA-DADOS-23 — uso inválido %s é recusado sem repetir argumentos",
+    async (_nome, argumentos) => {
+      await comAmbiente(async ({ cliente, url }) => {
+        const { status, stderr } = rodar(argumentos, { DIRECT_URL: url });
+
+        expect(status).toBe(1);
+        expect(stderr).toContain("USO_INVALIDO");
+        expect(stderr).not.toContain("valor-secreto");
+        expect(await retrato(cliente, "memberships")).toEqual([]);
+      });
+    },
+    TEMPO_DO_COMANDO_MS,
+  );
+
+  it(
+    "CA-DADOS-24 — recusa banco remoto sem confirmação, sem expor a conexão",
+    () => {
+      const senha = "senha-ficticia-123";
+      const { status, stdout, stderr } = rodar(["--user-id", randomUUID()], {
+        DIRECT_URL: `postgresql://usuario:${senha}@db.exemplo.invalid:5432/banco`,
+      });
+      const saida = `${stdout}\n${stderr}`;
+
+      expect(status).toBe(1);
+      expect(saida).toContain("REMOTO_SEM_CONFIRMACAO");
+      expect(saida).not.toContain(senha);
+      expect(saida).not.toContain("db.exemplo.invalid");
+    },
+    TEMPO_DO_COMANDO_MS,
+  );
+
+  it(
+    "CA-DADOS-24 — recusa a falta de URL",
+    () => {
+      const { status, stderr } = rodar(["--user-id", randomUUID()], {});
+
+      expect(status).toBe(1);
+      expect(stderr).toContain("URL_AUSENTE");
+    },
+    TEMPO_DO_COMANDO_MS,
+  );
+});
