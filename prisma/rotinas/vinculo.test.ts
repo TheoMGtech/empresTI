@@ -13,7 +13,7 @@ import { iniciarBancoReal, type BancoReal } from "@/test/banco-real";
 
 import { executarCargaDoManifesto } from "./carga";
 import { ErroIdentidadeRecusada } from "./identidade";
-import { ErroVinculo, vincularProfessor } from "./vinculo";
+import { ErroVinculo, vincularProfessor, vincularUsuario, type DadosVinculo } from "./vinculo";
 
 const TEMPO_DE_SUBIDA_MS = 300_000;
 const TEMPO_DE_ENCERRAMENTO_MS = 60_000;
@@ -83,7 +83,12 @@ async function retrato(cliente: Client, tabela: string) {
   return rows.map((item) => item.linha);
 }
 
-async function inserirMembership(cliente: Client, userId: string, role: string, slug = "suporte_ti") {
+async function inserirMembership(
+  cliente: Client,
+  userId: string,
+  role: string,
+  slug = "suporte_ti",
+) {
   await cliente.query(
     `INSERT INTO memberships (user_id, tenant_id, role)
      SELECT $1, id, $2::papel_membership FROM tenants WHERE slug = $3`,
@@ -160,7 +165,11 @@ describe("vínculo recusado sem gravar", () => {
       (cliente) => criarIdentidade(cliente, { confirmado: null }),
       "EMAIL_NAO_CONFIRMADO",
     ],
-    ["usuário banido", (cliente) => criarIdentidade(cliente, { banido: FUTURO }), "IDENTIDADE_BANIDA"],
+    [
+      "usuário banido",
+      (cliente) => criarIdentidade(cliente, { banido: FUTURO }),
+      "IDENTIDADE_BANIDA",
+    ],
   ])("CA-DADOS-C1 — recusa %s", async (_nome, preparar, codigo) => {
     await comAmbiente(async ({ prisma, cliente }) => {
       const id = await preparar(cliente);
@@ -292,7 +301,9 @@ describe("o que o vínculo não faz", () => {
     });
   });
 
-  it("CA-DADOS-19 — o código não cadastra usuário nem aceita papel por argumento", () => {
+  // O papel por argumento passou a ser aceito pela CA-SESSAO-12 (Spec 003); a prova de que o
+  // código não cadastra usuário continua valendo.
+  it("CA-DADOS-19 — o código não cadastra usuário", () => {
     const fontes = [new URL("./vinculo.ts", import.meta.url), ROTINA].map((arquivo) =>
       readFileSync(arquivo, "utf8"),
     );
@@ -361,7 +372,7 @@ describe("rotina de linha de comando", () => {
 
   it.each<[string, string[]]>([
     ["sem --user-id", []],
-    ["com papel por argumento", ["--user-id", "valor-secreto", "--role", "operacoes"]],
+    ["com a opção inexistente --role", ["--user-id", "valor-secreto", "--role", "operacoes"]],
     ["com argumento desconhecido", ["--valor-secreto"]],
   ])(
     "CA-DADOS-23 — uso inválido %s é recusado sem repetir argumentos",
@@ -402,6 +413,169 @@ describe("rotina de linha de comando", () => {
 
       expect(status).toBe(1);
       expect(stderr).toContain("URL_AUSENTE");
+    },
+    TEMPO_DO_COMANDO_MS,
+  );
+});
+
+describe("papel e nome no vínculo (Spec 003)", () => {
+  async function lerVinculo(cliente: Client) {
+    const { rows } = await cliente.query<{ role: string; nome_exibicao: string | null }>(
+      "SELECT role, nome_exibicao FROM memberships",
+    );
+    return rows;
+  }
+
+  it("CA-SESSAO-12 — grava papel operacoes e nome de exibição", async () => {
+    await comAmbiente(async ({ prisma, cliente }) => {
+      const userId = await criarIdentidade(cliente);
+
+      expect(
+        await vincularUsuario(prisma, { userId, papel: "operacoes", nomeExibicao: "  Ana Souza " }),
+      ).toBe("criado");
+      expect(await lerVinculo(cliente)).toEqual([
+        { role: "operacoes", nome_exibicao: "Ana Souza" },
+      ]);
+    });
+  });
+
+  it("CA-SESSAO-12 — sem papel nem nome, mantém colaborador sem nome", async () => {
+    await comAmbiente(async ({ prisma, cliente }) => {
+      const userId = await criarIdentidade(cliente);
+
+      await vincularUsuario(prisma, { userId });
+      expect(await lerVinculo(cliente)).toEqual([{ role: "colaborador", nome_exibicao: null }]);
+    });
+  });
+
+  it("CA-SESSAO-12 — repetir com o mesmo papel e nome não muda nada", async () => {
+    await comAmbiente(async ({ prisma, cliente }) => {
+      const userId = await criarIdentidade(cliente);
+      const dados = { userId, papel: "operacoes", nomeExibicao: "Ana Souza" };
+      await vincularUsuario(prisma, dados);
+      const antes = await retrato(cliente, "memberships");
+
+      expect(await vincularUsuario(prisma, dados)).toBe("ja_existente");
+      expect(await vincularUsuario(prisma, { userId, papel: "operacoes" })).toBe("ja_existente");
+      expect(await retrato(cliente, "memberships")).toEqual(antes);
+    });
+  });
+
+  it.each<[string, Omit<DadosVinculo, "userId">, string]>([
+    ["papel desconhecido", { papel: "admin" }, "PAPEL_INVALIDO"],
+    ["papel em maiúsculas", { papel: "OPERACOES" }, "PAPEL_INVALIDO"],
+    ["papel vazio", { papel: "" }, "PAPEL_INVALIDO"],
+    ["nome vazio", { nomeExibicao: "" }, "NOME_INVALIDO"],
+    ["nome em branco", { nomeExibicao: " \t\n " }, "NOME_INVALIDO"],
+  ])("CA-SESSAO-12 — recusa %s sem gravar", async (_caso, extras, codigo) => {
+    await comAmbiente(async ({ prisma, cliente }) => {
+      const userId = await criarIdentidade(cliente);
+
+      const erro = await vincularUsuario(prisma, { userId, ...extras }).catch(
+        (falha: unknown) => falha,
+      );
+
+      expect(erro).toBeInstanceOf(ErroVinculo);
+      expect(erro).toMatchObject({ codigo });
+      expect(await retrato(cliente, "memberships")).toEqual([]);
+    });
+  });
+
+  it("CA-SESSAO-12 — papel diferente do vínculo existente aborta sem alterar", async () => {
+    await comAmbiente(async ({ prisma, cliente }) => {
+      const userId = await criarIdentidade(cliente);
+      await vincularUsuario(prisma, { userId });
+      const antes = await retrato(cliente, "memberships");
+
+      await expect(vincularUsuario(prisma, { userId, papel: "operacoes" })).rejects.toMatchObject({
+        codigo: "PAPEL_DIVERGENTE",
+      });
+      expect(await retrato(cliente, "memberships")).toEqual(antes);
+    });
+  });
+
+  it("CA-SESSAO-12 — nome diferente do vínculo existente aborta sem alterar", async () => {
+    await comAmbiente(async ({ prisma, cliente }) => {
+      const userId = await criarIdentidade(cliente);
+      await vincularUsuario(prisma, { userId });
+      const antes = await retrato(cliente, "memberships");
+
+      await expect(
+        vincularUsuario(prisma, { userId, nomeExibicao: "Outro Nome" }),
+      ).rejects.toMatchObject({ codigo: "NOME_DIVERGENTE" });
+      expect(await retrato(cliente, "memberships")).toEqual(antes);
+    });
+  });
+
+  it.each<[string, (cliente: Client) => Promise<string>, string]>([
+    ["identidade inexistente", async () => randomUUID(), "IDENTIDADE_INEXISTENTE"],
+    [
+      "e-mail não confirmado",
+      (cliente) => criarIdentidade(cliente, { confirmado: null }),
+      "EMAIL_NAO_CONFIRMADO",
+    ],
+    [
+      "usuário banido",
+      (cliente) => criarIdentidade(cliente, { banido: FUTURO }),
+      "IDENTIDADE_BANIDA",
+    ],
+  ])(
+    "CA-SESSAO-12 — com papel e nome, mantém a verificação de identidade: %s",
+    async (_caso, preparar, codigo) => {
+      await comAmbiente(async ({ prisma, cliente }) => {
+        const userId = await preparar(cliente);
+
+        const erro = await vincularUsuario(prisma, {
+          userId,
+          papel: "operacoes",
+          nomeExibicao: "Ana Souza",
+        }).catch((falha: unknown) => falha);
+
+        expect(erro).toBeInstanceOf(ErroIdentidadeRecusada);
+        expect(erro).toMatchObject({ codigo });
+        expect(await retrato(cliente, "memberships")).toEqual([]);
+      });
+    },
+  );
+
+  it(
+    "CA-SESSAO-12 — a linha de comando aceita --papel e --nome sem repetir o nome",
+    async () => {
+      await comAmbiente(async ({ cliente, url }) => {
+        const userId = await criarIdentidade(cliente);
+
+        const { status, stdout, stderr } = rodar(
+          ["--user-id", userId, "--papel", "operacoes", "--nome", "Ana Souza"],
+          { DIRECT_URL: url },
+        );
+
+        expect({ status, stdout }).toEqual({ status: 0, stdout: "Vínculo criado.\n" });
+        expect(`${stdout}\n${stderr}`).not.toContain("Ana Souza");
+        expect(await lerVinculo(cliente)).toEqual([
+          { role: "operacoes", nome_exibicao: "Ana Souza" },
+        ]);
+      });
+    },
+    TEMPO_DO_COMANDO_MS,
+  );
+
+  it(
+    "CA-SESSAO-12 — a linha de comando recusa papel inválido sem repetir o valor",
+    async () => {
+      await comAmbiente(async ({ cliente, url }) => {
+        const userId = await criarIdentidade(cliente);
+
+        const { status, stdout, stderr } = rodar(
+          ["--user-id", userId, "--papel", "valor-secreto"],
+          { DIRECT_URL: url },
+        );
+
+        expect(status).toBe(1);
+        expect(stdout).toBe("");
+        expect(stderr).toContain("PAPEL_INVALIDO");
+        expect(stderr).not.toContain("valor-secreto");
+        expect(await retrato(cliente, "memberships")).toEqual([]);
+      });
     },
     TEMPO_DO_COMANDO_MS,
   );

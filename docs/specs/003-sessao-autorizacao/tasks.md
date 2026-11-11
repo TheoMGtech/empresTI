@@ -2,7 +2,7 @@
 
 ## Estado
 
-**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-SESSAO-01 a T-SESSAO-06
+**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-SESSAO-01 a T-SESSAO-07
 concluídas.
 
 Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
@@ -45,7 +45,7 @@ de produção ou merge em `main`.
   - Atende: CA-SESSAO-05.
   - Testes: devolve só `nomeExibicao` e `papel`; `null` sem nome.
   - Commit: `feat(sessao): devolver nome e papel da sessão`.
-- [ ] **T-SESSAO-07 — Rotina de vínculo com papel e nome**
+- [x] **T-SESSAO-07 — Rotina de vínculo com papel e nome**
   - Atende: CA-SESSAO-12.
   - Testes: papel e nome gravados; verificação de identidade mantida; papel inválido recusado.
   - Commit: `feat(banco): aceitar papel e nome no vínculo`.
