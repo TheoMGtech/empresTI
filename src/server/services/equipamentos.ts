@@ -26,11 +26,28 @@ export function montarUrlImagem(urlSupabase: string, caminho: string | null): st
   return `${base}/storage/v1/object/public/${objeto}`;
 }
 
-// Até a Spec 005 não há empréstimos: `ativo` resulta em `disponivel` (plano da Spec 004).
+// Disponibilidade pela situação gravada. Um item `ativo` com empréstimo aberto está emprestado
+// (RN-DADOS-06, RF-SOLIC-04): ver `disponibilidadeDe`.
 const DISPONIBILIDADE_POR_SITUACAO: Record<SituacaoEquipamento, Disponibilidade> = {
   ativo: { estado: "disponivel" },
   em_manutencao: { estado: "manutencao" },
   fora_de_uso: { estado: "fora_de_uso" },
+};
+
+/** A situação gravada prevalece; um item `ativo` com empréstimo aberto está emprestado. */
+function disponibilidadeDe(
+  situacao: SituacaoEquipamento,
+  aberto: { devolverAte: Date } | null | undefined,
+): Disponibilidade {
+  return situacao === "ativo" && aberto
+    ? { estado: "emprestado", devolverAte: formatarDataDoBanco(aberto.devolverAte) }
+    : DISPONIBILIDADE_POR_SITUACAO[situacao];
+}
+
+/** Disponível: `ativo` e sem empréstimo aberto (RN-DADOS-06, RN-SOLIC-01). */
+const SO_DISPONIVEIS = {
+  situacao: "ativo" as const,
+  emprestimos: { none: { devolvidoEm: null } },
 };
 
 /** `fora_de_uso` só aparece para Operações (RN-CATALOGO-03); o papel vem do contexto. */
@@ -61,8 +78,7 @@ export async function listarEquipamentos(
         AND: [
           visiveis,
           entrada.categoria ? { categoria: entrada.categoria } : {},
-          // Até a Spec 005, disponível é o mesmo que `ativo`.
-          entrada.somenteDisponiveis ? { situacao: "ativo" as const } : {},
+          entrada.somenteDisponiveis ? SO_DISPONIVEIS : {},
           entrada.cursor ? { patrimonio: { gt: entrada.cursor } } : {},
         ],
       },
@@ -75,10 +91,12 @@ export async function listarEquipamentos(
         categoria: true,
         situacao: true,
         imagemCaminho: true,
+        // Só a data de devolução do aberto: nunca quem está com o item (RS-CATALOGO-03).
+        emprestimos: { where: { devolvidoEm: null }, select: { devolverAte: true }, take: 1 },
       },
     }),
     prisma.equipamento.count({ where: visiveis }),
-    prisma.equipamento.count({ where: { ...visiveis, situacao: "ativo" } }),
+    prisma.equipamento.count({ where: { AND: [visiveis, SO_DISPONIVEIS] } }),
   ]);
 
   const pagina = registros.slice(0, limite);
@@ -90,7 +108,7 @@ export async function listarEquipamentos(
       nome: registro.nome,
       categoria: registro.categoria,
       imagemUrl: montarUrlImagem(opcoes.urlSupabase, registro.imagemCaminho),
-      disponibilidade: DISPONIBILIDADE_POR_SITUACAO[registro.situacao],
+      disponibilidade: disponibilidadeDe(registro.situacao, registro.emprestimos[0]),
     })),
     proximoCursor: haMais ? (pagina.at(-1)?.patrimonio ?? null) : null,
     resumo: { total, disponiveis },
@@ -154,11 +172,7 @@ export async function detalharEquipamento(
       : Promise.resolve(null),
   ]);
 
-  // A situação gravada prevalece; um item `ativo` com empréstimo aberto está emprestado.
-  const disponibilidade: Disponibilidade =
-    equipamento.situacao === "ativo" && aberto
-      ? { estado: "emprestado", devolverAte: formatarDataDoBanco(aberto.devolverAte) }
-      : DISPONIBILIDADE_POR_SITUACAO[equipamento.situacao];
+  const disponibilidade = disponibilidadeDe(equipamento.situacao, aberto);
 
   const detalhe: DetalheEquipamento = {
     id: equipamento.id,
