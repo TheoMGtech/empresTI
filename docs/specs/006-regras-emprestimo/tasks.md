@@ -2,7 +2,7 @@
 
 ## Estado
 
-**Status:** Aprovadas pelo responsável em 2026-11-11. Nenhuma tarefa iniciada.
+**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-REGRAS-01 concluída.
 
 Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
 `rules/checks.md` ao concluir; todo teste cita no nome o CA que evidencia; sem alteração no
@@ -10,7 +10,7 @@ Supabase remoto, deploy de produção ou merge em `main`.
 
 ## Bloco A — servidor (BE)
 
-- [ ] **T-REGRAS-01 — Contrato de `meuResumo` e motivos**
+- [x] **T-REGRAS-01 — Contrato de `meuResumo` e motivos**
   - Avisar o FE.
   - Atende: RF-REGRAS-01, RF-REGRAS-04.
   - Commit: `feat(emprestimos): publicar contrato do resumo`.

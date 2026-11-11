@@ -3,10 +3,13 @@ import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 import { describe, expect, expectTypeOf, it } from "vitest";
 
 import {
+  LIMITE_ITENS_POR_PESSOA,
   MOTIVOS_SOLICITACAO,
   esquemaEntradaSolicitarEmprestimo,
+  esquemaMeuResumo,
   esquemaSaidaSolicitarEmprestimo,
   type EntradaSolicitarEmprestimo,
+  type MeuResumo,
   type SaidaSolicitarEmprestimo,
 } from "@/lib/esquemas/emprestimos";
 import {
@@ -16,6 +19,10 @@ import {
   type EntradaDetalharEquipamento,
 } from "@/lib/esquemas/equipamentos";
 import { routerAplicacao, type RouterAplicacao } from "@/server/api/raiz";
+import {
+  MENSAGEM_RESUMO_NAO_IMPLEMENTADO,
+  RECUSAS_SOLICITACAO,
+} from "@/server/api/routers/emprestimos";
 import type { ClienteSupabaseAutenticacao } from "@/server/services/autenticacao";
 
 const TENANT = "00000000-0000-4000-8000-00000000000a";
@@ -146,12 +153,55 @@ describe("contrato de emprestimos.solicitar", () => {
     ).toBe(false);
   });
 
-  it("RF-SOLIC-06 — os motivos de recusa são os da spec", () => {
+  it("RF-SOLIC-06/RF-REGRAS-04 — os motivos de recusa são os das specs 005 e 006", () => {
     expect(MOTIVOS_SOLICITACAO).toEqual([
       "EQUIPAMENTO_NAO_ENCONTRADO",
       "EQUIPAMENTO_INDISPONIVEL",
       "EQUIPAMENTO_EM_MANUTENCAO",
+      "LIMITE_ATINGIDO",
+      "ITEM_EM_ATRASO",
     ]);
+  });
+
+  it("RF-REGRAS-04 — cada motivo tem código e mensagem de recusa", () => {
+    for (const motivo of MOTIVOS_SOLICITACAO) {
+      expect(RECUSAS_SOLICITACAO[motivo]).toEqual({
+        code: expect.stringMatching(/^(NOT_FOUND|CONFLICT)$/),
+        message: expect.stringMatching(/\S/),
+      });
+    }
+  });
+});
+
+describe("contrato de emprestimos.meuResumo", () => {
+  it("RF-REGRAS-01 — devolve itensAbertos, limite, emAtraso e prazoDias, e nada mais", () => {
+    const resumo = { itensAbertos: 2, limite: 3, emAtraso: 0, prazoDias: 14 };
+
+    expect(esquemaMeuResumo.parse(resumo)).toEqual(resumo);
+    expect(esquemaMeuResumo.safeParse({ ...resumo, usuarioId: USUARIO }).success).toBe(false);
+    expect(esquemaMeuResumo.safeParse({ ...resumo, emAtraso: true }).success).toBe(false);
+    expect(esquemaMeuResumo.safeParse({ ...resumo, itensAbertos: -1 }).success).toBe(false);
+  });
+
+  it("RN-REGRAS-01 — o limite publicado é 3", () => {
+    expect(LIMITE_ITENS_POR_PESSOA).toBe(3);
+  });
+
+  it("RF-REGRAS-01 — o AppRouter expõe meuResumo com o tipo do contrato", () => {
+    expect(Object.keys(routerAplicacao._def.procedures)).toContain("emprestimos.meuResumo");
+    expectTypeOf<
+      inferRouterOutputs<RouterAplicacao>["emprestimos"]["meuResumo"]
+    >().toEqualTypeOf<MeuResumo>();
+  });
+
+  it("T-REGRAS-01 — sem sessão recusa; com sessão responde NOT_IMPLEMENTED", async () => {
+    await expect(caller(null).emprestimos.meuResumo()).rejects.toMatchObject({
+      code: "UNAUTHORIZED",
+    });
+    await expect(caller(USUARIO).emprestimos.meuResumo()).rejects.toMatchObject({
+      code: "NOT_IMPLEMENTED",
+      message: MENSAGEM_RESUMO_NAO_IMPLEMENTADO,
+    });
   });
 });
 
