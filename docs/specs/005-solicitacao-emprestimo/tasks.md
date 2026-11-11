@@ -2,7 +2,7 @@
 
 ## Estado
 
-**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-SOLIC-01 a T-SOLIC-03
+**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-SOLIC-01 a T-SOLIC-04
 concluídas.
 
 Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
@@ -29,7 +29,7 @@ de produção ou merge em `main`.
 
 ## Bloco B — servidor (BE)
 
-- [ ] **T-SOLIC-04 — `equipamentos.detalhar`**
+- [x] **T-SOLIC-04 — `equipamentos.detalhar`**
   - Atende: CA-SOLIC-04, 08, 09, 10.
   - Commit: `feat(catalogo): detalhar equipamento por papel`.
 - [ ] **T-SOLIC-05 — `emprestimos.solicitar`**

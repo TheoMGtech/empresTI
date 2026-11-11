@@ -2,14 +2,18 @@ import type { PrismaClient, SituacaoEquipamento } from "@prisma/client";
 
 import {
   LIMITE_PADRAO_LISTAGEM,
+  type DetalheEquipamento,
   type Disponibilidade,
   type EntradaListarEquipamentos,
   type SaidaListarEquipamentos,
 } from "@/lib/esquemas/equipamentos";
 import type { Papel } from "@/lib/esquemas/sessao";
+import { calcularDevolverAte, formatarDataDoBanco } from "@/lib/prazos";
 
 type ClientePrisma = Pick<PrismaClient, "equipamento">;
 type Escopo = { tenantId: string; papel: Papel };
+
+export class ErroEquipamentoNaoEncontrado extends Error {}
 
 /**
  * URL pública da fotografia, montada na leitura (RF-CATALOGO-02, RN-DADOS-08). O caminho gravado
@@ -90,5 +94,95 @@ export async function listarEquipamentos(
     })),
     proximoCursor: haMais ? (pagina.at(-1)?.patrimonio ?? null) : null,
     resumo: { total, disponiveis },
+  };
+}
+
+/** Texto opcional sem valor útil vira `null`, para a tela ocultar o campo (RF-SOLIC-05). */
+function textoOuNulo(valor: string | null): string | null {
+  const limpo = valor?.trim();
+  return limpo ? limpo : null;
+}
+
+/**
+ * Detalhe de um equipamento do tenant da sessão, por patrimônio (RF-SOLIC-01). Equipamento de outro
+ * tenant, inexistente ou `fora_de_uso` para colaborador não é encontrado (CA-SOLIC-04, CA-SOLIC-08).
+ * Número de série, observações e histórico só saem para Operações (CA-SOLIC-09, RS-SOLIC-05).
+ * `agora` é injetado para o prazo previsto ser testável com datas fixas (CA-SOLIC-10).
+ */
+export async function detalharEquipamento(
+  prisma: Pick<PrismaClient, "equipamento" | "emprestimo">,
+  escopo: Escopo,
+  patrimonio: string,
+  opcoes: { urlSupabase: string; agora: Date },
+): Promise<DetalheEquipamento> {
+  const equipamento = await prisma.equipamento.findFirst({
+    where: { ...filtroDeVisibilidade(escopo), patrimonio },
+    select: {
+      id: true,
+      patrimonio: true,
+      nome: true,
+      categoria: true,
+      situacao: true,
+      imagemCaminho: true,
+      local: true,
+      numeroSerie: true,
+      observacoes: true,
+    },
+  });
+  if (!equipamento) throw new ErroEquipamentoNaoEncontrado();
+
+  const doEquipamento = { tenantId: escopo.tenantId, equipamentoId: equipamento.id };
+  const operacoes = escopo.papel === "operacoes";
+
+  const [aberto, ultima, historico] = await Promise.all([
+    prisma.emprestimo.findFirst({
+      where: { ...doEquipamento, devolvidoEm: null },
+      select: { devolverAte: true },
+    }),
+    prisma.emprestimo.aggregate({ where: doEquipamento, _max: { devolvidoEm: true } }),
+    operacoes
+      ? prisma.emprestimo.findMany({
+          where: doEquipamento,
+          orderBy: [{ retiradoEm: "desc" }, { id: "asc" }],
+          select: {
+            retiradoEm: true,
+            devolverAte: true,
+            devolvidoEm: true,
+            membership: { select: { nomeExibicao: true } },
+          },
+        })
+      : Promise.resolve(null),
+  ]);
+
+  // A situação gravada prevalece; um item `ativo` com empréstimo aberto está emprestado.
+  const disponibilidade: Disponibilidade =
+    equipamento.situacao === "ativo" && aberto
+      ? { estado: "emprestado", devolverAte: formatarDataDoBanco(aberto.devolverAte) }
+      : DISPONIBILIDADE_POR_SITUACAO[equipamento.situacao];
+
+  const detalhe: DetalheEquipamento = {
+    id: equipamento.id,
+    patrimonio: equipamento.patrimonio,
+    nome: equipamento.nome,
+    categoria: equipamento.categoria,
+    imagemUrl: montarUrlImagem(opcoes.urlSupabase, equipamento.imagemCaminho),
+    disponibilidade,
+    local: textoOuNulo(equipamento.local),
+    ultimaDevolucao: ultima._max.devolvidoEm,
+    devolverAtePrevisto: calcularDevolverAte(opcoes.agora),
+  };
+
+  if (!operacoes || !historico) return detalhe;
+
+  return {
+    ...detalhe,
+    numeroSerie: textoOuNulo(equipamento.numeroSerie),
+    observacoes: textoOuNulo(equipamento.observacoes),
+    historico: historico.map((emprestimo) => ({
+      retiradoEm: emprestimo.retiradoEm,
+      devolverAte: formatarDataDoBanco(emprestimo.devolverAte),
+      devolvidoEm: emprestimo.devolvidoEm,
+      tomadorNome: textoOuNulo(emprestimo.membership.nomeExibicao),
+    })),
   };
 }

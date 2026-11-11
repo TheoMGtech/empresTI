@@ -17,7 +17,6 @@ import {
 } from "@/lib/esquemas/equipamentos";
 import { routerAplicacao, type RouterAplicacao } from "@/server/api/raiz";
 import { MENSAGEM_SOLICITACAO_NAO_IMPLEMENTADA } from "@/server/api/routers/emprestimos";
-import { MENSAGEM_DETALHE_NAO_IMPLEMENTADO } from "@/server/api/routers/equipamentos";
 import type { ClienteSupabaseAutenticacao } from "@/server/services/autenticacao";
 
 const TENANT = "00000000-0000-4000-8000-00000000000a";
@@ -185,13 +184,7 @@ describe("registro no AppRouter", () => {
     ).rejects.toMatchObject({ code: "UNAUTHORIZED" });
   });
 
-  it("T-SOLIC-02 — com sessão, respondem NOT_IMPLEMENTED sem inventar dados", async () => {
-    await expect(
-      caller(USUARIO).equipamentos.detalhar({ patrimonio: "TI-0001" }),
-    ).rejects.toMatchObject({
-      code: "NOT_IMPLEMENTED",
-      message: MENSAGEM_DETALHE_NAO_IMPLEMENTADO,
-    });
+  it("T-SOLIC-02 — com sessão, solicitar responde NOT_IMPLEMENTED sem inventar dados", async () => {
     await expect(
       caller(USUARIO).emprestimos.solicitar({ equipamentoId: EQUIPAMENTO }),
     ).rejects.toMatchObject({

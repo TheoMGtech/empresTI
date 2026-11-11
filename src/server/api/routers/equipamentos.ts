@@ -7,10 +7,14 @@ import {
   esquemaEntradaListarEquipamentos,
   esquemaSaidaListarEquipamentos,
 } from "@/lib/esquemas/equipamentos";
-import { criarRouterTRPC, tenantProcedure } from "@/server/api/trpc";
-import { listarEquipamentos } from "@/server/services/equipamentos";
+import { ErroComMotivo, criarRouterTRPC, tenantProcedure } from "@/server/api/trpc";
+import {
+  ErroEquipamentoNaoEncontrado,
+  detalharEquipamento,
+  listarEquipamentos,
+} from "@/server/services/equipamentos";
 
-export const MENSAGEM_DETALHE_NAO_IMPLEMENTADO = "Detalhe ainda não disponível.";
+export const MENSAGEM_EQUIPAMENTO_NAO_ENCONTRADO = "Equipamento não encontrado.";
 
 export const routerEquipamentos = criarRouterTRPC({
   // RF-CATALOGO-01, RS-CATALOGO-01: tenant e papel vêm do contexto, nunca do input.
@@ -26,11 +30,27 @@ export const routerEquipamentos = criarRouterTRPC({
       ),
     ),
 
-  // Contrato publicado na T-SOLIC-02 (RF-SOLIC-01). Até a T-SOLIC-04 responde `NOT_IMPLEMENTED`.
+  // RF-SOLIC-01: detalhe por patrimônio no tenant da sessão, com campos por papel.
   detalhar: tenantProcedure
     .input(esquemaEntradaDetalharEquipamento)
     .output(esquemaDetalheEquipamento)
-    .query((): never => {
-      throw new TRPCError({ code: "NOT_IMPLEMENTED", message: MENSAGEM_DETALHE_NAO_IMPLEMENTADO });
+    .query(async ({ ctx, input }) => {
+      try {
+        return await detalharEquipamento(
+          ctx.obterClientePrisma(),
+          { tenantId: ctx.tenantId, papel: ctx.papel },
+          input.patrimonio,
+          { urlSupabase: lerAmbientePublico().NEXT_PUBLIC_SUPABASE_URL, agora: new Date() },
+        );
+      } catch (erro) {
+        if (erro instanceof ErroEquipamentoNaoEncontrado) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: MENSAGEM_EQUIPAMENTO_NAO_ENCONTRADO,
+            cause: new ErroComMotivo("EQUIPAMENTO_NAO_ENCONTRADO"),
+          });
+        }
+        throw erro;
+      }
     }),
 });
