@@ -92,6 +92,8 @@ afterAll(async () => {
 }, TEMPO_DE_ENCERRAMENTO_MS);
 
 describe("migrations", () => {
+  // As provas de escopo valem para o estado da spec 002; specs posteriores acrescentam
+  // migrations e colunas. Triggers e bloqueios seguem provados nos testes abaixo.
   it("CA-DADOS-01 — existe a migration gerada da auditoria, depois da estrutura", async () => {
     const pasta = fileURLToPath(new URL("../../prisma/migrations", import.meta.url));
     const entradas = await readdir(pasta, { withFileTypes: true });
@@ -100,7 +102,7 @@ describe("migrations", () => {
       .map((item) => item.name)
       .sort();
 
-    expect(nomes.map((nome) => nome.replace(/^\d+_/, ""))).toEqual([
+    expect(nomes.slice(0, 4).map((nome) => nome.replace(/^\d+_/, ""))).toEqual([
       "criar_saude_sistema",
       "criar_estrutura_dominio",
       "criar_auditoria",
@@ -122,12 +124,9 @@ describe("migrations", () => {
         { tabela: "tenants" },
       ]);
       expect(await colunas(cliente, "tenants")).toEqual(["criado_em", "id", "slug"]);
-      expect(await colunas(cliente, "memberships")).toEqual([
-        "criado_em",
-        "role",
-        "tenant_id",
-        "user_id",
-      ]);
+      expect(await colunas(cliente, "memberships")).toEqual(
+        expect.arrayContaining(["criado_em", "role", "tenant_id", "user_id"]),
+      );
       expect(await colunas(cliente, "saude_sistema")).toEqual([
         "componente",
         "id",
