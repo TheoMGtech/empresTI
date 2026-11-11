@@ -252,8 +252,9 @@ A rotina de vínculo depende de aprovação no plano (D9).
 
 **Segurança e qualidade**
 
-- **CA-DADOS-23** — Gitleaks não encontra vazamentos, e as saídas das rotinas trazem só
-  contagens, sem dado pessoal ou credencial.
+- **CA-DADOS-23** — Gitleaks não encontra vazamentos, e as saídas das rotinas apresentam somente
+  contagens ou mensagens fixas de resultado e erro, sem expor dados pessoais, credenciais ou
+  informações sensíveis de conexão.
 - **CA-DADOS-24** — As rotinas recusam banco remoto sem confirmação explícita.
 - **CA-DADOS-25** — O `AppRouter` e as rotas de tela permanecem sem procedimentos ou
   páginas novas.
