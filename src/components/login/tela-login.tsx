@@ -1,8 +1,12 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+
 import { FormularioLogin } from "@/components/login/formulario-login";
-import { SessaoAtiva } from "@/components/login/sessao-ativa";
 import { trpc } from "@/trpc/cliente";
+
+export const DESTINO_APOS_LOGIN = "/catalogo";
 
 const REGUA_ESMAECIDA =
   "h-px w-full bg-[linear-gradient(to_right,rgba(230,234,246,0),#222C4A_48px,#222C4A_calc(100%-48px),rgba(230,234,246,0))]";
@@ -50,8 +54,14 @@ function PainelInstitucional() {
 }
 
 export function TelaLogin() {
+  const roteador = useRouter();
   const sessao = trpc.autenticacao.sessao.useQuery(undefined, { retry: 1 });
   const autenticado = sessao.data?.autenticado === true;
+
+  // RF-LOGIN-06 (revisão DF-15): sessão válida em `/` e login bem-sucedido vão ao catálogo.
+  useEffect(() => {
+    if (autenticado) roteador.replace(DESTINO_APOS_LOGIN);
+  }, [autenticado, roteador]);
 
   return (
     <main
@@ -64,7 +74,9 @@ export function TelaLogin() {
         <section className="flex flex-1 items-start justify-center p-6 sm:p-10 lg:items-center lg:p-14">
           <div className="flex w-full max-w-[372px] flex-col gap-7">
             {autenticado ? (
-              <SessaoAtiva />
+              <p className="text-[13px] text-(--text-muted)" role="status">
+                Abrindo o catálogo.
+              </p>
             ) : (
               <>
                 <div className="flex flex-col gap-2">
