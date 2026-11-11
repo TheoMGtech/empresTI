@@ -37,12 +37,37 @@ function criarLinkDeTeste(manipuladores: ManipuladoresTRPC): TRPCLink<RouterApli
       });
 }
 
-export function erroTRPC(codigo: "UNAUTHORIZED" | "INTERNAL_SERVER_ERROR", mensagem: string) {
+// Código JSON-RPC e status HTTP de cada código tRPC usado nas simulações.
+const CODIGOS_TRPC = {
+  BAD_REQUEST: [-32600, 400],
+  UNAUTHORIZED: [-32001, 401],
+  FORBIDDEN: [-32003, 403],
+  NOT_FOUND: [-32004, 404],
+  CONFLICT: [-32009, 409],
+  PRECONDITION_FAILED: [-32012, 412],
+  INTERNAL_SERVER_ERROR: [-32603, 500],
+} as const;
+
+export type CodigoTRPCSimulado = keyof typeof CODIGOS_TRPC;
+
+/** Erro no formato do `errorFormatter` (CA-SESSAO-11): `code`, `motivo` e `campos`. */
+export function erroTRPC(
+  codigo: CodigoTRPCSimulado,
+  mensagem: string,
+  extras: { motivo?: string; campos?: Record<string, string[]> } = {},
+) {
+  const [codigoJson, status] = CODIGOS_TRPC[codigo];
+
   return TRPCClientError.from({
     error: {
-      code: codigo === "UNAUTHORIZED" ? -32001 : -32603,
+      code: codigoJson,
       message: mensagem,
-      data: { code: codigo, httpStatus: codigo === "UNAUTHORIZED" ? 401 : 500 },
+      data: {
+        code: codigo,
+        httpStatus: status,
+        motivo: extras.motivo ?? null,
+        campos: extras.campos ?? null,
+      },
     },
   });
 }
@@ -53,9 +78,11 @@ export function renderizarComTRPC(interface_: ReactNode, manipuladores: Manipula
   });
   const clienteTRPC = trpc.createClient({ links: [criarLinkDeTeste(manipuladores)] });
 
-  return render(
+  const resultado = render(
     <trpc.Provider client={clienteTRPC} queryClient={clienteConsulta}>
       <QueryClientProvider client={clienteConsulta}>{interface_}</QueryClientProvider>
     </trpc.Provider>,
   );
+
+  return { ...resultado, clienteConsulta };
 }
