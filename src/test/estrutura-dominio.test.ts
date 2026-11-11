@@ -1,5 +1,6 @@
 // @vitest-environment node
-import { readdir } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { Client } from "pg";
@@ -96,6 +97,8 @@ describe("migrations do zero", () => {
     expect(nomes.some((nome) => nome.endsWith("_criar_estrutura_dominio"))).toBe(true);
   });
 
+  // A lista de tabelas vale para o estado da spec 002; specs posteriores acrescentam tabelas
+  // (Spec 005, T-SOLIC-01).
   it("CA-DADOS-01 — todas as migrations aplicam em banco isolado", async () => {
     await comBanco(async (cliente) => {
       const tabelas = await listar(
@@ -104,13 +107,15 @@ describe("migrations do zero", () => {
         "tablename",
       );
 
-      expect(tabelas).toEqual([
-        "auditoria",
-        "equipamentos",
-        "memberships",
-        "saude_sistema",
-        "tenants",
-      ]);
+      expect(tabelas).toEqual(
+        expect.arrayContaining([
+          "auditoria",
+          "equipamentos",
+          "memberships",
+          "saude_sistema",
+          "tenants",
+        ]),
+      );
     });
   });
 
@@ -406,7 +411,9 @@ describe("fotografia e campos obrigatórios", () => {
 });
 
 describe("limites da estrutura", () => {
-  it("CA-DADOS-06 — equipamento tem só os campos definidos", async () => {
+  // As colunas valem para o estado da spec 002; a Spec 005 acrescenta colunas opcionais
+  // (T-SOLIC-01). As migrations da spec 002 seguem sem colunas além destas.
+  it("CA-DADOS-06 — equipamento tem os campos definidos na spec 002", async () => {
     await comBanco(async (cliente) => {
       const colunas = await listar(
         cliente,
@@ -416,19 +423,43 @@ describe("limites da estrutura", () => {
         "column_name",
       );
 
-      expect(colunas).toEqual([
-        "atualizado_em",
-        "categoria",
-        "criado_em",
-        "id",
-        "imagem_caminho",
-        "imagem_sha256",
-        "nome",
-        "patrimonio",
-        "situacao",
-        "tenant_id",
-      ]);
+      expect(colunas).toEqual(
+        expect.arrayContaining([
+          "atualizado_em",
+          "categoria",
+          "criado_em",
+          "id",
+          "imagem_caminho",
+          "imagem_sha256",
+          "nome",
+          "patrimonio",
+          "situacao",
+          "tenant_id",
+        ]),
+      );
     });
+  });
+
+  it("CA-DADOS-06 — as migrations da spec 002 não criam número de série, local nem observações", async () => {
+    const pasta = fileURLToPath(new URL("../../prisma/migrations", import.meta.url));
+    const nomes = (await readdir(pasta, { withFileTypes: true }))
+      .filter((item) => item.isDirectory())
+      .map((item) => item.name)
+      .sort()
+      .slice(0, 4);
+    const conteudo = (
+      await Promise.all(
+        nomes.map((nome) => readFile(path.join(pasta, nome, "migration.sql"), "utf8")),
+      )
+    ).join("\n");
+
+    expect(nomes.map((nome) => nome.replace(/^\d+_/, ""))).toEqual([
+      "criar_saude_sistema",
+      "criar_estrutura_dominio",
+      "criar_auditoria",
+      "reforcar_bloqueio_truncate",
+    ]);
+    expect(conteudo).not.toMatch(/numero_serie|"local"|observacoes/);
   });
 
   it("CA-DADOS-07 — memberships só tem FK para tenants", async () => {

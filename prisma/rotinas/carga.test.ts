@@ -247,16 +247,19 @@ describe("o que a carga não cria", () => {
     });
   });
 
-  it("CA-DADOS-08 — não cria usuários, memberships nem estrutura de empréstimos", async () => {
+  // A tabela de empréstimos passa a existir na Spec 005 (T-SOLIC-01): a prova vale para o que a
+  // carga grava, não para a estrutura.
+  it("CA-DADOS-08 — não cria usuários, memberships nem empréstimos", async () => {
     await comBanco(async (prisma, cliente) => {
       await executarCargaDoManifesto(prisma);
-      const { rows } = await cliente.query(
-        `SELECT to_regclass('public.emprestimos') AS emprestimos,
-                to_regnamespace('auth') AS auth`,
+      const { rows } = await cliente.query<{ emprestimos: string | null; auth: string | null }>(
+        `SELECT to_regclass('public.emprestimos')::text AS emprestimos,
+                to_regnamespace('auth')::text AS auth`,
       );
 
       expect(await contar(cliente, "memberships")).toBe(0);
-      expect(rows).toEqual([{ emprestimos: null, auth: null }]);
+      expect(rows[0]?.auth).toBeNull();
+      if (rows[0]?.emprestimos) expect(await contar(cliente, "emprestimos")).toBe(0);
     });
   });
 });
