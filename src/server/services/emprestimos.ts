@@ -2,11 +2,12 @@ import { Prisma, type PrismaClient } from "@prisma/client";
 
 import {
   LIMITE_ITENS_POR_PESSOA,
+  type MeuResumo,
   type MotivoSolicitacao,
   type SaidaSolicitarEmprestimo,
 } from "@/lib/esquemas/emprestimos";
 import type { Papel } from "@/lib/esquemas/sessao";
-import { calcularDevolverAte } from "@/lib/prazos";
+import { PRAZO_PADRAO_DIAS, calcularDevolverAte, dataEmSaoPaulo } from "@/lib/prazos";
 
 /** Ação gravada na auditoria pela solicitação (RS-SOLIC-04). */
 export const ACAO_SOLICITAR = "emprestimo.solicitar";
@@ -25,6 +26,39 @@ export const recursoEmprestimo = (id: string) => `emprestimo:${id}`;
 
 function eViolacaoDeUnicidade(erro: unknown) {
   return erro instanceof Prisma.PrismaClientKnownRequestError && erro.code === "P2002";
+}
+
+type Pessoa = { tenantId: string; usuarioId: string };
+
+/**
+ * Empréstimos abertos da pessoa no tenant e quantos estão em atraso (RS-REGRAS-02). O atraso começa
+ * depois do fim da data de vencimento no calendário de São Paulo (RN-REGRAS-06): está atrasado o
+ * empréstimo aberto com `devolver_ate` anterior à data de hoje. Atrasados contam no limite
+ * (RN-REGRAS-05).
+ */
+async function situacaoDaPessoa(
+  cliente: Pick<PrismaClient, "emprestimo">,
+  pessoa: Pessoa,
+  agora: Date,
+) {
+  const abertos = { tenantId: pessoa.tenantId, userId: pessoa.usuarioId, devolvidoEm: null };
+  const hoje = new Date(`${dataEmSaoPaulo(agora)}T00:00:00Z`);
+
+  const itensAbertos = await cliente.emprestimo.count({ where: abertos });
+  const emAtraso = await cliente.emprestimo.count({
+    where: { ...abertos, devolverAte: { lt: hoje } },
+  });
+  return { itensAbertos, emAtraso };
+}
+
+/** Resumo da própria pessoa para a interface (RF-REGRAS-01). `agora` é injetado (CA-REGRAS-09). */
+export async function consultarMeuResumo(
+  prisma: Pick<PrismaClient, "emprestimo">,
+  pessoa: Pessoa,
+  opcoes: { agora: Date },
+): Promise<MeuResumo> {
+  const { itensAbertos, emAtraso } = await situacaoDaPessoa(prisma, pessoa, opcoes.agora);
+  return { itensAbertos, limite: LIMITE_ITENS_POR_PESSOA, emAtraso, prazoDias: PRAZO_PADRAO_DIAS };
 }
 
 /**
@@ -52,11 +86,9 @@ export async function solicitarEmprestimo(
          WHERE "user_id" = ${escopo.usuarioId}::uuid AND "tenant_id" = ${escopo.tenantId}::uuid
          FOR UPDATE`;
 
-      // Ordem da Spec 006: atraso (T-REGRAS-03), limite, depois as recusas da Spec 005.
-      const itensAbertos = await transacao.emprestimo.count({
-        where: { tenantId: escopo.tenantId, userId: escopo.usuarioId, devolvidoEm: null },
-      });
-      // Atrasados continuam contando (RN-REGRAS-05).
+      // Ordem da Spec 006: atraso, limite, depois as recusas da Spec 005.
+      const { itensAbertos, emAtraso } = await situacaoDaPessoa(transacao, escopo, opcoes.agora);
+      if (emAtraso > 0) throw new ErroSolicitacao("ITEM_EM_ATRASO");
       if (itensAbertos >= LIMITE_ITENS_POR_PESSOA) throw new ErroSolicitacao("LIMITE_ATINGIDO");
 
       const equipamento = await transacao.equipamento.findFirst({

@@ -7,7 +7,11 @@ import {
   type MotivoSolicitacao,
 } from "@/lib/esquemas/emprestimos";
 import { ErroComMotivo, criarRouterTRPC, tenantProcedure } from "@/server/api/trpc";
-import { ErroSolicitacao, solicitarEmprestimo } from "@/server/services/emprestimos";
+import {
+  ErroSolicitacao,
+  consultarMeuResumo,
+  solicitarEmprestimo,
+} from "@/server/services/emprestimos";
 
 export const RECUSAS_SOLICITACAO: Record<
   MotivoSolicitacao,
@@ -20,14 +24,17 @@ export const RECUSAS_SOLICITACAO: Record<
   ITEM_EM_ATRASO: { code: "CONFLICT", message: "Há item em atraso. Devolva antes de pegar outro." },
 };
 
-export const MENSAGEM_RESUMO_NAO_IMPLEMENTADO = "Resumo ainda não disponível.";
-
 export const routerEmprestimos = criarRouterTRPC({
-  // Contrato publicado na T-REGRAS-01 (RF-REGRAS-01). Até a T-REGRAS-03 responde
-  // `NOT_IMPLEMENTED` sem ler empréstimos.
-  meuResumo: tenantProcedure.output(esquemaMeuResumo).query((): never => {
-    throw new TRPCError({ code: "NOT_IMPLEMENTED", message: MENSAGEM_RESUMO_NAO_IMPLEMENTADO });
-  }),
+  // RF-REGRAS-01: itens abertos, limite, atrasados e prazo da própria pessoa (RS-REGRAS-02).
+  meuResumo: tenantProcedure
+    .output(esquemaMeuResumo)
+    .query(({ ctx }) =>
+      consultarMeuResumo(
+        ctx.obterClientePrisma(),
+        { tenantId: ctx.tenantId, usuarioId: ctx.usuarioId },
+        { agora: new Date() },
+      ),
+    ),
 
   // RF-SOLIC-02: recebe só o equipamento; usuário, tenant e prazo vêm do servidor (RS-SOLIC-01).
   // RN-SOLIC-06: colaborador e Operações podem solicitar.

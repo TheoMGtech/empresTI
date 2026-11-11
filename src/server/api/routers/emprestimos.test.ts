@@ -19,10 +19,7 @@ import {
   type EntradaDetalharEquipamento,
 } from "@/lib/esquemas/equipamentos";
 import { routerAplicacao, type RouterAplicacao } from "@/server/api/raiz";
-import {
-  MENSAGEM_RESUMO_NAO_IMPLEMENTADO,
-  RECUSAS_SOLICITACAO,
-} from "@/server/api/routers/emprestimos";
+import { RECUSAS_SOLICITACAO } from "@/server/api/routers/emprestimos";
 import type { ClienteSupabaseAutenticacao } from "@/server/services/autenticacao";
 
 const TENANT = "00000000-0000-4000-8000-00000000000a";
@@ -194,13 +191,9 @@ describe("contrato de emprestimos.meuResumo", () => {
     >().toEqualTypeOf<MeuResumo>();
   });
 
-  it("T-REGRAS-01 — sem sessão recusa; com sessão responde NOT_IMPLEMENTED", async () => {
+  it("RS-REGRAS-02 — sem sessão, meuResumo recusa", async () => {
     await expect(caller(null).emprestimos.meuResumo()).rejects.toMatchObject({
       code: "UNAUTHORIZED",
-    });
-    await expect(caller(USUARIO).emprestimos.meuResumo()).rejects.toMatchObject({
-      code: "NOT_IMPLEMENTED",
-      message: MENSAGEM_RESUMO_NAO_IMPLEMENTADO,
     });
   });
 });
