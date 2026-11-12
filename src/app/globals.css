@@ -4,16 +4,21 @@
   color-scheme: dark;
   --page: #05070f;
   --color-bg: #080c1a;
+  --sidebar-bg: #060a16;
   --color-surface: #0e1530;
   --surface-sunken: #0b1128;
   --color-text: #e6eaf6;
   --text-muted: #8a93b2;
   --text-dim: #7c86a2;
   --text-faint: #5e6884;
+  --text-ghost: #454e68;
+  --text-nav: #9aa3bc;
   --border-frame: #222c4a;
   --border-card: #1f2949;
   --border-soft: #1a2340;
+  --border-row: #161d33;
   --border-strong: #2b3450;
+  --border-hover: #454e68;
   --accent-100: #eef2fe;
   --accent-200: #d6e0fb;
   --accent-300: #b4c6f6;
@@ -58,4 +63,42 @@ a:hover {
 :focus-visible {
   outline: 2px solid var(--accent-500);
   outline-offset: 2px;
+}
+
+/* Diálogo (layout §8): abre em 180ms, fecha em 120ms. */
+@keyframes fundo-dialogo-entrar {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes fundo-dialogo-sair {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes dialogo-entrar {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes dialogo-sair {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(6px);
+  }
 }

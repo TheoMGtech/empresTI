@@ -54,8 +54,33 @@ Itens sob responsabilidade do responsável:
 11. Avaliar tornar o job `Application quality` um status check obrigatório em
     `develop` e `main`; hoje só `Documentation and secret guard` é exigido, e o
     CI não roda `npm run test:e2e`.
+12. Investigar, antes da primeira migration em produção, a tabela técnica
+    `_prisma_migrations`, que o Prisma cria em `public` sem RLS. A exposição depende da
+    Data API e dos privilégios de `anon` e `authenticated`, e o ADR-001 §7 pede RLS em
+    todas as tabelas. Nenhuma alteração até decisão específica do responsável.
 
 O workflow de migrations não dispara automaticamente. Ele só é executável manualmente, com confirmação literal `APPLY`, e usa o Environment protegido. Ele ainda não foi executado; o Environment `production` precisa existir com proteção antes da primeira execução, pois o GitHub criaria um Environment sem proteção se o workflow rodasse antes.
+
+## Credenciais de ferramentas locais
+
+As regras destas credenciais estão em `rules/secrets.md`. Registro atual:
+
+**`PIXABAY_API_KEY`**
+
+- **Finalidade:** autenticar as buscas dos scripts locais da skill
+  `imagens-equipamentos` na API da Pixabay.
+- **Arquivo local aprovado:** `.env.pixabay.local`, ignorado pela regra `.env.*`
+  do `.gitignore`.
+- **Cadastro:** feito pelo responsável, em editor de texto, quando a etapa de
+  validação for autorizada. O agente não cria, não lê e não revela o arquivo.
+- **Vercel:** não cadastrar. O runtime Next.js não usa esta variável.
+- **Supabase:** esta configuração não precisa de credencial nem de acesso ao
+  Supabase.
+- **Manuseio:** nunca colocar o valor da chave em comandos, chats ou arquivos
+  versionados.
+- **Validação futura:** a integração com a API será validada em etapa própria,
+  depois que os scripts forem implementados e aprovados. Ela ainda não foi
+  executada.
 
 ## Política operacional
 
@@ -71,4 +96,4 @@ O workflow de migrations não dispara automaticamente. Ele só é executável ma
   conferida com `git diff origin/develop HEAD` vazio.
 - Migrations entram somente após uma spec aprovada e são aplicadas uma vez por execução explícita.
 - `DATABASE_URL`, `DIRECT_URL`, `SUPABASE_SERVICE_ROLE_KEY` e tokens Sentry são secretos e exclusivos de servidor.
-- Uma alteração que necessite novas variáveis deve atualizar `.env.example`, a documentação e o ambiente do provedor na mesma entrega.
+- Uma alteração que necessite novas variáveis do produto deve atualizar `.env.example`, a documentação e o ambiente do provedor na mesma entrega. Credenciais de ferramentas exclusivamente locais não vão ao ambiente do provedor.

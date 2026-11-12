@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "enabledMcpjsonServers": ["supabase-empresti"],
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.local)",
+      "Read(./.env.*.local)",
+      "Read(./.env.development)",
+      "Read(./.env.production)",
+      "Read(./.env.test)",
+      "Read(./.vercel/.env*)",
+      "Bash(gh workflow run *)",
+      "PowerShell(gh workflow run *)",
+      "Bash(vercel *)",
+      "PowerShell(vercel *)",
+      "Bash(npx vercel *)",
+      "PowerShell(npx vercel *)",
+      "Edit(./.mcp.json)",
+      "Edit(./.vercel/**)"
+    ],
+    "ask": ["Edit(./.github/workflows/**)"]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell|Monitor|mcp__terminal__run_in_terminal",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/bloquear-operacoes.mjs\"",
+            "timeout": 20,
+            "onFailure": "block"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -5,7 +5,7 @@
 Regras de processo já definidas para este projeto:
 
 1. O projeto utiliza SDD repo-native/manual.
-2. A ordem é `SPEC → PLAN → TASKS → CODE`.
+2. A ordem é `SPEC → aprovação humana → PLAN → TASKS → aprovação humana → CODE`.
 3. Não se implementa uma funcionalidade antes de sua especificação.
 4. Specs governam comportamento.
 5. Se spec e código divergirem sobre comportamento, a spec prevalece até ser alterada.
@@ -53,17 +53,17 @@ Regras de processo já definidas para este projeto:
 
 ## Fluxo de trabalho (SDD na prática)
 
-1. Para uma feature nova, o agente elabora o rascunho completo: `spec.md`, depois `plan.md`, depois `tasks.md`, na pasta própria da feature (regra 11).
-2. Antes de escrever qualquer código, o agente para e entrega o pacote (spec + plan + tasks) ao responsável para revisão e aprovação.
-3. Só depois da aprovação do pacote se escreve código (regras 2, 3 e 10).
+1. Para uma feature nova, o agente elabora `spec.md` na pasta própria da feature (regra 11) e aguarda a aprovação do responsável.
+2. Com a spec aprovada, o agente elabora `plan.md` e `tasks.md` e aguarda nova aprovação do responsável.
+3. Só depois da aprovação de `plan.md` e `tasks.md` se escreve código (regras 2, 3 e 10).
 4. A implementação deve ser validada contra os critérios de aceitação da spec (regra 12).
-5. Cada PR deve ser pequeno, verificável e vinculado a uma spec aprovada.
+5. Cada PR de funcionalidade deve ser pequeno, verificável e vinculado a uma spec aprovada. PR de manutenção, configuração ou ferramenta de verificação sem spec de produto declara isso no próprio PR.
 
 ## Qualidade e verificação (obrigatório)
 
 - Antes de dar uma tarefa por terminada, executar: **lint, typecheck, build e tests**.
 - **Tests:** obrigatórios em cada feature, com tamanho proporcional ao risco (como exige o template de PR).
-- Cada PR deve incluir **evidência** da verificação executada (comandos e resultado) e cobrir os critérios de aceitação da spec.
+- Cada PR deve incluir **evidência** da verificação executada (comandos e resultado) e, havendo spec, cobrir os critérios de aceitação dela.
 - Quando aplicável, verificar o **isolamento entre tenants** (checklist do template de PR).
 - Estratégia de referência: Vitest, Testing Library, Testcontainers e Playwright (ADR-001); o procedimento está em `rules/tests.md`.
 
@@ -159,8 +159,13 @@ Não use `npx` nesta pasta: o `&` no caminho quebra o comando. Use os scripts
 
 - Ficam em `agents/<nome>.md`. O frontmatter diz quando delegar; o corpo é a
   instrução completa do subagente.
+- No Claude Code, a descoberta nativa vem de `.claude/agents/<nome>.md`: ali ficam
+  a `description` e as ferramentas permitidas, e o corpo só aponta para
+  `agents/<nome>.md`, que continua sendo a fonte das instruções.
 - `agents/verificador-spec.md` confere a spec CA a CA antes de ela ser declarada
-  pronta (`rules/spec-flow.md`). Ele não corrige nada.
+  `PRONTA` (`rules/spec-flow.md`, que também define o registro em
+  `verificacao.md`). Ele não corrige nada e só lê arquivos: o agente
+  principal, ou um ambiente isolado, roda os checks e entrega a evidência.
 - Subagente não herda esta conversa: ao delegar, passe tudo que o arquivo dele
   pede como entrada.
 - Se o harness não tiver subagentes, abra uma sessão nova e comece com: "Aja
