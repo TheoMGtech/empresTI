@@ -122,3 +122,18 @@ model Auditoria {
   @@index([tenantId, ocorridoEm], map: "auditoria_tenant_ocorrido_idx")
   @@map("auditoria")
 }
+
+// Contadores de limite de requisições (Spec 009). Tabela técnica, sem `tenant_id` (exceção
+// aprovada só para ela). Ficam só no SQL da migration: as CHECKs, a RLS com policies de negação
+// para `anon` e `authenticated` e o REVOKE.
+model LimiteRequisicao {
+  escopo        String
+  identificador String
+  janelaInicio  DateTime @map("janela_inicio") @db.Timestamptz(6)
+  expiraEm      DateTime @map("expira_em") @db.Timestamptz(6)
+  contador      Int      @default(0)
+
+  @@id([escopo, identificador, janelaInicio])
+  @@index([expiraEm])
+  @@map("limites_requisicao")
+}
