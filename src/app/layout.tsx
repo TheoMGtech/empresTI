@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Open_Sans } from "next/font/google";
+import { connection } from "next/server";
 import type { ReactNode } from "react";
 
 import { ProvedorTRPC } from "@/trpc/provedor";
@@ -17,7 +18,11 @@ export const metadata: Metadata = {
   description: "Acesso ao sistema de empréstimo interno.",
 };
 
-export default function LayoutRaiz({ children }: Readonly<{ children: ReactNode }>) {
+export default async function LayoutRaiz({ children }: Readonly<{ children: ReactNode }>) {
+  // Renderização por requisição: página pré-renderizada no build não recebe o nonce da CSP
+  // (Spec 009, RF-SEG-01).
+  await connection();
+
   return (
     <html lang="pt-BR" className={openSans.variable}>
       <body>
