@@ -2,6 +2,8 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./e2e",
+  // Cabeçalhos e nonce de produção só valem no build: `npm run test:e2e:producao` (Spec 009).
+  testIgnore: ["producao/**"],
   fullyParallel: true,
   reporter: "html",
   // `localhost`, e não `127.0.0.1`: o `next dev` bloqueia o HMR para origens não
