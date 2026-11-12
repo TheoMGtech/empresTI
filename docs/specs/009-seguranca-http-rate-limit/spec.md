@@ -2,8 +2,9 @@
 
 ## Estado
 
-**Status:** EM APROVAÇÃO — criação aprovada pelo responsável em 2026-11-12, com as decisões Q1 a
-Q19. O texto desta spec aguarda aprovação. Sem `plan.md` e `tasks.md`.
+**Status:** APROVADA — pelo responsável em 2026-11-12, sobre o commit `d01f077`, com P1 a P8 e o
+ajuste de redação da retenção (RN-SEG-10). `plan.md` e `tasks.md` aguardam aprovação. O DDL de
+`limites_requisicao` exige aprovação específica antes de a migration ser gerada.
 
 ## Objetivo
 
@@ -127,10 +128,15 @@ nonce e limite persistente de tentativas de login e de mutações. Nenhuma funci
   acontece antes de existir tenant na sessão. O escopo vai no identificador: IP; e-mail; e, nas
   mutações, `tenant_id` e `usuario_id` juntos. Essa exceção vale só para esta tabela técnica e não
   autoriza tabela de domínio sem `tenant_id` (Q8).
-- **RN-SEG-10** — Limpeza: cada escrita no contador remove, em lote limitado, linhas com
-  `expira_em` já passado. Sem `pg_cron`, Redis, serviço externo ou worker
-  (Q9). Retenção máxima de 24 horas para contadores expirados (Q5), condicionada a haver tráfego
-  (ver P5).
+- **RN-SEG-10** — Contadores expirados e limpeza (Q5, Q9, P5):
+  1. Um contador com `expira_em` já passado deixa imediatamente de participar da limitação, mesmo
+     que a linha ainda exista.
+  2. A remoção física é oportunística: cada escrita seguinte no contador remove, em lote limitado,
+     linhas com `expira_em` já passado.
+  3. Sem novas escritas, não há garantia de exclusão física em 24 horas nem em prazo algum. As
+     linhas restantes contêm só identificadores HMAC (RS-SEG-01).
+  4. O responsável aceitou essa limitação para a primeira entrega (2026-11-12).
+  5. Esta spec não introduz `pg_cron`, Redis, worker, serviço externo nem outro agendador.
 - **RN-SEG-11** — IP confiável (Q10):
   - Em deploy da Vercel (`VERCEL=1`), o IP vem só de `x-forwarded-for`, que a Vercel sobrescreve
     para impedir falsificação (documentação de request headers da Vercel). O valor precisa ser um
@@ -215,16 +221,27 @@ momento da geração.
 
 ## Implantação
 
-1. O responsável gera a chave localmente, sem colar o valor no chat, em arquivo versionado ou em
-   log:
+Preparação, feita pelo responsável:
+
+1. Gerar a chave localmente, sem colar o valor no chat, em arquivo versionado ou em log:
    `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`.
-2. Na Vercel (projeto `empresti`), o responsável cadastra `CHAVE_HMAC_LIMITES` como variável
-   sensível, com valores diferentes em Production e em Preview.
-3. A migration de `limites_requisicao` é aplicada pelo workflow `migrate-production`, junto das
+2. Na Vercel (projeto `empresti`), cadastrar `CHAVE_HMAC_LIMITES` como variável sensível, com
+   valores diferentes em Production e em Preview.
+3. Aplicar a migration de `limites_requisicao` pelo workflow `migrate-production`, junto das
    demais pendentes, **antes** de a versão com o limite chegar a `main`. Sem a tabela, login e
    mutações falham fechados (RF-SEG-12).
-4. No preview, conferir os cabeçalhos com `curl -sI <url do preview>` antes da promoção. A
-   validação integrada (DF-14) confere a CSP aplicada em produção.
+
+Três níveis de validação, distintos e nesta ordem. Nenhum substitui o seguinte, e nenhum é
+declarado executado antes de existir o ambiente correspondente:
+
+1. **Local, com build de produção:** `npm run build` e `npm run start`, com o E2E de CSP
+   (CA-SEG-01 a 06) e os demais checks (CA-SEG-18). Prova o código, não a Vercel.
+2. **Validação integrada real no preview da Vercel** (DF-14, `docs/VALIDACAO-INTEGRADA.md`):
+   cabeçalhos e CSP aplicada (`curl -sI <url do preview>`), telas sem `securitypolicyviolation`,
+   IP confiável e os limites de login e de mutação contra o Supabase real.
+3. **Verificação final na URL de produção:** depois do deploy de `main` autorizado pelo
+   responsável e antes de declarar a entrega concluída. Confere os cabeçalhos, a CSP, o HSTS e o
+   login real. Só é registrada depois de existir o deploy correspondente.
 
 ## Critérios de aceitação
 
@@ -261,16 +278,19 @@ momento da geração.
   chave e diferentes do SHA-256 sem chave. Nenhum log do fluxo contém e-mail, IP ou identificador.
 - **CA-SEG-14** — Em banco real, `anon` e `authenticated` não leem, inserem, alteram nem apagam
   linhas de `limites_requisicao`, e a RLS está habilitada.
-- **CA-SEG-15** — Uma escrita no contador remove as linhas expiradas, em lote limitado, e preserva
-  as da janela atual.
+- **CA-SEG-15** — Um contador expirado que ainda existe na tabela não bloqueia nem soma à janela
+  atual. Uma escrita seguinte remove as linhas expiradas, em lote limitado, e preserva as da janela
+  atual.
 - **CA-SEG-16** — Com `VERCEL=1`, o IP vem de `x-forwarded-for` válido. `x-real-ip`,
   `x-vercel-forwarded-for` e `x-client-ip` forjados são ignorados. Cabeçalho ausente, inválido ou
-  fora da Vercel usa o identificador compartilhado.
+  fora da Vercel usa o identificador compartilhado, e o teste comprova o bloqueio coletivo: pessoas
+  diferentes sem IP confiável dividem o mesmo limite por IP (P3).
 - **CA-SEG-17** — O formulário de login e as telas das mutações mostram exatamente as mensagens de
   RF-SEG-11 e RN-SEG-12.
 - **CA-SEG-18** — Lint, typecheck, testes, E2E (servidor de desenvolvimento e build de produção),
-  build e `prisma:reset` no banco local descartável passam. A CSP aplicada em produção é conferida
-  na validação integrada (DF-14), obrigatória antes da entrega final.
+  build e `prisma:reset` no banco local descartável passam. Isso basta para declarar esta spec
+  PRONTA (DF-14). A validação no preview e a verificação final na URL de produção (Implantação)
+  continuam obrigatórias antes da entrega final.
 
 ## Dependências
 
@@ -299,8 +319,9 @@ promoção.
 - **Q3:** login com 5 falhas por e-mail e 100 tentativas por IP em 15 minutos; mutações com 30 por
   usuário e 120 por IP em 60 segundos, somadas; contagem atômica.
 - **Q4:** 429 com `Retry-After` e a mensagem aprovada; não revelar se o e-mail existe.
-- **Q5:** HMAC-SHA-256 com chave do servidor; e-mail normalizado; retenção máxima de 24 horas; nada
-  em log.
+- **Q5:** HMAC-SHA-256 com chave do servidor; e-mail normalizado; nada em log. A meta de 24 horas
+  para contadores expirados ficou ajustada por P5: limpeza oportunística, sem garantia de exclusão
+  física em 24 horas (RN-SEG-10).
 - **Q6:** nenhum papel isento.
 - **Q7:** fail-closed para login e mutações.
 - **Q8:** tabela sem `tenant_id`, com as exigências de RN-SEG-09 e RS-SEG-04; DDL com aprovação
@@ -313,17 +334,23 @@ promoção.
 - **Q16:** a Vercel Toolbar fica bloqueada nos previews.
 - **Q17 a Q19:** cadastro público desabilitado manualmente pelo responsável;
   `_prisma_migrations` e Sentry/CAPTCHA/WAF fora desta spec.
+- **ADR-001 §6:** `limites_requisicao` é tabela técnica, não de domínio. A ausência de `tenant_id`
+  está aprovada só para ela, mantidos a RLS, o `REVOKE ALL` e o isolamento dos identificadores. O
+  ADR não muda.
+- **CSP:** nonce por requisição. A implementação é comprovada no build de produção e depois na
+  Vercel, sem `unsafe-inline` para contornar falhas.
 
-## Propostas desta spec que dependem da aprovação do texto
+## Decisões sobre as propostas (responsável, 2026-11-12)
 
-- **P1** — Texto da mensagem de indisponibilidade (RN-SEG-12).
-- **P2** — Reserva de vaga por e-mail devolvida no sucesso e em falha que não é de credencial
-  (RN-SEG-04).
-- **P3** — Identificador compartilhado `ip-indisponivel` sem origem confiável (RN-SEG-11).
-- **P4** — HSTS com `max-age=31536000` (um ano).
-- **P5** — Retenção de 24 horas condicionada a tráfego: a limpeza só roda nas escritas (Q9). Sem
-  nenhuma tentativa, linhas expiradas podem ficar mais tempo. Elas contêm só HMAC.
-- **P6** — Janelas fixas (RN-SEG-02).
-- **P7** — Nome da variável: `CHAVE_HMAC_LIMITES`.
-- **P8** — Depois desta aprovação, as Specs 001, 005, 007 e 008 recebem só uma linha em "Contrato
-  afetado" apontando para esta spec (`rules/spec-flow.md`, item 7). Nenhum CA delas muda.
+- **P1 (aprovada):** mensagem de indisponibilidade de RN-SEG-12.
+- **P2 (aprovada):** reserva atômica de vaga por e-mail, devolvida no sucesso e em falha que não é
+  de credencial (RN-SEG-04).
+- **P3 (aprovada):** identificador compartilhado `ip-indisponivel` sem origem confiável, com o
+  risco de bloqueio coletivo documentado e testado (RN-SEG-11, CA-SEG-16).
+- **P4 (aprovada):** HSTS com `max-age=31536000`, sem `preload` nem `includeSubDomains`.
+- **P5 (aprovada com ajuste):** limpeza oportunística, sem garantia de exclusão física em 24 horas
+  (RN-SEG-10).
+- **P6 (aprovada):** janelas fixas (RN-SEG-02).
+- **P7 (aprovada):** variável `CHAVE_HMAC_LIMITES`.
+- **P8 (aprovada):** as Specs 001, 005, 007 e 008 recebem só uma linha em "Contrato afetado"
+  apontando para esta spec (`rules/spec-flow.md`, item 7). Nenhum CA delas muda.
