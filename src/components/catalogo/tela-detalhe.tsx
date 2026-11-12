@@ -12,6 +12,8 @@ import {
 } from "@/components/catalogo/categorias";
 import { PillSituacao } from "@/components/catalogo/pill-situacao";
 import { CardSeusItens } from "@/components/emprestimos/card-seus-itens";
+import { ControleSituacao } from "@/components/operacoes/controle-situacao";
+import { useSessaoOpcional } from "@/components/shell/sessao";
 import { ContadorItens } from "@/components/emprestimos/contador-itens";
 import { CabecalhoPagina, ConteudoPagina } from "@/components/shell/pagina";
 import { Trilha } from "@/components/shell/trilha";
@@ -125,6 +127,7 @@ function Estado({ children }: { children: ReactNode }) {
 
 /** Tela 03 · Detalhe do equipamento (RF-SOLIC-01, 03 e 05). */
 export function TelaDetalhe({ patrimonio }: { patrimonio: string }) {
+  const sessao = useSessaoOpcional();
   const consulta = trpc.equipamentos.detalhar.useQuery({ patrimonio });
   const detalhe = consulta.data;
   const codigo =
@@ -201,6 +204,7 @@ export function TelaDetalhe({ patrimonio }: { patrimonio: string }) {
             <aside aria-label="Solicitação" className="flex flex-col gap-4">
               <CardSolicitacao detalhe={detalhe} />
               <CardSeusItens />
+              {sessao?.papel === "operacoes" ? <ControleSituacao detalhe={detalhe} /> : null}
             </aside>
           </div>
         ) : null}

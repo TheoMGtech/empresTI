@@ -45,6 +45,8 @@ type PropsCartao = {
   abreIndisponivel: boolean;
   /** RF-REGRAS-02: atraso ou limite atingido. O card continua abrindo o detalhe. */
   solicitacaoBloqueada?: boolean;
+  /** Prévia do cadastro (tela 06): mesmo visual, sem link. */
+  semAcao?: boolean;
 };
 
 /** Card do catálogo (layout §5.4). */
@@ -52,9 +54,10 @@ export function CartaoEquipamento({
   item,
   abreIndisponivel,
   solicitacaoBloqueada = false,
+  semAcao = false,
 }: PropsCartao) {
   const disponivel = item.disponibilidade.estado === "disponivel";
-  const clicavel = disponivel || abreIndisponivel;
+  const clicavel = !semAcao && (disponivel || abreIndisponivel);
 
   const conteudo = (
     <>
