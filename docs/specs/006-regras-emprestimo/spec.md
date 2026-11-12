@@ -2,10 +2,12 @@
 
 ## Estado
 
-**Status:** Em implementação — aprovada pelo responsável em 2026-11-11, com `plan.md` e
-`tasks.md`; T-REGRAS-01 a T-REGRAS-04 concluídas e comportamento entregue. Verificação formal V-01
-(2026-11-11, commit `9a421a2`): NÃO PRONTA, com CA-REGRAS-03 e CA-REGRAS-06 SEM TESTE
-(`verificacao.md`). T-REGRAS-05 segue aberta; não declarar PRONTA antes de nova execução.
+**Status:** Implementada — aprovada pelo responsável em 2026-11-11, com `plan.md` e `tasks.md`;
+T-REGRAS-01 a T-REGRAS-05 concluídas. Verificação formal V-01 (2026-11-11, commit `9a421a2`): NÃO
+PRONTA, com CA-REGRAS-03 e CA-REGRAS-06 SEM TESTE. V-02 (2026-11-11, commit `854f6c4`):
+`Veredito: PRONTA` (`verificacao.md`). Aguarda a validação final do responsável para ser declarada
+PRONTA. A validação integrada real (DF-14) continua obrigatória antes da publicação em `main` e na
+Vercel.
 
 ## Objetivo
 

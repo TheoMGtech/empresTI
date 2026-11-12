@@ -2,9 +2,9 @@
 
 ## Estado
 
-**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-REGRAS-01 a T-REGRAS-04 concluídas.
-T-REGRAS-05 em andamento: verificação V-01 (commit `9a421a2`) NÃO PRONTA, com CA-REGRAS-03 e
-CA-REGRAS-06 SEM TESTE (`verificacao.md`); a correção exige nova execução.
+**Status:** Aprovadas pelo responsável em 2026-11-11. T-REGRAS-01 a T-REGRAS-05 concluídas.
+Verificação V-01 (commit `9a421a2`) NÃO PRONTA; V-02 (commit `854f6c4`) com `Veredito: PRONTA`
+(`verificacao.md`), aguardando a validação final do responsável.
 
 Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
 `rules/checks.md` ao concluir; todo teste cita no nome o CA que evidencia; sem alteração no
@@ -31,7 +31,7 @@ Supabase remoto, deploy de produção ou merge em `main`.
 
 ## Bloco C — fechamento
 
-- [ ] **T-REGRAS-05 — Provas finais (BE)**
+- [x] **T-REGRAS-05 — Provas finais (BE)**
   - Atende: CA-REGRAS-03, 06 (por referência à Spec 005), 10. Verificação formal conforme
     `rules/spec-flow.md`.
   - Commit: `test(emprestimos): provar critérios finais da spec 006`.

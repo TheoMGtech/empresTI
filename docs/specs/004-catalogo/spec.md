@@ -2,10 +2,11 @@
 
 ## Estado
 
-**Status:** Em implementação — aprovada pelo responsável em 2026-11-11, com `plan.md` e
-`tasks.md`; T-CATALOGO-01 a T-CATALOGO-05 concluídas e comportamento entregue. Verificação formal
-V-01 (2026-11-11, commit `9a421a2`): NÃO PRONTA, com CA-CATALOGO-06 SEM TESTE (`verificacao.md`).
-T-CATALOGO-06 segue aberta; não declarar PRONTA antes de nova execução.
+**Status:** Implementada — aprovada pelo responsável em 2026-11-11, com `plan.md` e `tasks.md`;
+T-CATALOGO-01 a T-CATALOGO-06 concluídas. Verificação formal V-01 (2026-11-11, commit `9a421a2`):
+NÃO PRONTA, com CA-CATALOGO-06 SEM TESTE. V-02 (2026-11-11, commit `854f6c4`): `Veredito: PRONTA`
+(`verificacao.md`). Aguarda a validação final do responsável para ser declarada PRONTA. A
+validação integrada real (DF-14) continua obrigatória antes da publicação em `main` e na Vercel.
 
 ## Objetivo
 
