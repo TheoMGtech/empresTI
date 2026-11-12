@@ -3,8 +3,8 @@
 ## Estado
 
 **Status:** APROVADAS — pelo responsável em 2026-11-12, com `plan.md` (sobre o commit `3841cfc`) e o
-DDL de `limites_requisicao`. Autorizada só a T-SEG-01; cada tarefa seguinte depende de
-autorização específica.
+DDL de `limites_requisicao`. Cada tarefa depende de autorização específica. Concluídas: T-SEG-01 a
+03. Autorizadas em execução: T-SEG-04a e T-SEG-04 (2026-11-12).
 
 Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
 `rules/checks.md` ao concluir; todo teste cita no nome o CA que evidencia; código e documentação
@@ -16,23 +16,32 @@ dependem da T-SEG-05. O Bloco E fecha.
 
 ## Bloco A — cabeçalhos e CSP
 
-- [ ] **T-SEG-01 (BE) — Cabeçalhos fixos e HSTS**
+- [x] **T-SEG-01 (BE) — Cabeçalhos fixos e HSTS** — PR #91.
   - `cabecalhosFixos()` e `next.config.ts`.
   - Atende: CA-SEG-04. Depende de: nada.
   - Commit: `feat(seguranca): definir cabeçalhos HTTP fixos`.
-- [ ] **T-SEG-02 (BE) — CSP com nonce no proxy**
+- [x] **T-SEG-02 (BE) — CSP com nonce no proxy** — PR #92.
   - `montarCsp()`, nonce por requisição e `atualizarSessao` repassando CSP e `x-nonce` ao Next e à
     resposta. Conferir no build que toda rota é `ƒ`.
   - Atende: CA-SEG-01, 02, 05 (unitários). Depende de: nada.
   - Commit: `feat(seguranca): aplicar CSP com nonce por requisição`.
-- [ ] **T-SEG-03 (FE) — Barra de prazo sem estilo inline**
+- [x] **T-SEG-03 (FE) — Barra de prazo sem estilo inline** — PR #94.
   - `rect` SVG com `width` em atributo, mesma aparência.
   - Atende: CA-SEG-06. Depende de: nada.
   - Commit: `fix(emprestimos): remover estilo inline da barra de prazo`.
+- [ ] **T-SEG-04a (FE/BE) — Compatibilidade de runtime com a CSP**
+  - Acrescentada em 2026-11-12, aprovada pelo responsável, depois de a primeira execução da
+    T-SEG-04 encontrar duas violações reais no build de produção.
+  - Zod 4 com `jitless` (`src/lib/zod.ts`). Nonce do Radix Dialog por `get-nonce@1.0.1`,
+    dependência direta aprovada, configurado no navegador por `NonceEstilos` a partir do `x-nonce`
+    do layout. Nada muda na CSP nem no comportamento dos diálogos e das validações.
+  - Atende: CA-SEG-03 (pré-condição). Depende de: T-SEG-02.
+  - Commit: `fix(seguranca): compatibilizar Zod e Radix com a CSP`.
 - [ ] **T-SEG-04 (verificação) — E2E no build de produção**
-  - `playwright.producao.config.ts`, script `test:e2e:producao` e `e2e/producao/`: cabeçalhos,
-    nonces e nenhuma `securitypolicyviolation` nas seis telas.
-  - Atende: CA-SEG-01, 02, 03, 04, 06 (no navegador). Depende de: T-SEG-01, 02, 03.
+  - `playwright.producao.config.ts`, script `test:e2e:producao`, fixture de violação de CSP em
+    `e2e/apoio/teste.ts` aplicada às sete specs de telas e `e2e/producao/`: cabeçalhos, nonces,
+    nonce nos estilos do Radix e nenhuma `securitypolicyviolation` nas seis telas.
+  - Atende: CA-SEG-01, 02, 03, 04, 06 (no navegador). Depende de: T-SEG-01, 02, 03, 04a.
   - Commit: `test(seguranca): verificar CSP no build de produção`.
 
 ## Bloco B — migration
@@ -101,7 +110,7 @@ dependem da T-SEG-05. O Bloco E fecha.
 | CA | Tarefas |
 |---|---|
 | CA-SEG-01, 02 | 02, 04 |
-| CA-SEG-03 | 04 |
+| CA-SEG-03 | 04a, 04 |
 | CA-SEG-04 | 01, 04 |
 | CA-SEG-05 | 02 |
 | CA-SEG-06 | 03, 04 |
