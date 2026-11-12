@@ -1,0 +1,746 @@
+{
+  "versao": 1,
+  "estado": "aprovado",
+  "semelhanca_visual": {
+    "situacao": "verificada",
+    "metodo": "Comparação visual manual do lote completo em JPEG 800 × 600, com inspeção específica de TI-0005 e TI-0007; hashes e métricas perceptuais usados apenas como evidência auxiliar. TI-0005 e TI-0007 mostram aparentemente o mesmo modelo de monitor, mas foram consideradas fotografias suficientemente diferentes.",
+    "responsavel": "TheoMGtech, responsável do projeto",
+    "verificada_em": "2026-11-10"
+  },
+  "itens": [
+    {
+      "id": "TI-0001",
+      "equipamento": "Notebook 14 polegadas",
+      "categoria": "Notebook",
+      "situacao": "selecionada",
+      "origem": {
+        "fonte": "Pixabay",
+        "pixabay_id": 1846056,
+        "url_pagina": "https://pixabay.com/photos/computer-laptop-connection-desk-1846056/",
+        "autor": "Pexels",
+        "licenca": {
+          "referencia": "Licença de Conteúdo Pixabay, conforme https://pixabay.com/service/terms/",
+          "consultada_em": "2026-11-09"
+        },
+        "obtida_em": "2026-11-10",
+        "dimensoes_originais": {
+          "largura": 2400,
+          "altura": 1607
+        }
+      },
+      "arquivo": {
+        "nome_relativo": "TI-0001-40794e08.jpg",
+        "dimensoes_finais": {
+          "largura": 800,
+          "altura": 600
+        },
+        "sha256": "40794e081ad7578e18ed479d49d0340042b51ab1d23ed76737abf3448d0a0403",
+        "recorte": {
+          "imagem_base": {
+            "sha256": "cd87f06c49d064a55722424c6be035fd6c673b288768178d7d5e5c8841d92ded",
+            "largura": 1280,
+            "altura": 857
+          },
+          "regiao": {
+            "esquerda": 272,
+            "topo": 0,
+            "largura": 1008,
+            "altura": 756
+          }
+        }
+      },
+      "revisao_visual": {
+        "resultado": "aceita_agente",
+        "observacao": "Recorte explícito 272, 0, 1008 × 756. Sem logotipo visível; o desenho pode lembrar um modelo conhecido, ponto já decidido pelo responsável. Receptor USB sem letras legíveis; legendas das teclas são inscrições técnicas."
+      },
+      "storage": {
+        "destino_planejado": "equipamentos/TI-0001-40794e08.jpg"
+      },
+      "aprovacao_humana": {
+        "decisao": "aprovada",
+        "responsavel": "TheoMGtech, responsável do projeto",
+        "aprovada_em": "2026-11-10",
+        "sha256_aprovado": "40794e081ad7578e18ed479d49d0340042b51ab1d23ed76737abf3448d0a0403"
+      }
+    },
+    {
+      "id": "TI-0002",
+      "equipamento": "Notebook 15 polegadas",
+      "categoria": "Notebook",
+      "situacao": "selecionada",
+      "origem": {
+        "fonte": "Pixabay",
+        "pixabay_id": 791032,
+        "url_pagina": "https://pixabay.com/photos/technology-laptop-computer-netbook-791032/",
+        "autor": "kaboompics",
+        "licenca": {
+          "referencia": "Licença de Conteúdo Pixabay, conforme https://pixabay.com/service/terms/",
+          "consultada_em": "2026-11-09"
+        },
+        "obtida_em": "2026-11-10",
+        "dimensoes_originais": {
+          "largura": 5253,
+          "altura": 3502
+        }
+      },
+      "arquivo": {
+        "nome_relativo": "TI-0002-1b249f50.jpg",
+        "dimensoes_finais": {
+          "largura": 800,
+          "altura": 600
+        },
+        "sha256": "1b249f50bc665daff3b597fb0050a9520aca762033661745e71b4224c8b6fd8f"
+      },
+      "revisao_visual": {
+        "resultado": "aceita_agente",
+        "observacao": "Notebook visto de trás, sem marca visível. Lombadas de livros desfocadas, sem título legível."
+      },
+      "storage": {
+        "destino_planejado": "equipamentos/TI-0002-1b249f50.jpg"
+      },
+      "aprovacao_humana": {
+        "decisao": "aprovada",
+        "responsavel": "TheoMGtech, responsável do projeto",
+        "aprovada_em": "2026-11-10",
+        "sha256_aprovado": "1b249f50bc665daff3b597fb0050a9520aca762033661745e71b4224c8b6fd8f"
+      }
+    },
+    {
+      "id": "TI-0003",
+      "equipamento": "Notebook 13 polegadas",
+      "categoria": "Notebook",
+      "situacao": "selecionada",
+      "origem": {
+        "fonte": "Pixabay",
+        "pixabay_id": 2567809,
+        "url_pagina": "https://pixabay.com/photos/laptop-computer-technology-2567809/",
+        "autor": "StockSnap",
+        "licenca": {
+          "referencia": "Licença de Conteúdo Pixabay, conforme https://pixabay.com/service/terms/",
+          "consultada_em": "2026-11-09"
+        },
+        "obtida_em": "2026-11-10",
+        "dimensoes_originais": {
+          "largura": 5184,
+          "altura": 3456
+        }
+      },
+      "arquivo": {
+        "nome_relativo": "TI-0003-4c34c0b3.jpg",
+        "dimensoes_finais": {
+          "largura": 800,
+          "altura": 600
+        },
+        "sha256": "4c34c0b3b72886d44653ecca14e25f2b3e37a981f962bd84be95ae29906a2199"
+      },
+      "revisao_visual": {
+        "resultado": "aceita_agente",
+        "observacao": "Tela ligada em branco, com faixa de ícones desfocados sem conteúdo identificável. Sem marca visível. Tom sépia forte."
+      },
+      "storage": {
+        "destino_planejado": "equipamentos/TI-0003-4c34c0b3.jpg"
+      },
+      "aprovacao_humana": {
+        "decisao": "aprovada",
+        "responsavel": "TheoMGtech, responsável do projeto",
+        "aprovada_em": "2026-11-10",
+        "sha256_aprovado": "4c34c0b3b72886d44653ecca14e25f2b3e37a981f962bd84be95ae29906a2199"
+      }
+    },
+    {
+      "id": "TI-0004",
+      "equipamento": "Notebook 15 polegadas",
+      "categoria": "Notebook",
+      "situacao": "selecionada",
+      "origem": {
+        "fonte": "Pixabay",
+        "pixabay_id": 6856557,
+        "url_pagina": "https://pixabay.com/photos/laptop-technology-electronic-6856557/",
+        "autor": "LUNEMax",
+        "licenca": {
+          "referencia": "Licença de Conteúdo Pixabay, conforme https://pixabay.com/service/terms/",
+          "consultada_em": "2026-11-09"
+        },
+        "obtida_em": "2026-11-10",
+        "dimensoes_originais": {
+          "largura": 3000,
+          "altura": 1987
+        }
+      },
+      "arquivo": {
+        "nome_relativo": "TI-0004-67cbaaf7.jpg",
+        "dimensoes_finais": {
+          "largura": 800,
+          "altura": 600
+        },
+        "sha256": "67cbaaf7d5b5902d2b9733ee9a295bb9788cfc227aa94ecc79ddfb72854bcf50"
+      },
+      "revisao_visual": {
+        "resultado": "aceita_agente",
+        "observacao": "Sem logotipo nem texto legível. Desenho e portas podem lembrar um modelo conhecido, ponto já avaliado pelo responsável. Notebook aberto."
+      },
+      "storage": {
+        "destino_planejado": "equipamentos/TI-0004-67cbaaf7.jpg"
+      },
+      "aprovacao_humana": {
+        "decisao": "aprovada",
+        "responsavel": "TheoMGtech, responsável do projeto",
+        "aprovada_em": "2026-11-10",
+        "sha256_aprovado": "67cbaaf7d5b5902d2b9733ee9a295bb9788cfc227aa94ecc79ddfb72854bcf50"
+      }
+    },
+    {
+      "id": "TI-0005",
+      "equipamento": "Monitor 24 polegadas",
+      "categoria": "Monitor",
+      "situacao": "selecionada",
+      "origem": {
+        "fonte": "Pixabay",
+        "pixabay_id": 17768,
+        "url_pagina": "https://pixabay.com/photos/blank-business-computer-desktop-17768/",
+        "autor": "PublicDomainPictures",
+        "licenca": {
+          "referencia": "Licença de Conteúdo Pixabay, conforme https://pixabay.com/service/terms/",
+          "consultada_em": "2026-11-09"
+        },
+        "obtida_em": "2026-11-10",
+        "dimensoes_originais": {
+          "largura": 5616,
+          "altura": 3744
+        }
+      },
+      "arquivo": {
+        "nome_relativo": "TI-0005-8180f323.jpg",
+        "dimensoes_finais": {
+          "largura": 800,
+          "altura": 600
+        },
+        "sha256": "8180f323246014a457518c21651f62b097db1794785852491c47b0bcf6bae245"
+      },
+      "revisao_visual": {
+        "resultado": "aceita_agente",
+        "observacao": "Monitor isolado em fundo branco, tela apagada, ícones genéricos de controle. Mesmo modelo e autor do TI-0007, em fotografia distinta."
+      },
+      "storage": {
+        "destino_planejado": "equipamentos/TI-0005-8180f323.jpg"
+      },
+      "aprovacao_humana": {
+        "decisao": "aprovada",
+        "responsavel": "TheoMGtech, responsável do projeto",
+        "aprovada_em": "2026-11-10",
+        "sha256_aprovado": "8180f323246014a457518c21651f62b097db1794785852491c47b0bcf6bae245"
+      }
+    },
+    {
+      "id": "TI-0006",
+      "equipamento": "Monitor 27 polegadas",
+      "categoria": "Monitor",
+      "situacao": "selecionada",
+      "origem": {
+        "fonte": "Pixabay",
+        "pixabay_id": 1181385,
+        "url_pagina": "https://pixabay.com/photos/offices-business-computer-1181385/",
+        "autor": "janeb13",
+        "licenca": {
+          "referencia": "Licença de Conteúdo Pixabay, conforme https://pixabay.com/service/terms/",
+          "consultada_em": "2026-11-10"
+        },
+        "obtida_em": "2026-11-10",
+        "dimensoes_originais": {
+          "largura": 1920,
+          "altura": 1080
+        }
+      },
+      "arquivo": {
+        "nome_relativo": "TI-0006-0bdbc300.jpg",
+        "dimensoes_finais": {
+          "largura": 800,
+          "altura": 600
+        },
+        "sha256": "0bdbc3008c0858b47b4a0ab35b73b31cfe7d30f450df54f0a12778212107ea11",
+        "recorte": {
+          "imagem_base": {
+            "sha256": "460f611d7d4bf0a556ec1307f5af17054b3e8be4b363cb8e3f1600f813c89d2e",
+            "largura": 1280,
+            "altura": 720
+          },
+          "regiao": {
+            "esquerda": 260,
+            "topo": 120,
+            "largura": 800,
+            "altura": 600
+          }
+        }
+      },
+      "revisao_visual": {
+        "resultado": "aceita_agente",
+        "observacao": "Recorte explícito 260, 120, 800 × 600. Sala de computadores sem pessoas; telas ligadas com papel de parede genérico, sem informação identificável; inscrição da moldura ilegível em 800 × 600. Considerada adequada pelo responsável."
+      },
+      "storage": {
+        "destino_planejado": "equipamentos/TI-0006-0bdbc300.jpg"
+      },
+      "aprovacao_humana": {
+        "decisao": "aprovada",
+        "responsavel": "TheoMGtech, responsável do projeto",
+        "aprovada_em": "2026-11-10",
+        "sha256_aprovado": "0bdbc3008c0858b47b4a0ab35b73b31cfe7d30f450df54f0a12778212107ea11"
+      }
+    },
+    {
+      "id": "TI-0007",
+      "equipamento": "Monitor 22 polegadas",
+      "categoria": "Monitor",
+      "situacao": "selecionada",
+      "origem": {
+        "fonte": "Pixabay",
+        "pixabay_id": 17894,
+        "url_pagina": "https://pixabay.com/photos/blank-business-computer-desktop-17894/",
+        "autor": "PublicDomainPictures",
+        "licenca": {
+          "referencia": "Licença de Conteúdo Pixabay, conforme https://pixabay.com/service/terms/",
+          "consultada_em": "2026-11-09"
+        },
+        "obtida_em": "2026-11-10",
+        "dimensoes_originais": {
+          "largura": 5416,
+          "altura": 3611
+        }
+      },
+      "arquivo": {
+        "nome_relativo": "TI-0007-a1634cd1.jpg",
+        "dimensoes_finais": {
+          "largura": 800,
+          "altura": 600
+        },
+        "sha256": "a1634cd13e538a01275111450db78863ea4a0724573a06281d8254f6dfdd9550"
+      },
+      "revisao_visual": {
+        "resultado": "aceita_agente",
+        "observacao": "Monitor frontal em fundo branco; tela e fundo preenchidos digitalmente em branco, sem conteúdo. Ícones genéricos de controle. Mesmo modelo e autor do TI-0005, em fotografia distinta."
+      },
+      "storage": {
+        "destino_planejado": "equipamentos/TI-0007-a1634cd1.jpg"
+      },
+      "aprovacao_humana": {
+        "decisao": "aprovada",
+        "responsavel": "TheoMGtech, responsável do projeto",
+        "aprovada_em": "2026-11-10",
+        "sha256_aprovado": "a1634cd13e538a01275111450db78863ea4a0724573a06281d8254f6dfdd9550"
+      }
+    },
+    {
+      "id": "TI-0008",
+      "equipamento": "Cabo HDMI 2 m",
+      "categoria": "Cabo",
+      "situacao": "selecionada",
+      "origem": {
+        "fonte": "Pixabay",
+        "pixabay_id": 643728,
+        "url_pagina": "https://pixabay.com/photos/hdmi-cable-connection-643728/",
+        "autor": "PIX1861",
+        "licenca": {
+          "referencia": "Licença de Conteúdo Pixabay, conforme https://pixabay.com/service/terms/",
+          "consultada_em": "2026-11-09"
+        },
+        "obtida_em": "2026-11-10",
+        "dimensoes_originais": {
+          "largura": 5184,
+          "altura": 3456
+        }
+      },
+      "arquivo": {
+        "nome_relativo": "TI-0008-0d143612.jpg",
+        "dimensoes_finais": {
+          "largura": 800,
+          "altura": 600
+        },
+        "sha256": "0d143612047443cd17fc8b5c3a38a409b551984d9c3a2abc2904fe9ba1cb24f4"
+      },
+      "revisao_visual": {
+        "resultado": "aceita_agente",
+        "observacao": "Conector HDMI em fundo neutro, sem marca nem texto."
+      },
+      "storage": {
+        "destino_planejado": "equipamentos/TI-0008-0d143612.jpg"
+      },
+      "aprovacao_humana": {
+        "decisao": "aprovada",
+        "responsavel": "TheoMGtech, responsável do projeto",
+        "aprovada_em": "2026-11-10",
+        "sha256_aprovado": "0d143612047443cd17fc8b5c3a38a409b551984d9c3a2abc2904fe9ba1cb24f4"
+      }
+    },
+    {
+      "id": "TI-0009",
+      "equipamento": "Cabo USB-C 1 m",
+      "categoria": "Cabo",
+      "situacao": "selecionada",
+      "origem": {
+        "fonte": "Pixabay",
+        "pixabay_id": 1281034,
+        "url_pagina": "https://pixabay.com/photos/usb-type-c-cable-guy-two-1281034/",
+        "autor": "denvit",
+        "licenca": {
+          "referencia": "Licença de Conteúdo Pixabay, conforme https://pixabay.com/service/terms/",
+          "consultada_em": "2026-11-09"
+        },
+        "obtida_em": "2026-11-10",
+        "dimensoes_originais": {
+          "largura": 4272,
+          "altura": 2848
+        }
+      },
+      "arquivo": {
+        "nome_relativo": "TI-0009-9c878fb3.jpg",
+        "dimensoes_finais": {
+          "largura": 800,
+          "altura": 600
+        },
+        "sha256": "9c878fb3e8fae9c6d47da014697306f71ae51b64078d092ac14038724fbcdddf"
+      },
+      "revisao_visual": {
+        "resultado": "aceita_agente",
+        "observacao": "Conector USB-C com o símbolo genérico de USB, inscrição técnica permitida. Sem marca."
+      },
+      "storage": {
+        "destino_planejado": "equipamentos/TI-0009-9c878fb3.jpg"
+      },
+      "aprovacao_humana": {
+        "decisao": "aprovada",
+        "responsavel": "TheoMGtech, responsável do projeto",
+        "aprovada_em": "2026-11-10",
+        "sha256_aprovado": "9c878fb3e8fae9c6d47da014697306f71ae51b64078d092ac14038724fbcdddf"
+      }
+    },
+    {
+      "id": "TI-0010",
+      "equipamento": "Cabo de rede 3 m",
+      "categoria": "Cabo",
+      "situacao": "selecionada",
+      "origem": {
+        "fonte": "Pixabay",
+        "pixabay_id": 2245837,
+        "url_pagina": "https://pixabay.com/photos/network-cable-network-cable-data-2245837/",
+        "autor": "doctor-a",
+        "licenca": {
+          "referencia": "Licença de Conteúdo Pixabay, conforme https://pixabay.com/service/terms/",
+          "consultada_em": "2026-11-09"
+        },
+        "obtida_em": "2026-11-10",
+        "dimensoes_originais": {
+          "largura": 2000,
+          "altura": 1330
+        }
+      },
+      "arquivo": {
+        "nome_relativo": "TI-0010-bfdb619e.jpg",
+        "dimensoes_finais": {
+          "largura": 800,
+          "altura": 600
+        },
+        "sha256": "bfdb619e30ccf586dba4468f77493b373d414b24f8a2678e91ccbfd2f849655d"
+      },
+      "revisao_visual": {
+        "resultado": "aceita_agente",
+        "observacao": "Conector RJ45 nítido, sem marca nem texto legível."
+      },
+      "storage": {
+        "destino_planejado": "equipamentos/TI-0010-bfdb619e.jpg"
+      },
+      "aprovacao_humana": {
+        "decisao": "aprovada",
+        "responsavel": "TheoMGtech, responsável do projeto",
+        "aprovada_em": "2026-11-10",
+        "sha256_aprovado": "bfdb619e30ccf586dba4468f77493b373d414b24f8a2678e91ccbfd2f849655d"
+      }
+    },
+    {
+      "id": "TI-0011",
+      "equipamento": "Webcam Full HD",
+      "categoria": "Câmera",
+      "situacao": "selecionada",
+      "origem": {
+        "fonte": "Pixabay",
+        "pixabay_id": 796227,
+        "url_pagina": "https://pixabay.com/photos/web-cam-internet-video-796227/",
+        "autor": "Vitamin",
+        "licenca": {
+          "referencia": "Licença de Conteúdo Pixabay, conforme https://pixabay.com/service/terms/",
+          "consultada_em": "2026-11-10"
+        },
+        "obtida_em": "2026-11-10",
+        "dimensoes_originais": {
+          "largura": 5184,
+          "altura": 3456
+        }
+      },
+      "arquivo": {
+        "nome_relativo": "TI-0011-d8159c38.jpg",
+        "dimensoes_finais": {
+          "largura": 800,
+          "altura": 600
+        },
+        "sha256": "d8159c380ad8c695aff513f9f10a55ad4077e7877ac2379d8887ac6ff81ad3e7"
+      },
+      "revisao_visual": {
+        "resultado": "aceita_agente",
+        "observacao": "Inscrições técnicas genéricas WEB CAMERA e F/#2.0 f:4.8mm, permitidas pela orientação posterior do professor. Sem logotipo nem pessoas. Rejeição anterior reclassificada com auditoria."
+      },
+      "storage": {
+        "destino_planejado": "equipamentos/TI-0011-d8159c38.jpg"
+      },
+      "aprovacao_humana": {
+        "decisao": "aprovada",
+        "responsavel": "TheoMGtech, responsável do projeto",
+        "aprovada_em": "2026-11-10",
+        "sha256_aprovado": "d8159c380ad8c695aff513f9f10a55ad4077e7877ac2379d8887ac6ff81ad3e7"
+      }
+    },
+    {
+      "id": "TI-0012",
+      "equipamento": "Câmera compacta",
+      "categoria": "Câmera",
+      "situacao": "selecionada",
+      "origem": {
+        "fonte": "Pixabay",
+        "pixabay_id": 551287,
+        "url_pagina": "https://pixabay.com/pt/photos/c%C3%A2mera-digital-c%C3%A2mera-compactar-551287/",
+        "autor": "Humusak",
+        "licenca": {
+          "referencia": "Licença de Conteúdo Pixabay, conforme https://pixabay.com/service/terms/",
+          "consultada_em": "2026-11-10"
+        },
+        "obtida_em": "2026-11-10",
+        "dimensoes_originais": {
+          "largura": 4859,
+          "altura": 3080
+        }
+      },
+      "arquivo": {
+        "nome_relativo": "TI-0012-128d9a02.jpg",
+        "dimensoes_finais": {
+          "largura": 800,
+          "altura": 600
+        },
+        "sha256": "128d9a02a19e47e04728a04529fa208da47b1359f7a24bb306917ad07c294cec"
+      },
+      "revisao_visual": {
+        "resultado": "aceita_agente",
+        "observacao": "Traseira com tela apagada. Rótulos técnicos de controles, como RING FUNC., FUNC. SET, DISP. e MENU, permitidos pela orientação posterior do professor. Sem logotipo. Borda esquerda cortada pelo enquadramento central."
+      },
+      "storage": {
+        "destino_planejado": "equipamentos/TI-0012-128d9a02.jpg"
+      },
+      "aprovacao_humana": {
+        "decisao": "aprovada",
+        "responsavel": "TheoMGtech, responsável do projeto",
+        "aprovada_em": "2026-11-10",
+        "sha256_aprovado": "128d9a02a19e47e04728a04529fa208da47b1359f7a24bb306917ad07c294cec"
+      }
+    }
+  ],
+  "rejeicoes": [
+    {
+      "id_equipamento": "TI-0001",
+      "pixabay_id": 2982270,
+      "url_pagina": "https://pixabay.com/photos/computer-laptop-work-place-mouse-2982270/",
+      "motivos": [
+        "MARCA"
+      ],
+      "observacao": "Logotipos ASUS, Nikon e Logitech legíveis na cena",
+      "rejeitada_em": "2026-11-10"
+    },
+    {
+      "id_equipamento": "TI-0003",
+      "pixabay_id": 338505,
+      "url_pagina": "https://pixabay.com/photos/keyboard-keys-hardware-pc-computer-338505/",
+      "motivos": [
+        "OBJETO_ERRADO",
+        "MARCA"
+      ],
+      "observacao": "Câmera Sony em primeiro plano; notebook desfocado ao fundo",
+      "rejeitada_em": "2026-11-10"
+    },
+    {
+      "id_equipamento": "TI-0004",
+      "pixabay_id": 4906312,
+      "url_pagina": "https://pixabay.com/photos/laptop-workstaion-office-work-4906312/",
+      "motivos": [
+        "PESSOA",
+        "OBJETO_ERRADO"
+      ],
+      "observacao": "Mãos e pernas de uma pessoa; notebook aberto em uso",
+      "rejeitada_em": "2026-11-10"
+    },
+    {
+      "id_equipamento": "TI-0005",
+      "pixabay_id": 1207834,
+      "url_pagina": "https://pixabay.com/photos/home-office-pc-computer-1207834/",
+      "motivos": [
+        "MARCA"
+      ],
+      "observacao": "Logotipo Apple em destaque no monitor",
+      "rejeitada_em": "2026-11-10"
+    },
+    {
+      "id_equipamento": "TI-0006",
+      "pixabay_id": 405768,
+      "url_pagina": "https://pixabay.com/photos/workstation-home-office-computer-405768/",
+      "motivos": [
+        "MARCA",
+        "TEXTO",
+        "TELA_COM_CONTEUDO"
+      ],
+      "observacao": "Marca Dell, logotipo do Twitter, documento legível nas telas",
+      "rejeitada_em": "2026-11-10"
+    },
+    {
+      "id_equipamento": "TI-0011",
+      "pixabay_id": 1219748,
+      "url_pagina": "https://pixabay.com/photos/camera-webcam-computer-internet-1219748/",
+      "motivos": [
+        "TEXTO"
+      ],
+      "observacao": "Especificações técnicas legíveis na lente",
+      "rejeitada_em": "2026-11-10"
+    },
+    {
+      "id_equipamento": "TI-0012",
+      "pixabay_id": 3545828,
+      "url_pagina": "https://pixabay.com/photos/camera-compact-digital-3545828/",
+      "motivos": [
+        "MARCA",
+        "TEXTO"
+      ],
+      "observacao": "Marca Pentax e especificações legíveis no corpo",
+      "rejeitada_em": "2026-11-10"
+    },
+    {
+      "id_equipamento": "TI-0001",
+      "pixabay_id": 5517762,
+      "url_pagina": "https://pixabay.com/photos/workplace-workspace-home-office-5517762/",
+      "motivos": [
+        "PESSOA"
+      ],
+      "observacao": "Retrato de pessoa em porta-retratos sobre a mesa",
+      "rejeitada_em": "2026-11-10"
+    },
+    {
+      "id_equipamento": "TI-0005",
+      "pixabay_id": 820389,
+      "url_pagina": "https://pixabay.com/photos/home-office-workspace-desk-design-820389/",
+      "motivos": [
+        "MARCA",
+        "TEXTO",
+        "TELA_COM_CONTEUDO"
+      ],
+      "observacao": "Logotipo Apple, relógio na tela e títulos de livros legíveis",
+      "rejeitada_em": "2026-11-10"
+    },
+    {
+      "id_equipamento": "TI-0006",
+      "pixabay_id": 2181919,
+      "url_pagina": "https://pixabay.com/photos/chairs-conference-room-empty-2181919/",
+      "motivos": [
+        "OBJETO_ERRADO"
+      ],
+      "observacao": "Tela pequena e distante em sala de reunião; equipamento pouco reconhecível",
+      "rejeitada_em": "2026-11-10"
+    },
+    {
+      "id_equipamento": "TI-0012",
+      "pixabay_id": 4907231,
+      "url_pagina": "https://pixabay.com/photos/camera-photo-panel-photography-4907231/",
+      "motivos": [
+        "TEXTO",
+        "OBJETO_ERRADO"
+      ],
+      "observacao": "Botões com texto legível; apenas detalhe traseiro, câmera pouco reconhecível",
+      "rejeitada_em": "2026-11-10"
+    },
+    {
+      "id_equipamento": "TI-0001",
+      "pixabay_id": 4484282,
+      "url_pagina": "https://pixabay.com/photos/computer-office-laptop-desk-4484282/",
+      "motivos": [
+        "TEXTO"
+      ],
+      "observacao": "Frases legíveis no bloco e nas canetas; notebook parcialmente cortado",
+      "rejeitada_em": "2026-11-10"
+    },
+    {
+      "id_equipamento": "TI-0005",
+      "pixabay_id": 932926,
+      "url_pagina": "https://pixabay.com/photos/office-work-desk-computer-932926/",
+      "motivos": [
+        "PESSOA",
+        "TELA_COM_CONTEUDO"
+      ],
+      "observacao": "Pessoa trabalhando; telas com conteúdo",
+      "rejeitada_em": "2026-11-10"
+    },
+    {
+      "id_equipamento": "TI-0006",
+      "pixabay_id": 4795762,
+      "url_pagina": "https://pixabay.com/photos/computer-laptop-tech-blue-computer-4795762/",
+      "motivos": [
+        "TELA_COM_CONTEUDO"
+      ],
+      "observacao": "Código-fonte e página legíveis nas telas",
+      "rejeitada_em": "2026-11-10"
+    },
+    {
+      "id_equipamento": "TI-0012",
+      "pixabay_id": 5309390,
+      "url_pagina": "https://pixabay.com/photos/camera-photography-photo-camera-5309390/",
+      "motivos": [
+        "MARCA",
+        "TEXTO",
+        "OBJETO_ERRADO"
+      ],
+      "observacao": "Marca Olympus legível; câmera reflex, não compacta",
+      "rejeitada_em": "2026-11-10"
+    },
+    {
+      "id_equipamento": "TI-0001",
+      "pixabay_id": 3036166,
+      "url_pagina": "https://pixabay.com/photos/computer-laptop-blank-empty-screen-3036166/",
+      "motivos": [
+        "INDICIO_IA",
+        "RECORTE"
+      ],
+      "observacao": "Aparência de render 3D, não fotografia; notebook cortado à direita",
+      "rejeitada_em": "2026-11-10"
+    },
+    {
+      "id_equipamento": "TI-0005",
+      "pixabay_id": 6628144,
+      "url_pagina": "https://pixabay.com/photos/computer-technology-monitor-screen-6628144/",
+      "motivos": [
+        "INDICIO_IA"
+      ],
+      "observacao": "Ilustração digital, não fotografia, apesar do tipo informado pela API",
+      "rejeitada_em": "2026-11-10"
+    },
+    {
+      "id_equipamento": "TI-0006",
+      "pixabay_id": 820315,
+      "url_pagina": "https://pixabay.com/photos/workspace-desk-computers-laptop-820315/",
+      "motivos": [
+        "MARCA"
+      ],
+      "observacao": "Logotipos Apple em destaque",
+      "rejeitada_em": "2026-11-10"
+    },
+    {
+      "id_equipamento": "TI-0010",
+      "pixabay_id": 494649,
+      "url_pagina": "https://pixabay.com/photos/network-cable-cable-patch-494649/",
+      "motivos": [
+        "QUALIDADE"
+      ],
+      "observacao": "Composição com vários cabos, menos apropriada para representar um equipamento individual",
+      "rejeitada_em": "2026-11-10"
+    }
+  ]
+}

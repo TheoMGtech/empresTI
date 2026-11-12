@@ -1,0 +1,14 @@
+[
+  { "id": "TI-0001", "equipamento": "Notebook 14 polegadas", "categoria": "Notebook" },
+  { "id": "TI-0002", "equipamento": "Notebook 15 polegadas", "categoria": "Notebook" },
+  { "id": "TI-0003", "equipamento": "Notebook 13 polegadas", "categoria": "Notebook" },
+  { "id": "TI-0004", "equipamento": "Notebook 15 polegadas", "categoria": "Notebook" },
+  { "id": "TI-0005", "equipamento": "Monitor 24 polegadas", "categoria": "Monitor" },
+  { "id": "TI-0006", "equipamento": "Monitor 27 polegadas", "categoria": "Monitor" },
+  { "id": "TI-0007", "equipamento": "Monitor 22 polegadas", "categoria": "Monitor" },
+  { "id": "TI-0008", "equipamento": "Cabo HDMI 2 m", "categoria": "Cabo" },
+  { "id": "TI-0009", "equipamento": "Cabo USB-C 1 m", "categoria": "Cabo" },
+  { "id": "TI-0010", "equipamento": "Cabo de rede 3 m", "categoria": "Cabo" },
+  { "id": "TI-0011", "equipamento": "Webcam Full HD", "categoria": "Câmera" },
+  { "id": "TI-0012", "equipamento": "Câmera compacta", "categoria": "Câmera" }
+]
