@@ -15,8 +15,11 @@ referência: `spec.md` (APROVADA em 2026-11-12).
 - **Regras:** `rules/checks.md`, `rules/tests.md`, `rules/migration.md`, `rules/secrets.md`.
 - **Skills:** `supabase-postgres-best-practices` (upsert atômico, índice de expiração, RLS);
   `supabase` (privilégios de `anon` e `authenticated` na Data API).
-- **Dependências:** nenhuma biblioteca nova. HMAC e nonce usam `node:crypto` e a Web Crypto do
-  runtime. Novo script `test:e2e:producao` em `package.json`, sem pacote novo.
+- **Dependências:** HMAC e nonce usam `node:crypto` e a Web Crypto do runtime. Novo script
+  `test:e2e:producao` em `package.json`. Única dependência direta nova: `get-nonce@1.0.1`,
+  aprovada pelo responsável em 2026-11-12 só para entregar o nonce aos estilos do Radix Dialog
+  (T-SEG-04a). É a mesma versão que já vinha instalada como dependência de
+  `react-style-singleton`.
 
 ## Arquivos previstos
 
@@ -25,7 +28,8 @@ referência: `spec.md` (APROVADA em 2026-11-12).
 | `src/server/seguranca/cabecalhos.ts`, `next.config.ts` | Cabeçalhos fixos e HSTS | 01 |
 | `src/server/seguranca/csp.ts`, `src/server/supabase/proxy.ts`, `src/proxy.ts` | Nonce e CSP | 02 |
 | `src/components/emprestimos/barra-prazo.tsx` | Barra sem `style` | 03 |
-| `playwright.producao.config.ts`, `e2e/producao/*.spec.ts`, `package.json` | E2E no build de produção | 04 |
+| `src/lib/zod.ts`, `src/env.ts`, `src/lib/esquemas/*.ts`, `src/components/seguranca/nonce-estilos.tsx`, `src/app/layout.tsx`, `package.json`, `package-lock.json` | Compatibilidade de runtime com a CSP | 04a |
+| `playwright.producao.config.ts`, `e2e/apoio/teste.ts`, `e2e/producao/*.spec.ts`, `e2e/*.spec.ts` (import), `package.json` | E2E no build de produção | 04 |
 | `prisma/schema.prisma`, `prisma/migrations/<data>_criar_limites_requisicao/` | Tabela | 05 |
 | `src/env.ts`, `.env.example`, `src/test/setup.ts`, `src/server/services/ip-confiavel.ts`, `src/server/services/identificadores-limite.ts` | Chave, IP e HMAC | 06 |
 | `src/server/services/limites.ts` | Contador atômico e limpeza | 07 |
@@ -83,18 +87,49 @@ Requisitos para isso funcionar, conferidos na T-SEG-02:
 - `barra-prazo.tsx` troca a `div` com `style={{ width }}` por um `svg` com `rect` cujo `width` é um
   **atributo SVG** em porcentagem. Atributo de apresentação SVG não é `style` e não é bloqueado por
   `style-src`. Mantém altura, cantos, cores, `role="progressbar"`, os atributos ARIA e a transição.
-- Os demais estilos aplicados por React e Radix depois da hidratação usam a CSSOM, que a CSP não
-  bloqueia. O E2E de produção (T-SEG-04) é o que comprova a ausência de violação em cada tela.
+- Os demais estilos aplicados por React depois da hidratação usam a CSSOM, que a CSP não bloqueia.
+  O E2E de produção (T-SEG-04) é o que comprova a ausência de violação em cada tela.
+
+### Compatibilidade de runtime com a CSP (T-SEG-04a)
+
+Encontrada pela primeira execução do E2E de produção (2026-11-12) e aprovada pelo responsável no
+mesmo dia. Nenhuma origem ou palavra-chave entra na CSP:
+
+- **Zod 4 (`script-src … eval`, login e cadastro):** ao construir cada `z.object`, o Zod testa
+  `new Function`, e o navegador registra o teste como violação, mesmo com o erro capturado.
+  `src/lib/zod.ts` aplica `z.config({ jitless: true })` e reexporta `z`. `src/env.ts` e
+  `src/lib/esquemas/*.ts`, os módulos que rodam no navegador, importam `z` dali, para a
+  configuração valer antes de qualquer esquema. A validação usa o caminho interpretado, com o
+  mesmo resultado.
+- **Radix Dialog (`style-src-elem` inline, telas com diálogo):** `@radix-ui/react-dialog` →
+  `react-remove-scroll` → `react-style-singleton` insere um `<style>` com o nonce de
+  `get-nonce`, que hoje vem vazio.
+  - O layout raiz lê o `x-nonce` repassado pelo proxy com `headers()` e o entrega, sem gerar outro
+    nonce, a `NonceEstilos`. Esse componente cliente chama `setNonce()` durante a renderização no
+    navegador, antes de qualquer diálogo montar.
+  - No servidor, `NonceEstilos` não chama `setNonce()`: o estado de `get-nonce` é global do
+    módulo, e no servidor vazaria entre requisições.
+  - Vale o primeiro nonce recebido no navegador, que é o da CSP aplicada ao documento.
+    Renderizações seguintes do layout (navegação ou `router.refresh()` buscam outro payload, com
+    outro nonce) não o trocam, porque a CSP do documento não muda.
+  - Um teste confere que `get-nonce` resolve para o mesmo arquivo a partir do projeto e a partir de
+    `react-style-singleton`, ou seja, que há uma única instância.
 
 ### E2E no build de produção (T-SEG-04)
 
 - `playwright.producao.config.ts`: `webServer` roda `npm run build` e depois `npm run start -- -p
   3100`, com `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` de teste; `baseURL` `http://localhost:3100`;
-  `testDir: ./e2e/producao`. O `playwright.config.ts` atual passa a ignorar `e2e/producao`.
+  `testDir: ./e2e`. Roda toda a suíte de telas e os testes de cabeçalho e nonce de
+  `e2e/producao/`. O `playwright.config.ts` atual ignora `e2e/producao`.
 - Novo script: `"test:e2e:producao": "node ./node_modules/@playwright/test/cli.js test --config
   playwright.producao.config.ts"`.
-- Os testes usam o tRPC simulado de `e2e/apoio/trpc.ts`, registram `securitypolicyviolation` em
-  cada página e conferem cabeçalhos, nonce e as seis telas de CA-SEG-03.
+- `e2e/apoio/teste.ts` estende o `test` do Playwright com uma fixture automática: qualquer
+  `securitypolicyviolation`, ou recusa de CSP no console, falha o teste. As sete specs de telas
+  importam `test` dali, então as seis telas de CA-SEG-03 são exercidas pelos fluxos que já existem.
+- As fotografias do E2E de catálogo usam a origem do Storage liberada na CSP, com as requisições
+  abortadas pelo teste, como antes.
+- Um teste abre um diálogo no build de produção e confere que os `<style>` inseridos levam o nonce
+  da CSP do documento.
 
 ## Desenho — limite de requisições
 
