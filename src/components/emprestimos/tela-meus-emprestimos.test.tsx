@@ -137,7 +137,7 @@ describe("T-DEVOL-04 — Meus empréstimos", () => {
     const barra = screen.getByRole("progressbar", { name: "Prazo" });
     expect(barra).toHaveAttribute("aria-valuenow", "7");
     expect(barra).toHaveAttribute("aria-valuemax", "14");
-    expect(barra.firstElementChild).toHaveStyle({ width: "50%" });
+    expect(barra.querySelector("rect")).toHaveAttribute("width", "50%");
     expect(screen.getByText("24/nov")).toBeInTheDocument();
   });
 
