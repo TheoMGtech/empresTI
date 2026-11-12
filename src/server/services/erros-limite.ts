@@ -7,3 +7,12 @@ export class ErroLimiteIndisponivel extends Error {
     this.name = "ErroLimiteIndisponivel";
   }
 }
+
+// Spec 009 (RF-SEG-11): limite estourado. `segundos` vai para o `Retry-After` (T-SEG-08); a
+// mensagem também é genérica e não diz qual contador bloqueou nem para quem.
+export class ErroLimiteExcedido extends Error {
+  constructor(readonly segundos: number) {
+    super("Limite de requisições excedido.");
+    this.name = "ErroLimiteExcedido";
+  }
+}
