@@ -1,10 +1,11 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./apoio/teste";
 
 import { simularTRPC } from "./apoio/trpc";
 
-// Dados fictícios no formato da carga inicial da Spec 002. As fotos apontam para um host
-// fictício, bloqueado abaixo, para provar o fallback sem tocar no Storage real.
-const HOST_FOTOS = "https://e2e-ficticio.supabase.co";
+// Dados fictícios no formato da carga inicial da Spec 002. As fotos usam a origem do Storage que a
+// CSP libera (Spec 009, RF-SEG-02), como em produção, mas toda requisição a ela é abortada abaixo:
+// prova o fallback sem tocar no Storage real.
+const HOST_FOTOS = "https://wdudlqacomnasnrxgbni.supabase.co";
 
 const ITENS = [
   ["TI-0001", "Notebook 14 polegadas", "notebook", "disponivel"],
