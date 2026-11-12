@@ -2,8 +2,12 @@
 
 ## Estado
 
-**Status:** APROVADA — pelo responsável em 2026-11-11, com `plan.md` e `tasks.md`. Ainda não
-implementada.
+**Status:** Implementada — aprovada pelo responsável em 2026-11-11, com `plan.md` e `tasks.md`;
+T-SESSAO-01 a T-SESSAO-10 concluídas. Verificação formal V-01 (2026-11-11, commit `cf90302`):
+NÃO PRONTA, com CA-SESSAO-14 AMBÍGUO e o check `git status --short` sem registro. V-02
+(2026-11-11, commit `9a421a2`): `Veredito: PRONTA` (`verificacao.md`). Aguarda a validação final
+do responsável para ser declarada PRONTA. A validação integrada real (DF-14) continua obrigatória
+antes da publicação em `main` e na Vercel.
 
 ## Objetivo
 
@@ -86,7 +90,8 @@ provas ao escopo da Spec 002, sem removê-las.
 - **CA-SESSAO-12** — A rotina de vínculo aceita papel e nome, mantendo a verificação de identidade.
 - **CA-SESSAO-13** — Sem rolagem horizontal em 375px, e sidebar fixa a partir de 1024px.
 - **CA-SESSAO-14** — Lint, typecheck, testes, E2E e build passam. E2E com tRPC simulado vale no
-  desenvolvimento; a validação integrada real é obrigatória antes da entrega (DF-14).
+  desenvolvimento e basta para declarar esta spec PRONTA; a validação integrada real é obrigatória
+  antes da entrega final, isto é, antes da publicação em `main` e na Vercel (DF-14).
 
 ## Dependências
 
@@ -106,3 +111,8 @@ criada manualmente pelo responsável.
 - **D-SESSAO-04 (DF-9):** segunda conta `operacoes`, criada pelo responsável.
 - **DF-10:** `@phosphor-icons/react` autorizado, instalado só na primeira tarefa que usar ícone.
 - **DF-12:** `Sair` no bloco de usuário; sino omitido. **DF-22:** responsividade.
+- **DF-14 (responsável, 2026-11-11):** a validação integrada real é obrigatória antes da entrega
+  final (publicação em `main` e na Vercel), mas não é pré-condição para declarar esta spec PRONTA.
+  A spec pode ser PRONTA com os critérios comprovados, lint, typecheck, testes e build aprovados, o
+  E2E previsto aprovado (tRPC simulado vale no desenvolvimento) e `Veredito: PRONTA` do
+  `verificador-spec` no commit exato. Roteiro: `docs/VALIDACAO-INTEGRADA.md`.
