@@ -1,14 +1,18 @@
 ---
 description: Procedimento para iniciar ou alterar funcionalidade de produto
 globs: ["docs/specs/**"]
-alwaysApply: false
+alwaysApply: true
 ---
 
 # Fluxo de especificação
 > leitor: agente
 
 ## Quando
-Ao iniciar funcionalidade nova ou alterar comportamento observável existente.
+Ao iniciar funcionalidade nova, alterar comportamento observável existente,
+avaliar se uma spec está pronta ou declarar uma spec `PRONTA`.
+
+## Ordem oficial
+`SPEC → aprovação humana → PLAN → TASKS → aprovação humana → CODE`
 
 ## Procedimento
 1. Antes de escrever a spec, liste as perguntas que o PRD não responde sobre a
@@ -26,17 +30,106 @@ Ao iniciar funcionalidade nova ou alterar comportamento observável existente.
 7. Mudança de comportamento numa feature existente altera a spec vigente dela
    primeiro; só então plano, tarefas e código.
 
-## Antes de declarar uma spec pronta
-- Delegue ao subagente `verificador-spec` (`agents/verificador-spec.md`),
-  passando o caminho da spec e o intervalo de commits.
-- A spec só é pronta com "Veredito: PRONTA". Qualquer outro resultado volta para
-  as tarefas — quem corrige é o agente principal, nunca o verificador.
-- Com a spec pronta e implementada, atualize o `## Estado` dela para
-  `Implementada` e marque as tarefas com `[x]`.
+## `Implementada` e `PRONTA`
+- `Implementada`: as tarefas foram concluídas e o comportamento foi entregue. A
+  spec passa a descrever o comportamento vigente, o que não prova seus critérios.
+  Nesse momento, atualize o `## Estado` dela e marque as tarefas com `[x]`.
+- `PRONTA`: a execução mais recente em `verificacao.md` devolveu
+  `Veredito: PRONTA` para o commit citado, e o responsável fez a validação final.
+- `Implementada` não implica `PRONTA`. Spec marcada `Implementada` antes desta
+  regra mantém o estado registrado até o responsável decidir.
+
+## Consulta e verificação formal
+O que separa os dois casos é a autorização recebida, não o resultado obtido.
+
+**Consulta ou diagnóstico:** o usuário pergunta se uma spec está pronta ou pede
+uma avaliação, sem autorizar registro.
+- Invoque o `verificador-spec` quando a resposta exigir avaliar a spec, com as
+  mesmas entradas e a mesma neutralidade da verificação formal.
+- Apresente ao usuário o veredito e as evidências.
+- Não modifique arquivos, não registre em `verificacao.md` e não crie commit sem
+  autorização explícita do responsável. Alteração gerada por check é desfeita,
+  conforme `rules/checks.md`.
+- A ausência de registro versionado não permite inventar resultado: evidência que
+  falta é informada como falta.
+- O resultado da consulta não altera o estado da spec nem permite declará-la
+  `PRONTA`.
+
+**Verificação formal:** há fluxo de implementação autorizado e a spec será
+declarada `PRONTA`, ou o responsável autorizou o registro. Siga as duas seções
+abaixo e registre o resultado, inclusive quando for `NÃO PRONTA`.
+
+## Antes de declarar uma spec `PRONTA`
+Esta seção vale para a verificação formal. PR de configuração, manutenção,
+dependência ou ferramenta de verificação que não declara `PRONTA` não precisa de
+verificação nem de `verificacao.md`: escreva "Não se aplica" no PR.
+
+1. Rode os checks de `rules/checks.md` no commit exato, com a pasta de trabalho
+   sem alterações, no agente principal ou em ambiente isolado. O verificador só
+   lê arquivos e não executa comandos.
+2. Delegue ao subagente `verificador-spec` (`agents/verificador-spec.md`),
+   passando o caminho da spec, o SHA completo do commit, a lista de arquivos
+   verificados e a evidência dos checks: commit, resultado e última linha de cada
+   comando. A delegação traz só essas entradas: não descreve o que mudou nem
+   antecipa o resultado.
+3. Registre o relatório integral em `docs/specs/<NNN-nome>/verificacao.md`, no
+   formato abaixo, identificando o commit exato avaliado. O verificador continua
+   somente leitura: quem registra é o agente principal.
+4. A spec só é `PRONTA` com `Veredito: PRONTA` na execução mais recente. Qualquer
+   outro resultado volta para as tarefas — quem corrige é o agente principal,
+   nunca o verificador — e a correção exige nova execução.
+5. O veredito vale para o commit verificado. Depois dele, o commit de registro só
+   pode tocar `verificacao.md`, o `## Estado` da spec e `tasks.md`. Qualquer outra
+   mudança exige nova execução.
+
+## Registro em `verificacao.md`
+- Toda execução de verificação formal que devolveu veredito entra no arquivo,
+  inclusive `NÃO PRONTA` e resultados inesperados. Sem veredito, como no pedido de
+  entradas faltantes, não há execução a registrar. Resultado de consulta só entra
+  com autorização explícita do responsável.
+- O arquivo só cresce: acrescente a linha do histórico e a seção da nova execução,
+  sem editar nem remover execuções anteriores.
+- O relatório é transcrito sem edição. Se vier fora do formato ou errado, registre
+  assim mesmo, explique nas observações e rode de novo.
+- Comentários do agente principal ficam só nas observações, nunca dentro do
+  relatório. Nenhum trecho do registro pode conter segredo.
+
+````markdown
+# Verificações — <NNN-nome>
+
+| Execução | Data | Commit verificado | CAs não ATENDIDOS | Checks `falhou` | Veredito |
+|---|---|---|---|---|---|
+| V-01 | <AAAA-MM-DD> | <SHA completo> | <CA: status> ou nenhum | <comando> ou nenhum | <PRONTA ou NÃO PRONTA> |
+
+## V-01 — <AAAA-MM-DD>
+
+- Spec: `docs/specs/<NNN-nome>/spec.md`
+- Commit verificado: <SHA completo>
+- Veredito: <linha copiada literalmente do relatório>
+- Relatório original: <identificadores da sessão e do subagente que o produziram>
+
+### Evidências entregues ao verificador (delegação, sem edição)
+
+```text
+<prompt completo enviado ao subagente>
+```
+
+### Relatório do verificador (sem edição)
+
+```text
+<resposta completa do subagente>
+```
+
+### Observações do agente principal
+
+- Diferenças em relação à execução anterior: <CAs, checks e veredito que mudaram> ou primeira execução.
+- <AAAA-MM-DD>: <complemento posterior, como PR e SHA de integração após squash>.
+````
 
 ## Verificação
 Todo comportamento implementado aponta para uma spec aprovada e para evidência
-de seus critérios de aceitação.
+de seus critérios de aceitação. Toda spec `PRONTA` tem, em `verificacao.md`,
+`Veredito: PRONTA` na execução mais recente, sobre o commit citado.
 
 ## Não faça
 - Não transforme PRD em spec sem fechar ambiguidades com o responsável.
@@ -44,3 +137,7 @@ de seus critérios de aceitação.
 - Não escreva código antes da aprovação de spec, plano e tarefas.
 - Não crie pasta de spec fora do padrão `NNN-nome-curto`.
 - Não apague spec implementada: ela continua descrevendo o comportamento vigente.
+- Não declare spec `PRONTA` sem o registro em `verificacao.md`.
+- Não edite o veredito, não omita reprovação e não reescreva execução anterior.
+- Não registre nem commite resultado de consulta sem autorização explícita do
+  responsável.
