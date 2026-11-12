@@ -71,8 +71,10 @@ de `_next/static` ficam de fora e não precisam de CSP):
 Requisitos para isso funcionar, conferidos na T-SEG-02:
 
 - Toda página precisa ser renderizada por requisição: página pré-renderizada no build não recebe
-  nonce. O build atual mostra as rotas como `ƒ (Dynamic)`. A T-SEG-02 confere a saída do build
-  e, se aparecer rota estática (`○`), torna o layout raiz dinâmico com `await connection()`.
+  nonce. Correção (2026-11-12): antes da T-SEG-02, o build pré-renderizava as sete páginas como
+  estáticas (`○`); a frase anterior deste plano, que as dava como `ƒ (Dynamic)`, lia a legenda do
+  build como se fosse a lista de rotas. A T-SEG-02 tornou o layout raiz dinâmico com
+  `await connection()`, e todas as rotas passaram a `ƒ`.
 - Sem `unsafe-inline` para contornar falhas (decisão do responsável). Uma violação que só se
   resolve com origem ou palavra-chave nova volta ao responsável com a evidência.
 
