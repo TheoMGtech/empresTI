@@ -42,13 +42,19 @@ export function BarraPrazo({
         className="h-1 overflow-hidden rounded-full bg-(--border-frame)"
         role="progressbar"
       >
-        <div
-          className={cn(
-            "h-full rounded-full transition-[width] duration-[240ms] ease-out motion-reduce:transition-none",
-            emAtraso ? "bg-[#E08A90]" : "bg-(--accent-500)",
-          )}
-          style={{ width: `${proporcao}%` }}
-        />
+        {/* Spec 009, RF-SEG-07: a largura vai em atributo SVG, não em `style`, que a CSP
+            bloqueia. O `rx` igual à metade da altura (h-1 = 4px) mantém a ponta arredondada. */}
+        <svg aria-hidden="true" className="block h-full w-full" focusable="false">
+          <rect
+            className={cn(
+              "transition-[width] duration-[240ms] ease-out motion-reduce:transition-none",
+              emAtraso ? "fill-[#E08A90]" : "fill-(--accent-500)",
+            )}
+            height="100%"
+            rx="2"
+            width={`${proporcao}%`}
+          />
+        </svg>
       </div>
     </div>
   );
