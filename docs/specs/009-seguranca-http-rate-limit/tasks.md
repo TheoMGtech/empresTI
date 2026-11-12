@@ -2,8 +2,9 @@
 
 ## Estado
 
-**Status:** EM APROVAÇÃO — aguarda o responsável, junto com `plan.md`. A T-SEG-05 depende ainda da
-aprovação específica do DDL.
+**Status:** APROVADAS — pelo responsável em 2026-11-12, com `plan.md` (sobre o commit `3841cfc`) e o
+DDL de `limites_requisicao`. Autorizada só a T-SEG-01; cada tarefa seguinte depende de
+autorização específica.
 
 Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
 `rules/checks.md` ao concluir; todo teste cita no nome o CA que evidencia; código e documentação
@@ -37,10 +38,10 @@ dependem da T-SEG-05. O Bloco E fecha.
 ## Bloco B — migration
 
 - [ ] **T-SEG-05 (migration) — Tabela `limites_requisicao`**
-  - Só depois da aprovação específica do DDL (`plan.md`).
+  - DDL aprovado em 2026-11-12 (`plan.md`); nova aprovação só se ele mudar.
   - O responsável gera a migration (`--create-only`) e roda o `prisma:reset` no banco local
-    descartável. O agente acrescenta CHECK, RLS, policies e `REVOKE`.
-  - Atende: CA-SEG-14. Depende de: aprovação do DDL.
+    descartável. O agente acrescenta CHECK, RLS, policies e `REVOKE`. Nenhuma migration remota.
+  - Atende: CA-SEG-14. Depende de: autorização da tarefa.
   - Commit: `feat(banco): criar tabela de limites de requisição`.
 
 ## Bloco C — limite de requisições (BE)
@@ -61,8 +62,10 @@ dependem da T-SEG-05. O Bloco E fecha.
   - Atende: CA-SEG-12 (formato), 16 (contexto). Depende de: T-SEG-07.
   - Commit: `feat(seguranca): responder limite excedido e indisponível`.
 - [ ] **T-SEG-09 — Limite do login**
-  - IP (100/15 min), reserva por e-mail (5/15 min) e devolução no sucesso ou em falha que não é de
-    credencial.
+  - Reserva atômica de `login_ip` (100/15 min) e `login_email` (5/15 min) numa única transação:
+    se um bloquear, nenhum é consumido. Depois, o IP fica consumido. A vaga do e-mail volta no
+    sucesso e na falha que não é de credencial, e fica na falha de credencial.
+  - Testes de concorrência, de rollback e de bloqueio do e-mail sem consumo do IP.
   - Atende: CA-SEG-07, 08, 09, 12, 16 (bloqueio coletivo). Depende de: T-SEG-08.
   - Commit: `feat(autenticacao): limitar tentativas de login`.
 - [ ] **T-SEG-10 — Limite das cinco mutações**
@@ -81,8 +84,10 @@ dependem da T-SEG-05. O Bloco E fecha.
 
 - [ ] **T-SEG-12 (docs) — Referências e roteiro de validação**
   - Linha em "Contrato afetado" das Specs 001, 005, 007 e 008 (P8). Seção da Spec 009 em
-    `docs/VALIDACAO-INTEGRADA.md`, com os níveis 2 (preview) e 3 (URL de produção). Pendência
-    `CHAVE_HMAC_LIMITES` em `docs/DEVOPS.md`.
+    `docs/VALIDACAO-INTEGRADA.md`, com os níveis 2 (preview, com as regras de isolamento do
+    plano) e 3 (URL de produção). Em `docs/DEVOPS.md`: `CHAVE_HMAC_LIMITES`, branches `main` e
+    `develop` no Environment `production` e as configurações do preview que dependem do
+    responsável.
   - Atende: rastreabilidade de CA-SEG-18. Depende de: T-SEG-01 a 11.
   - Commit: `docs(seguranca): referenciar a spec 009 e o roteiro de validação`.
 - [ ] **T-SEG-13 (verificação) — Provas finais e verificação formal**

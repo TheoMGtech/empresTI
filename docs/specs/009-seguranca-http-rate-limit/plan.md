@@ -2,8 +2,10 @@
 
 ## Estado
 
-**Status:** EM APROVAÇÃO — aguarda o responsável. Spec de referência: `spec.md` (APROVADA em
-2026-11-12). O DDL da seção "Migration" exige aprovação específica, separada deste plano.
+**Status:** APROVADO — pelo responsável em 2026-11-12, sobre o commit `3841cfc`, com dois ajustes
+obrigatórios já incorporados: login atômico (T-SEG-09) e ordem de deploy pela opção (1). O DDL da
+seção "Migration" também foi aprovado especificamente; outra aprovação só se ele mudar. Spec de
+referência: `spec.md` (APROVADA em 2026-11-12).
 
 ## Restrições e skills
 
@@ -126,8 +128,8 @@ concatenação):
   uma janela nova cria outra linha e a antiga nunca é lida.
 - **`devolver`** (P2): `UPDATE … SET contador = contador - 1 WHERE … AND contador > 0`, na mesma
   janela da reserva.
-- **`consumirJuntos`** (mutações, RN-SEG-06): uma transação com os dois `consumir`. Se o segundo
-  falhar, lança e desfaz o primeiro.
+- **`consumirJuntos`** (login e mutações): uma transação com os dois `consumir`. Se qualquer um
+  bloquear, lança e desfaz a transação inteira, e nenhum contador é consumido.
 - **Limpeza** (RN-SEG-10, item 2): depois de cada escrita, `DELETE FROM limites_requisicao WHERE
   ctid IN (SELECT ctid FROM limites_requisicao WHERE expira_em < now() LIMIT 200)`.
 - **Erros:** qualquer erro do banco vira `ErroLimiteIndisponivel`, sem detalhe (RF-SEG-12). Nada é
@@ -157,16 +159,22 @@ concatenação):
 
 ### Login (T-SEG-09)
 
-Em `autenticacao.entrar`, depois da validação de entrada, nesta ordem:
+Ajuste obrigatório 1 do responsável (2026-11-12). Em `autenticacao.entrar`, depois da validação
+de entrada, nesta ordem:
 
-1. `consumir(login_ip, 100, 15 min)`.
-2. `consumir(login_email, 5, 15 min)`, que é a reserva (P2).
-3. `entrar()` no Supabase Auth.
-4. Se der certo ou lançar `ErroAutenticacaoIndisponivel`, `devolver(login_email)`. Se lançar
-   `ErroCredenciaisInvalidas`, a vaga fica consumida.
+1. **Reserva atômica:** `consumirJuntos(login_ip 100/15 min, login_email 5/15 min)`, numa única
+   transação. Se qualquer limite bloquear, a transação é desfeita e **nenhum** contador é
+   consumido. Nesse caso, a resposta é 429 e nada chega ao Supabase.
+2. `entrar()` no Supabase Auth.
+3. Depois da chamada:
+   - o contador de IP **continua consumido** em qualquer resultado, porque registra toda
+     tentativa aceita para autenticação;
+   - com sucesso ou `ErroAutenticacaoIndisponivel` (falha que não é de credencial),
+     `devolver(login_email)`;
+   - com `ErroCredenciaisInvalidas`, a vaga do e-mail continua consumida.
 
-Se 1 ou 2 recusarem, nada chega ao Supabase. A resposta é a mesma para e-mail cadastrado ou não
-(RN-SEG-08).
+A resposta é a mesma para e-mail cadastrado ou não (RN-SEG-08). Limites e mensagens ficam os
+aprovados.
 
 ### Mutações (T-SEG-10)
 
@@ -258,7 +266,8 @@ REVOKE ALL ON "limites_requisicao" FROM PUBLIC, anon, authenticated;
 | 01, 02, 04 | Unitário de `montarCsp` e `cabecalhosFixos`; E2E de produção nos cabeçalhos e nonces de duas respostas. |
 | 03, 06 | E2E de produção com `securitypolicyviolation` nas seis telas; unitário da barra (sem `style`, proporção). |
 | 05 | Unitário do proxy com `setAll` simulado: cookies e CSP na resposta e na requisição repassada; testes da Spec 003. |
-| 07–10, 15 | Banco real (Testcontainers) com relógio fixo; concorrência com `Promise.all`; tentativa recusada sem consumo. |
+| 07–09 (login) | Banco real (Testcontainers) com relógio fixo e Supabase simulado: concorrência com `Promise.all` (no máximo 5 chamadas ao Supabase por e-mail e 100 por IP); rollback (IP no limite não consome o e-mail, e e-mail no limite não consome o IP); devolução da vaga no sucesso e na falha que não é de credencial; vaga mantida na falha de credencial. |
+| 10, 15 | Banco real com relógio fixo; concorrência com `Promise.all`; tentativa recusada sem consumo; expirado sem participar. |
 | 11 | Prova pelo AppRouter; suíte inteira verde. |
 | 12 | Banco derrubado ou sem tabela, e chave ausente: 503, Supabase simulado não chamado, nada gravado. |
 | 13 | Banco real: só hex de 64; HMAC ≠ SHA-256 sem chave; espião de `console` sem e-mail nem IP. |
@@ -286,17 +295,52 @@ Specs 002 a 008 aplicadas, então a ordem é a mesma.
 `CHAVE_HMAC_LIMITES` no próprio `.env.local`. O agente não lê nem escreve esse arquivo. Os testes
 e o E2E não precisam dele.
 
-## Ponto que depende do responsável (ordem da migration)
+## Ordem de deploy (ajuste obrigatório 2: opção 1, responsável, 2026-11-12)
 
-A spec manda aplicar a migration **antes** de a versão chegar a `main` (Implantação, passo 3). O
-workflow `migrate-production` usa as migrations da branch de onde é disparado. Se o Environment
-`production` aceitar só `main`, como sugerido antes, essa ordem fica impossível.
+O Environment `production` do GitHub pode aceitar **exclusivamente** as branches `main` e
+`develop`. Assim, a migration é aplicada a partir de `develop` antes da promoção, e o passo 3 da
+Implantação da spec fica como está. Condições do responsável:
 
-- **(1) Recomendado:** acrescentar `develop` às branches permitidas do Environment `production`.
-  `develop` exige PR e CI verde. O workflow roda a partir de `develop` logo antes da validação no
-  preview, que já precisa do banco migrado. A spec fica como está.
-- **(2)** Manter só `main` e aceitar alguns minutos de login e mutações em 503 em produção entre a
-  promoção e o fim do workflow. Isso exige ajustar o passo 3 da spec.
+1. A migration de produção só é executada pelo workflow `migrate-production`.
+2. A execução continua manual (`workflow_dispatch`), com confirmação `APPLY` e aprovação do
+   responsável no Environment.
+3. Antes de cada execução, a revisão confere que a branch escolhida contém exatamente as
+   migrations aprovadas: a lista de `prisma/migrations/` na branch, comparada com as aprovadas.
+4. Nenhum push em `develop` dispara migration. O workflow não tem gatilho `push`, e isso não muda.
+5. `develop` não ganha permissão de publicar a aplicação em produção. O Environment controla só o
+   workflow de migration; a Vercel continua publicando produção apenas a partir de `main`.
+6. `main` continua sendo a única branch de publicação definitiva.
+7. O preview da Vercel não executa teste destrutivo contra o banco de produção (seção abaixo).
+
+Essa permissão não autoriza o agente a alterar o Environment nem a executar o workflow: as duas
+coisas continuam com o responsável.
+
+### Isolamento da validação integrada no preview
+
+Há um único projeto Supabase. Por isso, o preview usa o mesmo banco da produção, salvo
+configuração diferente do responsável. Regras para a validação no preview:
+
+- Só o roteiro manual de `docs/VALIDACAO-INTEGRADA.md`, executado por pessoas com as contas de
+  validação. Nenhuma suíte automatizada (Vitest, Testcontainers, Playwright) aponta para o preview
+  ou para o banco remoto. O E2E usa sempre o tRPC simulado.
+- Nada de `prisma:reset`, `TRUNCATE`, `DELETE` avulso ou carga que apague dados no banco remoto.
+  A carga inicial só roda pelo procedimento já previsto, com a trava `--confirmar-remoto`.
+- As escritas da validação são operações normais do produto: solicitar, devolver, cadastrar e
+  alterar situação. Ficam registradas na auditoria append-only. Os contadores de limite expiram
+  sozinhos.
+- O teste de limite no preview (101ª tentativa de login, 31ª mutação) usa conta de validação e
+  não conta real de colaborador.
+
+Configurações que dependem do responsável, a destacar na T-SEG-12 e em `docs/DEVOPS.md`:
+
+- Para qual banco apontam `DATABASE_URL` e `DIRECT_URL` no ambiente Preview da Vercel. Hoje é o de
+  produção, salvo outra decisão sua.
+- Se a validação usa o tenant `suporte_ti` ou um tenant separado de validação. O provisionamento
+  de tenant é decisão pendente no ADR-001, e o agente não a toma.
+- `CHAVE_HMAC_LIMITES` em Preview, com valor diferente do de Production.
+- As contas de validação (colaborador e operacoes) e o vínculo delas.
+- Proteção do Environment `production` (branches `main` e `develop`, revisor obrigatório) antes da
+  primeira execução do workflow.
 
 ## Fora deste plano
 

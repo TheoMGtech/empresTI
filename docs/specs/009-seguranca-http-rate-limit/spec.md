@@ -3,8 +3,9 @@
 ## Estado
 
 **Status:** APROVADA — pelo responsável em 2026-11-12, sobre o commit `d01f077`, com P1 a P8 e o
-ajuste de redação da retenção (RN-SEG-10). `plan.md` e `tasks.md` aguardam aprovação. O DDL de
-`limites_requisicao` exige aprovação específica antes de a migration ser gerada.
+ajuste de redação da retenção (RN-SEG-10). `plan.md`, `tasks.md` e o DDL de `limites_requisicao`
+foram aprovados em 2026-11-12 (sobre `3841cfc`, com os ajustes de login atômico e ordem de
+deploy). Ainda não implementada.
 
 ## Objetivo
 
