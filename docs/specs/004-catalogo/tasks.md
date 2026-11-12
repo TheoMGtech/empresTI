@@ -2,9 +2,9 @@
 
 ## Estado
 
-**Status:** Aprovadas pelo responsável em 2026-11-11. Em execução: T-CATALOGO-01 a T-CATALOGO-05
-concluídas. T-CATALOGO-06 em andamento: verificação V-01 (commit `9a421a2`) NÃO PRONTA, com
-CA-CATALOGO-06 SEM TESTE (`verificacao.md`); a correção exige nova execução.
+**Status:** Aprovadas pelo responsável em 2026-11-11. T-CATALOGO-01 a T-CATALOGO-06 concluídas.
+Verificação V-01 (commit `9a421a2`) NÃO PRONTA; V-02 (commit `854f6c4`) com `Veredito: PRONTA`
+(`verificacao.md`), aguardando a validação final do responsável.
 
 Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
 `rules/checks.md` ao concluir; todo teste cita no nome o CA que evidencia; sem alteração no
@@ -35,6 +35,6 @@ Supabase remoto, deploy de produção ou merge em `main`.
 
 ## Bloco C — fechamento
 
-- [ ] **T-CATALOGO-06 — Provas finais (BE)**
+- [x] **T-CATALOGO-06 — Provas finais (BE)**
   - Atende: CA-CATALOGO-11. Verificação formal conforme `rules/spec-flow.md`.
   - Commit: `test(catalogo): provar critérios finais da spec 004`.
