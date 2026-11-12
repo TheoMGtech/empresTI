@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 // Papéis da Spec 002 (D6, RN-SESSAO-01). Espelham o enum `PapelMembership` do Prisma; o teste do
 // esquema falha se os dois divergirem.

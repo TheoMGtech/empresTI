@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 const esquemaPublico = z.object({
   NEXT_PUBLIC_APP_URL: z.url(),
