@@ -199,6 +199,23 @@ describe("limite por IP", () => {
       expect(await contador(cliente, "login_ip", idIp(IP))).toBe(0);
     });
   });
+
+  it.each([" pessoa@empresa.com", "pessoa@empresa.com ", "  Pessoa@Empresa.com  "])(
+    "CA-SEG-08 — e-mail com espaços nas pontas (%j) é recusado na validação, antes do limite e sem consumir vaga",
+    async (email) => {
+      await comBanco(async ({ prisma, cliente }) => {
+        const { cliente: auth, signInWithPassword } = supabase();
+
+        await expect(entrar(prisma, auth, { email, senha: SENHA })).rejects.toMatchObject({
+          code: "BAD_REQUEST",
+        });
+
+        expect(signInWithPassword).not.toHaveBeenCalled();
+        const { rows } = await cliente.query("SELECT 1 FROM limites_requisicao");
+        expect(rows).toEqual([]);
+      });
+    },
+  );
 });
 
 describe("limite por e-mail", () => {
