@@ -32,7 +32,7 @@ O domínio `empresti.vercel.app` não aponta para este projeto.
 
 | Controle | Implementação | Estado |
 |---|---|---|
-| CI | `.github/workflows/architecture.yml` (`Architecture checks`) | Em PR e push de `develop` e `main`: `Documentation and secret guard` (Gitleaks, `.env` fora do Git) e `Application quality` (lint, typecheck, Vitest com banco em container, build) |
+| CI | `.github/workflows/architecture.yml` (`Architecture checks`) | Em PR e push de `develop` e `main`: `Documentation and secret guard` (Gitleaks, `.env` fora do Git) e `Application quality` (lint, typecheck, Vitest com banco em container, build) e `E2E (desenvolvimento)` (Playwright com Chromium contra `npm run dev` em runner limpo, tRPC simulado, sem retries) |
 | Proteção de branches | GitHub | `main` e `develop` exigem PR, histórico linear e o check `Documentation and secret guard` |
 | Migrations de produção | `.github/workflows/migrate-production.yml` | Só `workflow_dispatch`, confirmação literal `APPLY`, Environment `production` com revisor obrigatório e política de branches |
 | Dependências | Dependabot semanal | PRs para `develop` (npm e GitHub Actions) |
@@ -134,8 +134,10 @@ Regras de isolamento da validação no preview: `docs/VALIDACAO-INTEGRADA.md`, i
    `develop` respondem 503. Decidir também o banco do Preview, o tenant e as contas de validação
    (seção "Spec 009 — limite de requisições").
 4. Decidir os PRs abertos do Dependabot (#37, #38, #39, #101, #102), todos com CI verde em 2026-11-12.
-5. Avaliar tornar `Application quality` um check obrigatório em `main` e `develop`; hoje só
-   `Documentation and secret guard` é exigido, e o CI não roda Playwright.
+5. Tornar `Application quality` e `E2E (desenvolvimento)` checks obrigatórios na proteção de `main`
+   e `develop`; hoje só `Documentation and secret guard` é exigido. O job de E2E roda em todo PR e
+   push desde 2026-11-13 (decisão do responsável), mas exigir o check é configuração do GitHub, do
+   responsável. O E2E do build de produção (`test:e2e:producao`) continua só local.
 6. Conectar o Sentry quando decidido; até lá não há observabilidade de erros em produção além dos
    logs da Vercel.
 7. Preencher `nome_exibicao` das contas de demonstração, se desejado (`prisma/vincular-professor.ts`).
