@@ -22,7 +22,7 @@ O release de 2026-11-12 (PR #98) levou as Specs 003 a 008 e excluiu de propósit
 | Ambiente | Origem | Endereço | Estado em 2026-11-12 |
 |---|---|---|---|
 | Produção | `main` | `empresti-self.vercel.app` e `empresti-theo-escola.vercel.app` (mesmo deploy) | `8e08040` (PR #98, árvore `3aa331e`); status Vercel `success`; as duas URLs respondem 200; `tecnico.status` com `bancoOperacional: true` |
-| Integração | `develop` | `empresti-git-develop-theo-escola.vercel.app` | `c618c2d` (T-SEG-07 da Spec 009); CI verde |
+| Integração | `develop` | `empresti-git-develop-theo-escola.vercel.app` | `f02d7ca` em 2026-11-13 (T-SEG-11 da Spec 009); CI verde. Login e as cinco mutações cobertas exigem `CHAVE_HMAC_LIMITES` em Preview (ver "Spec 009") |
 | Preview | cada branch e PR | URL gerada pela Vercel | Automático |
 | Local | máquina do desenvolvedor | `http://localhost:3000` | `npm run dev`; testes de banco usam PostgreSQL em container (Docker) |
 
@@ -73,6 +73,38 @@ existem lá.
 | `SENTRY_*` | — | Sem uso enquanto o Sentry não for conectado |
 | `PIXABAY_API_KEY` | só `.env.pixabay.local` | Ferramenta local, não vai à Vercel |
 
+### Spec 009 — limite de requisições
+
+Desde a T-SEG-09 (PR #107), o código de `develop` limita o login e, desde a T-SEG-10 (PR #108), as
+cinco mutações cobertas. Sem `CHAVE_HMAC_LIMITES` no ambiente, ou sem a tabela
+`limites_requisicao`, essas operações respondem 503 (fail-closed, decisão Q7); consultas e `sair`
+continuam respondendo. A tabela já existe em produção (seção "Banco de produção").
+
+- **`CHAVE_HMAC_LIMITES`:** variável sensível na Vercel, com valores diferentes em Preview e em
+  Production, gerada localmente pelo responsável
+  (`node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`) e nunca colada
+  em chat, arquivo versionado ou log. Mínimo de 32 caracteres. Trocar a chave zera, na prática, os
+  contadores em andamento.
+- **Desenvolvimento local:** para entrar de verdade em `npm run dev`, o responsável põe a chave no
+  próprio `.env.local`. Os testes usam o valor fictício de `src/test/setup.ts` e não precisam dela.
+- **Environment `production`:** aceita só `main` e `develop` (ajuste obrigatório 2, opção 1). Ele
+  controla só o workflow de migration: `develop` não publica a aplicação em produção, e a Vercel
+  continua publicando produção apenas a partir de `main`. Essa política não autoriza o agente a
+  alterar o Environment nem a executar o workflow.
+- **IP confiável:** só `x-forwarded-for` com `VERCEL=1`. Fora da Vercel, ou sem o cabeçalho, todas
+  as tentativas dividem o identificador `ip-indisponivel` (bloqueio coletivo aceito em P3).
+
+Configurações do preview que dependem do responsável (o agente não as decide):
+
+- Para qual banco apontam `DATABASE_URL` e `DIRECT_URL` no ambiente Preview da Vercel. Hoje, salvo
+  outra decisão, é o de produção, e o preview grava nele.
+- Se a validação integrada usa o tenant `suporte_ti` ou um tenant separado de validação. O
+  provisionamento de tenant é decisão pendente no ADR-001.
+- As contas de validação (`colaborador` e `operacoes`) usadas nos testes de limite do preview, que
+  não são contas reais de colaborador.
+
+Regras de isolamento da validação no preview: `docs/VALIDACAO-INTEGRADA.md`, item 9.1.
+
 ## Processo de release
 
 1. Atualizar as referências remotas e identificar o commit aprovado de `develop`.
@@ -97,7 +129,10 @@ existem lá.
    (`disable_signup`), conforme RS-LOGIN-04 da Spec 001. Não é verificável pelo MCP somente leitura.
 2. Confirmar se a Data API expõe o schema `public`. As policies negam o acesso, mas retirar `public`
    dos schemas expostos reduz a superfície.
-3. Cadastrar `CHAVE_HMAC_LIMITES` na Vercel (Preview e Production) antes do release da Spec 009.
+3. Cadastrar `CHAVE_HMAC_LIMITES` na Vercel (Preview e Production, valores diferentes) antes do
+   release da Spec 009. Enquanto faltar em Preview, o login e as cinco mutações do preview de
+   `develop` respondem 503. Decidir também o banco do Preview, o tenant e as contas de validação
+   (seção "Spec 009 — limite de requisições").
 4. Decidir os PRs abertos do Dependabot (#37, #38, #39, #101, #102), todos com CI verde em 2026-11-12.
 5. Avaliar tornar `Application quality` um check obrigatório em `main` e `develop`; hoje só
    `Documentation and secret guard` é exigido, e o CI não roda Playwright.
