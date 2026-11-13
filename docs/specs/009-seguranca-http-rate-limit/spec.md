@@ -5,7 +5,8 @@
 **Status:** APROVADA — pelo responsável em 2026-11-12, sobre o commit `d01f077`, com P1 a P8 e o
 ajuste de redação da retenção (RN-SEG-10). `plan.md`, `tasks.md` e o DDL de `limites_requisicao`
 foram aprovados em 2026-11-12 (sobre `3841cfc`, com os ajustes de login atômico e ordem de
-deploy). Ainda não implementada.
+deploy). Em implementação: T-SEG-01 a 11 integradas em `develop` (2026-11-13); faltam a
+T-SEG-12 (documentação) e a T-SEG-13 (provas finais e verificação formal). Não está PRONTA.
 
 ## Objetivo
 

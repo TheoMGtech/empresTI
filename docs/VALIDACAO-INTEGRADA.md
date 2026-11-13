@@ -138,6 +138,70 @@ PostgreSQL 17.6 em container da suíte do projeto, usado para o que não deve ro
 A Spec 009 (segurança HTTP e limite de requisições) ainda não está em `main`; seu roteiro de
 validação será acrescentado pela T-SEG-12 e executado depois do release dela.
 
+## 9. Segurança HTTP e limite de requisições (Spec 009)
+
+Roteiro acrescentado pela T-SEG-12 (2026-11-13), **ainda não executado**. Segue os três níveis da
+seção "Implantação" da spec, nesta ordem; nenhum substitui o seguinte, e nenhum é marcado antes de
+existir o ambiente correspondente. O nível 1 (local, build de produção) é a T-SEG-13 e fica em
+`docs/specs/009-seguranca-http-rate-limit/verificacao.md`; aqui ficam os níveis 2 e 3.
+
+### 9.0 Pré-requisitos (responsável)
+
+- [ ] `CHAVE_HMAC_LIMITES` cadastrada na Vercel como variável sensível, com valores diferentes em
+      Preview e em Production. O valor nunca é colado no chat, em arquivo versionado ou em log.
+- [x] Migration `criar_limites_requisicao` aplicada pelo workflow `migrate-production`, com a
+      confirmação `APPLY`, **antes** de a versão com o limite chegar a `main`. Sem a tabela, login e
+      mutações respondem 503 (fail-closed).
+      — run 43288501845 (2026-11-12); `_prisma_migrations` conferida por SQL somente leitura em
+      2026-11-13: `20261112174149_criar_limites_requisicao` concluída e sem rollback.
+- [ ] Decisões do responsável registradas em `docs/DEVOPS.md`: banco do Preview, tenant de
+      validação e contas de validação.
+
+### 9.1 Regras de isolamento no preview
+
+Há um único projeto Supabase; salvo outra configuração do responsável, o preview usa o banco de
+produção.
+
+- Só este roteiro manual, executado por pessoas com as contas de validação. Nenhuma suíte
+  automatizada (Vitest, Testcontainers, Playwright) aponta para o preview ou para o banco remoto.
+- Nada de `prisma:reset`, `TRUNCATE`, `DELETE` avulso ou carga que apague dados no banco remoto.
+- As escritas são operações normais do produto e ficam na auditoria. Os contadores de limite
+  expiram sozinhos (15 min no login, 60 s nas mutações).
+- Os testes de limite usam conta de validação, nunca conta real de colaborador.
+
+### 9.2 Nível 2 — preview da Vercel
+
+- [ ] `curl -sI <url do preview>` traz `Content-Security-Policy` com nonce, sem `unsafe-inline`,
+      `unsafe-eval` nem `Report-Only`; `X-Content-Type-Options: nosniff`,
+      `Referrer-Policy: strict-origin-when-cross-origin`,
+      `Permissions-Policy: camera=(), microphone=(), geolocation=()` e `X-Frame-Options: DENY`.
+- [ ] Sem `Strict-Transport-Security` no preview (só em `VERCEL_ENV=production`).
+- [ ] Duas requisições seguidas trazem nonces diferentes.
+- [ ] Login, catálogo, detalhe, Meus empréstimos, painel e cadastro de Operações abrem sem
+      `securitypolicyviolation` no console, com as fotos do Storage carregando e os diálogos
+      abrindo.
+- [ ] Login: com a conta de validação, 5 senhas erradas seguidas e a 6ª tentativa, mesmo com a
+      senha certa, responde 429 com "Muitas tentativas em pouco tempo. Aguarde alguns minutos e
+      tente novamente." e `Retry-After`. A mesma resposta para um e-mail inexistente.
+- [ ] Login bem-sucedido não consome a vaga do e-mail: depois de entrar, sair e errar a senha 4
+      vezes, a 5ª tentativa ainda chega ao Supabase.
+- [ ] Mutações: com a conta de validação, a 31ª mutação coberta em 60 s responde 429 com a
+      mensagem na tela, e nada é gravado por ela (a lista e a auditoria não mudam).
+- [ ] Consultas e `sair` continuam respondendo enquanto o limite de mutações está cheio.
+- [ ] Banco somente leitura: `limites_requisicao` só tem identificadores hex de 64 caracteres, sem
+      e-mail, IP ou id em claro.
+- [ ] Os logs da função na Vercel não trazem e-mail, IP nem identificador do fluxo de limite.
+
+### 9.3 Nível 3 — URL de produção
+
+Só depois do merge de `develop` em `main` pelo responsável, com autorização explícita, e do deploy
+de produção da Vercel.
+
+- [ ] `curl -sI https://empresti-self.vercel.app/` traz a CSP com nonce, os cabeçalhos fixos e
+      `Strict-Transport-Security: max-age=31536000`, sem `preload` nem `includeSubDomains`.
+- [ ] Login real com a conta `colaborador` funciona, e as telas abrem sem violação de CSP.
+- [ ] `ENTREGA.md` atualizado com o resultado da Spec 009.
+
 ## Registro
 
 | Item | Data | Conta | Resultado | Evidência |

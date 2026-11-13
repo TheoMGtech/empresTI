@@ -62,6 +62,8 @@ Importação da planilha (PRD), relatórios, exportação e upload de fotografia
 
 Seis procedimentos e duas rotas. Sem migration: as colunas opcionais vêm da Spec 005.
 
+Spec 009 (segurança HTTP e limite de requisições): `operacoes.registrarDevolucao`, `equipamentos.cadastrar` e `equipamentos.alterarSituacao` podem responder `TOO_MANY_REQUESTS` (429, com `Retry-After`) e `SERVICE_UNAVAILABLE` (503). Nenhum CA desta spec muda.
+
 ## Critérios de aceitação
 
 - **CA-OPER-01** — A lista traz todos os empréstimos em aberto do tenant, e nenhum de outro.
