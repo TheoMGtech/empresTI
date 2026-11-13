@@ -1,99 +1,120 @@
-# DevOps — Passo 0
+# DevOps — ambientes, entrega e pendências
 
-## Objetivo
-
-Estabelecer controles de repositório e de entrega antes da primeira feature, sem criar infraestrutura de aplicação, banco ou credenciais. A tabela abaixo registra o estado atual desses controles.
+> leitor: responsável e agente. Estado conferido em 2026-11-12 (GitHub, Vercel por status de commit,
+> banco por consulta somente leitura). Pendências permanentes do responsável ficam na última seção.
 
 ## Fluxo de entrega
 
 ```text
-branch curta → pull request → Architecture checks → develop
-                                                    └→ PR autorizado → main → Vercel
-                                                           └→ migrate-production (manual e protegido)
+feature/<nome> → PR → Architecture checks → squash em develop
+                                              └→ branch de release a partir de main com a árvore aprovada
+                                                  → PR para main (merge só pelo responsável) → Vercel Production
+migrate-production: manual, confirmação APPLY, Environment protegido `production`
 ```
 
-## Controles configurados
+Como as promoções entram em `main` por squash, `develop` e `main` têm históricos diferentes e um PR
+direto `develop` → `main` gera conflito. A promoção usa uma branch criada a partir de `main` com a
+árvore aprovada (`git read-tree -u --reset <commit>`), conferida com `git diff <commit> HEAD` vazio.
+O release de 2026-11-12 (PR #98) levou as Specs 003 a 008 e excluiu de propósito o código da Spec 009.
 
-| Controle | Implementação | Estado em 2026-10-23 |
-| --- | --- | --- |
-| Verificação de arquitetura | `.github/workflows/architecture.yml` | Ativa em PR, `develop` e `main`; jobs `Documentation and secret guard` (obrigatório) e `Application quality` (lint, typecheck, testes e build) |
-| Detecção de segredos | Gitleaks no workflow | Ativa |
-| Proteção de `.env` | `.gitignore` + validação no CI | Ativa |
-| Atualização de dependências | Dependabot semanal | Ativa; PRs para `develop` (npm e GitHub Actions) |
-| Banco de dados | Supabase `InovacaoTecnologia` (`wdudlqacomnasnrxgbni`) | Projeto criado e integrado ao GitHub (check `Supabase Preview`) |
-| Mudança de banco | workflow manual no Environment `production` | Workflow pronto; Environment não criado; migration `20261023110257_criar_saude_sistema` não aplicada em produção |
-| Deploy de aplicação | Vercel, time `theo-escola`, projeto `empresti` | Conectado; produção a partir de `main` em `empresti-self.vercel.app` e `empresti-theo-escola.vercel.app` (mesmo deploy), com o login publicado pelo PR #14; `develop` em `empresti-git-develop-theo-escola.vercel.app`; previews por branch |
-| Observabilidade | Sentry | Não conectado; sem DSN |
+## Ambientes
 
-## Configuração pendente e deliberada
+| Ambiente | Origem | Endereço | Estado em 2026-11-12 |
+|---|---|---|---|
+| Produção | `main` | `empresti-self.vercel.app` e `empresti-theo-escola.vercel.app` (mesmo deploy) | `8e08040` (PR #98, árvore `3aa331e`); status Vercel `success`; as duas URLs respondem 200; `tecnico.status` com `bancoOperacional: true` |
+| Integração | `develop` | `empresti-git-develop-theo-escola.vercel.app` | `c618c2d` (T-SEG-07 da Spec 009); CI verde |
+| Preview | cada branch e PR | URL gerada pela Vercel | Automático |
+| Local | máquina do desenvolvedor | `http://localhost:3000` | `npm run dev`; testes de banco usam PostgreSQL em container (Docker) |
 
-Itens sob responsabilidade do responsável:
+O domínio `empresti.vercel.app` não aponta para este projeto.
 
-1. ~~Conectar o projeto Vercel ao repositório~~ — concluído. Falta confirmar que
-   todas as variáveis do `.env.example` necessárias ao runtime, em especial
-   `DATABASE_URL`, estão cadastradas por ambiente.
-2. ~~Criar o projeto Supabase~~ — concluído (`wdudlqacomnasnrxgbni`), sem
-   credenciais versionadas.
-3. Criar o Environment `production` no GitHub, restringir aprovação a responsáveis e cadastrar `DATABASE_URL` e `DIRECT_URL` nele. **Pendente**: sem ele, a migration do andar zero não pode ser aplicada e a produção não consulta o banco (`tecnico.status` responde `bancoOperacional: false`). O login não depende do banco.
-4. ~~Criar e proteger `develop`~~ — concluído: `main` e `develop` exigem pull
-   request, histórico linear e o status check `Documentation and secret guard`.
-5. Configurar a integração do Sentry depois da feature que introduzir o runtime.
-6. Decidir se o cadastro público será desabilitado no Supabase Auth
-   (`disable_signup: false` hoje), conforme RS-LOGIN-04 de
-   `docs/specs/001-login/spec.md`.
-7. Fornecer uma conta oficial para validar CA-LOGIN-04 em produção.
-8. Decidir o destino dos PRs abertos do Dependabot (#8 a #12); o #11
-   (TypeScript 5.9 → 7.0) estava com CI falhando em 2026-10-23.
-9. Decidir como o banco local de desenvolvimento e de testes sobe (por exemplo,
-   Testcontainers, Postgres em container ou Supabase local só como Postgres).
-   Sem isso, `rules/checks.md` e `rules/migration.md` não conseguem aplicar
-   migration localmente.
-10. Alinhar a ordem das paradas do fluxo SDD: `rules/spec-flow.md` pede
-    aprovação da spec antes de `plan.md` e `tasks.md`; o `AGENTS.md` pede a
-    entrega do pacote completo.
-11. Avaliar tornar o job `Application quality` um status check obrigatório em
-    `develop` e `main`; hoje só `Documentation and secret guard` é exigido, e o
-    CI não roda `npm run test:e2e`.
-12. Investigar, antes da primeira migration em produção, a tabela técnica
-    `_prisma_migrations`, que o Prisma cria em `public` sem RLS. A exposição depende da
-    Data API e dos privilégios de `anon` e `authenticated`, e o ADR-001 §7 pede RLS em
-    todas as tabelas. Nenhuma alteração até decisão específica do responsável.
+## Controles
 
-O workflow de migrations não dispara automaticamente. Ele só é executável manualmente, com confirmação literal `APPLY`, e usa o Environment protegido. Ele ainda não foi executado; o Environment `production` precisa existir com proteção antes da primeira execução, pois o GitHub criaria um Environment sem proteção se o workflow rodasse antes.
+| Controle | Implementação | Estado |
+|---|---|---|
+| CI | `.github/workflows/architecture.yml` (`Architecture checks`) | Em PR e push de `develop` e `main`: `Documentation and secret guard` (Gitleaks, `.env` fora do Git) e `Application quality` (lint, typecheck, Vitest com banco em container, build) |
+| Proteção de branches | GitHub | `main` e `develop` exigem PR, histórico linear e o check `Documentation and secret guard` |
+| Migrations de produção | `.github/workflows/migrate-production.yml` | Só `workflow_dispatch`, confirmação literal `APPLY`, Environment `production` com revisor obrigatório e política de branches |
+| Dependências | Dependabot semanal | PRs para `develop` (npm e GitHub Actions) |
+| Banco | Supabase `InovacaoTecnologia` (`wdudlqacomnasnrxgbni`) | PostgreSQL com RLS em todas as tabelas de `public` |
+| Aplicação | Vercel, time `theo-escola`, projeto `empresti` | Integração GitHub; produção a partir de `main` |
+| Observabilidade | Sentry | Não conectado (sem DSN) |
+
+## Banco de produção
+
+- **Migrations:** 7 aplicadas, todas pela execução `43288501845` do `migrate-production`
+  (2026-11-12, a partir de `develop` em `d5914ca`, aprovada pelo responsável). Os checksums gravados
+  em `_prisma_migrations` conferem com os arquivos versionados. A 7ª
+  (`20261112174149_criar_limites_requisicao`) pertence à Spec 009 e já está aplicada, embora o código
+  que a usa ainda não esteja em `main`. O próximo release não deve reaplicá-la: `migrate deploy`
+  reconhece as já registradas.
+- **Dados:** tenant `suporte_ti`; 12 equipamentos (TI-0004 e TI-0007 `em_manutencao`), todos com
+  fotografia no bucket público `equipamentos` (12 objetos); 2 vínculos (`colaborador` e
+  `operacoes`), ambos com `nome_exibicao` vazio.
+- **Acesso:** toda tabela de `public` tem RLS; as tabelas de domínio têm policies que negam `anon` e
+  `authenticated` (`USING false`); `_prisma_migrations` tem RLS sem policy (nega por padrão) e
+  `limites_requisicao` também revoga os privilégios. A aplicação acessa o banco só pelo servidor.
+
+## Variáveis de ambiente
+
+Os nomes estão em `.env.example`, sem valores. Regra completa em `rules/secrets.md`. O Environment
+`production` do GitHub tem só `DATABASE_URL` e `DIRECT_URL` (conferido pelos nomes em 2026-11-12),
+com política de branches `main` e `develop`. O cadastro na Vercel é do responsável e não é lido pelo
+agente; o funcionamento da produção (login, banco e catálogo) indica que as variáveis de runtime
+existem lá.
+
+| Variável | Onde | Observação |
+|---|---|---|
+| `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Vercel (Preview e Production) | Públicas por definição |
+| `SUPABASE_PROJECT_REF` | Vercel | Identificador, não segredo |
+| `DATABASE_URL` (pooler, runtime) e `DIRECT_URL` (migrations) | Vercel; `DATABASE_URL` e `DIRECT_URL` no Environment `production` do GitHub | Segredos de servidor |
+| `SUPABASE_SERVICE_ROLE_KEY` | Vercel | Segredo de servidor; nunca com prefixo público |
+| `CHAVE_HMAC_LIMITES` | Vercel, por ambiente | Exigida pelo código da Spec 009; precisa existir antes do release que a publicar |
+| `SENTRY_*` | — | Sem uso enquanto o Sentry não for conectado |
+| `PIXABAY_API_KEY` | só `.env.pixabay.local` | Ferramenta local, não vai à Vercel |
+
+## Processo de release
+
+1. Atualizar as referências remotas e identificar o commit aprovado de `develop`.
+2. Comparar migrations do commit com `_prisma_migrations` (nome e checksum) por consulta somente
+   leitura; migration nova só pelo `migrate-production`, com autorização do responsável.
+3. Criar a branch de release a partir de `main` com a árvore aprovada e conferir `git diff` vazio.
+4. Abrir o PR para `main`, aguardar os checks e entregar o resultado ao responsável.
+5. Depois do merge do responsável: conferir o commit e a árvore de `main`, o status `Vercel` do
+   commit, as duas URLs, `tecnico.status` e os smoke tests de `docs/VALIDACAO-INTEGRADA.md`.
+
+## Restrições de produção
+
+- Agente não faz merge em `main`, não roda deploy manual, não altera a Vercel nem o Supabase remoto e
+  não executa `migrate-production` (`rules/restrictions.md`).
+- O MCP do Supabase é somente leitura (`.mcp.json`).
+- Testes de carga, força bruta, concorrência ou manipulação de datas não rodam contra produção:
+  rodam no PostgreSQL em container dos testes.
+
+## Pendências do responsável
+
+1. Confirmar no painel do Supabase Auth que o cadastro público está desabilitado
+   (`disable_signup`), conforme RS-LOGIN-04 da Spec 001. Não é verificável pelo MCP somente leitura.
+2. Confirmar se a Data API expõe o schema `public`. As policies negam o acesso, mas retirar `public`
+   dos schemas expostos reduz a superfície.
+3. Cadastrar `CHAVE_HMAC_LIMITES` na Vercel (Preview e Production) antes do release da Spec 009.
+4. Decidir os PRs abertos do Dependabot (#37, #38, #39, #101, #102), todos com CI verde em 2026-11-12.
+5. Avaliar tornar `Application quality` um check obrigatório em `main` e `develop`; hoje só
+   `Documentation and secret guard` é exigido, e o CI não roda Playwright.
+6. Conectar o Sentry quando decidido; até lá não há observabilidade de erros em produção além dos
+   logs da Vercel.
+7. Preencher `nome_exibicao` das contas de demonstração, se desejado (`prisma/vincular-professor.ts`).
+8. Alinhar a ordem das paradas do fluxo SDD entre `rules/spec-flow.md` e `AGENTS.md`.
+9. Atualizar o "Estado atual" de `AGENTS.md`, que ainda descreve o projeto na fase do login e diz que
+   não há banco local (os testes já usam PostgreSQL em container).
 
 ## Credenciais de ferramentas locais
 
-As regras destas credenciais estão em `rules/secrets.md`. Registro atual:
+**`PIXABAY_API_KEY`** — autentica as buscas dos scripts locais da skill `imagens-equipamentos`.
+Fica em `.env.pixabay.local` (ignorado pelo Git), cadastrada pelo responsável em editor de texto;
+o agente não cria, não lê e não revela o arquivo; não vai à Vercel; nunca aparece em comandos,
+chats ou arquivos versionados.
 
-**`PIXABAY_API_KEY`**
-
-- **Finalidade:** autenticar as buscas dos scripts locais da skill
-  `imagens-equipamentos` na API da Pixabay.
-- **Arquivo local aprovado:** `.env.pixabay.local`, ignorado pela regra `.env.*`
-  do `.gitignore`.
-- **Cadastro:** feito pelo responsável, em editor de texto, quando a etapa de
-  validação for autorizada. O agente não cria, não lê e não revela o arquivo.
-- **Vercel:** não cadastrar. O runtime Next.js não usa esta variável.
-- **Supabase:** esta configuração não precisa de credencial nem de acesso ao
-  Supabase.
-- **Manuseio:** nunca colocar o valor da chave em comandos, chats ou arquivos
-  versionados.
-- **Validação futura:** a integração com a API será validada em etapa própria,
-  depois que os scripts forem implementados e aprovados. Ela ainda não foi
-  executada.
-
-## Política operacional
-
-- Não há deploy direto a partir de branches de feature.
-- Branches de feature partem de `develop`; Dependabot também propõe atualizações
-  para `develop`.
-- O agente pode integrar PR próprio em `develop` após CI verde. Somente o
-  responsável autoriza e realiza o merge em `main`.
-- Como as promoções entram em `main` por squash, `develop` e `main` têm
-  históricos diferentes e um PR direto `develop` → `main` gera conflito. A
-  promoção do login (PR #14) usou uma branch criada a partir de `main` com a
-  árvore exata de `develop` (`git read-tree -u --reset origin/develop`),
-  conferida com `git diff origin/develop HEAD` vazio.
-- Migrations entram somente após uma spec aprovada e são aplicadas uma vez por execução explícita.
-- `DATABASE_URL`, `DIRECT_URL`, `SUPABASE_SERVICE_ROLE_KEY` e tokens Sentry são secretos e exclusivos de servidor.
-- Uma alteração que necessite novas variáveis do produto deve atualizar `.env.example`, a documentação e o ambiente do provedor na mesma entrega. Credenciais de ferramentas exclusivamente locais não vão ao ambiente do provedor.
+**Contas de demonstração para E2E** — as senhas das contas `colaborador@empresti.test` e
+`operacoes@empresti.test` ficam só em arquivo local ignorado pelo Git, lido pelo Playwright sem
+imprimir valores. O registro desta exceção em `rules/secrets.md` depende de decisão do responsável.
