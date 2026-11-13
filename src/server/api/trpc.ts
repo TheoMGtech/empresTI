@@ -1,9 +1,14 @@
+import type { PrismaClient } from "@prisma/client";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { z, ZodError } from "zod";
 
+import { MENSAGENS_LIMITE } from "@/lib/mensagens-limite";
 import { obterClientePrisma } from "@/server/db";
 import type { ClienteSupabaseAutenticacao } from "@/server/services/autenticacao";
+import { ErroLimiteExcedido, ErroLimiteIndisponivel } from "@/server/services/erros-limite";
+import { lerIpConfiavel } from "@/server/services/ip-confiavel";
+import { criarLimitador, type Limitador } from "@/server/services/limites";
 import {
   ErroMultiplosMemberships,
   ErroSemMembership,
@@ -14,11 +19,67 @@ import { criarClienteSupabaseServidor } from "@/server/supabase/cliente";
 const obterClienteSupabase = async (): Promise<ClienteSupabaseAutenticacao> =>
   criarClienteSupabaseServidor();
 
-export function criarContextoTRPC() {
+/**
+ * Contexto do tRPC. `ipConfiavel` e `obterLimitador` são opcionais só para os testes, que montam o
+ * contexto à mão com `createCaller` (Q10). Sem IP, vale o identificador compartilhado (P3); sem
+ * limitador, vale o real (`limitadorDoContexto`).
+ */
+export type ContextoTRPC = {
+  obterClientePrisma: () => PrismaClient;
+  obterClienteSupabase: () => Promise<ClienteSupabaseAutenticacao>;
+  ipConfiavel?: string | null;
+  obterLimitador?: () => Limitador;
+};
+
+// Spec 009 (T-SEG-08): o IP vem só de `lerIpConfiavel` (RN-SEG-11), e o limitador é sempre o real.
+export function criarContextoTRPC({ req }: { req: Request }): ContextoTRPC {
   return {
     obterClientePrisma,
     obterClienteSupabase,
+    ipConfiavel: lerIpConfiavel(req.headers),
+    obterLimitador: () => criarLimitador(obterClientePrisma),
   };
+}
+
+/** O padrão é o limitador real sobre o Prisma do contexto: nunca a ausência de limite. */
+export function limitadorDoContexto(ctx: ContextoTRPC): Limitador {
+  return ctx.obterLimitador?.() ?? criarLimitador(ctx.obterClientePrisma);
+}
+
+/**
+ * Traduz os erros do limitador (RF-SEG-11, RF-SEG-12): excedido vira 429 e indisponível vira 503,
+ * com as mensagens aprovadas e sem detalhe. O `ErroLimiteExcedido` segue como `cause`, para o
+ * `Retry-After` (`metaRespostaLimite`). Outros erros passam como estão.
+ */
+export async function aplicarLimite<T>(acao: () => Promise<T>): Promise<T> {
+  try {
+    return await acao();
+  } catch (erro) {
+    if (erro instanceof ErroLimiteExcedido) {
+      throw new TRPCError({
+        code: "TOO_MANY_REQUESTS",
+        message: MENSAGENS_LIMITE.excedido,
+        cause: erro,
+      });
+    }
+    if (erro instanceof ErroLimiteIndisponivel) {
+      throw new TRPCError({ code: "SERVICE_UNAVAILABLE", message: MENSAGENS_LIMITE.indisponivel });
+    }
+    throw erro;
+  }
+}
+
+/**
+ * `responseMeta` do Route Handler (RF-SEG-11): `Retry-After` com o maior número de segundos entre
+ * os erros `TOO_MANY_REQUESTS` da resposta. O status HTTP já vem do código do erro.
+ */
+export function metaRespostaLimite({ errors }: { errors: readonly TRPCError[] }) {
+  const segundos = errors
+    .filter((erro) => erro.code === "TOO_MANY_REQUESTS" && erro.cause instanceof ErroLimiteExcedido)
+    .map((erro) => (erro.cause as ErroLimiteExcedido).segundos);
+
+  if (segundos.length === 0) return {};
+  return { headers: { "Retry-After": String(Math.max(...segundos)) } };
 }
 
 /**
@@ -39,7 +100,7 @@ export const MENSAGENS_ERRO = {
 
 export type CamposInvalidos = Record<string, string[] | undefined>;
 
-const t = initTRPC.context<Awaited<ReturnType<typeof criarContextoTRPC>>>().create({
+const t = initTRPC.context<ContextoTRPC>().create({
   transformer: superjson,
   // Formato único de erro (ADR-001 §4, CA-SESSAO-11): a tela decide por `code`, `motivo` e
   // `campos`, sem ler a mensagem. Pilha e detalhe de erro inesperado não saem do servidor.
@@ -127,5 +188,26 @@ export const adminProcedure = tenantProcedure.use(async ({ ctx, next }) => {
     throw new TRPCError({ code: "FORBIDDEN", message: MENSAGENS_AUTORIZACAO.restritoOperacoes });
   }
 
+  return next();
+});
+
+/**
+ * Spec 009 (RF-SEG-10, RN-SEG-06): limite das cinco mutações cobertas, encaixado logo depois de
+ * `.input()` em `tenantProcedure` ou `adminProcedure`. Roda depois da autenticação, da autorização
+ * e da validação de entrada, e antes da regra de negócio. `mutacao_usuario` (30/60 s) e
+ * `mutacao_ip` (120/60 s) são consumidos juntos; excedido vira 429 e indisponível vira 503, sem
+ * gravar nada.
+ */
+export const limitarMutacao = t.middleware(async ({ ctx, next }) => {
+  // O tipo do middleware raiz não vê o tenant; em tempo de execução ele já está no contexto. Sem
+  // ele, o encaixe está errado: falha, nunca segue sem limite.
+  const { tenantId, usuarioId } = ctx as Partial<Record<"tenantId" | "usuarioId", string>>;
+  if (!tenantId || !usuarioId) {
+    throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: MENSAGENS_ERRO.interno });
+  }
+
+  await aplicarLimite(() =>
+    limitadorDoContexto(ctx).reservarMutacao({ tenantId, usuarioId, ip: ctx.ipConfiavel ?? null }),
+  );
   return next();
 });

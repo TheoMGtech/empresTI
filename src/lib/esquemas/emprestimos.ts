@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 import { LIMITE_MAXIMO_LISTAGEM, esquemaCategoria } from "@/lib/esquemas/equipamentos";
 

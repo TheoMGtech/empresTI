@@ -54,6 +54,8 @@ Devolução em nome de outra pessoa (Spec 008), renovação, comprovante, regist
 
 Três procedimentos novos e rota `/meus-emprestimos`. Sem migration.
 
+Spec 009 (segurança HTTP e limite de requisições): `emprestimos.devolver` pode responder `TOO_MANY_REQUESTS` (429, com `Retry-After`) e `SERVICE_UNAVAILABLE` (503). Nenhum CA desta spec muda.
+
 ## Critérios de aceitação
 
 - **CA-DEVOL-01** — A lista traz só os empréstimos em aberto da própria pessoa.

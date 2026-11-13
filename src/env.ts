@@ -1,4 +1,5 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
+import { ErroLimiteIndisponivel } from "@/server/services/erros-limite";
 
 const esquemaPublico = z.object({
   NEXT_PUBLIC_APP_URL: z.url(),
@@ -37,4 +38,14 @@ export function lerAmbienteBanco() {
   return esquemaBanco.parse({
     DATABASE_URL: process.env.DATABASE_URL,
   });
+}
+
+// Spec 009 (RS-SEG-02): chave exclusiva do servidor, lida a cada uso, nunca no carregamento do
+// módulo: o build não precisa dela. Ausente ou curta, o limitador fica indisponível (503).
+const esquemaChaveHmacLimites = z.string().min(32);
+
+export function lerChaveHmacLimites() {
+  const chave = esquemaChaveHmacLimites.safeParse(process.env.CHAVE_HMAC_LIMITES);
+  if (!chave.success) throw new ErroLimiteIndisponivel();
+  return chave.data;
 }

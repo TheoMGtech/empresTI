@@ -97,6 +97,10 @@ Supabase Auth. A entrega não libera funcionalidades de catálogo ou operações
 - **RS-LOGIN-05** — sessão autenticada sem membership não recebe acesso a dados de
   produto nesta entrega.
 
+## Contrato afetado
+
+Spec 009 (segurança HTTP e limite de requisições): `autenticacao.entrar` pode responder `TOO_MANY_REQUESTS` (429, com `Retry-After`) e `SERVICE_UNAVAILABLE` (503). Nenhum CA desta spec muda.
+
 ## Critérios de aceitação
 
 - **CA-LOGIN-01** — a URL pública `/` renderiza a tela Nocturne responsiva e

@@ -31,9 +31,19 @@ function simularSupabase({ renovarSessao }: { renovarSessao: boolean }) {
   }));
 }
 
-async function atualizarSessaoNaRaiz() {
+const SEGURANCA = {
+  nonce: "bm9uY2UtZGUtdGVzdGU=",
+  csp: "default-src 'self'; script-src 'self' 'nonce-bm9uY2UtZGUtdGVzdGU='",
+};
+
+async function atualizarSessaoNaRaiz(requisicao = new NextRequest("http://localhost:3000/")) {
   const { atualizarSessao } = await import("@/server/supabase/proxy");
-  return atualizarSessao(new NextRequest("http://localhost:3000/"));
+  return atualizarSessao(requisicao, SEGURANCA);
+}
+
+/** Cabeçalho que o `NextResponse.next({ request: { headers } })` repassa à renderização. */
+function repassadoAoNext(resposta: Response, nome: string) {
+  return resposta.headers.get(`x-middleware-request-${nome}`);
 }
 
 function cookieDaResposta(resposta: Response) {
@@ -84,5 +94,33 @@ describe("proxy de sessão Supabase", () => {
 
     expect(resposta.headers.getSetCookie()).toEqual([]);
     expect(resposta.headers.get("Cache-Control")).toBe("private, no-store");
+  });
+
+  it("CA-SEG-05 — sem renovação, a CSP vai na resposta e segue com o nonce para o Next", async () => {
+    simularSupabase({ renovarSessao: false });
+
+    const resposta = await atualizarSessaoNaRaiz();
+
+    expect(resposta.headers.get("Content-Security-Policy")).toBe(SEGURANCA.csp);
+    expect(repassadoAoNext(resposta, "content-security-policy")).toBe(SEGURANCA.csp);
+    expect(repassadoAoNext(resposta, "x-nonce")).toBe(SEGURANCA.nonce);
+  });
+
+  it("CA-SEG-05 — com sessão renovada, a resposta leva o cookie e a CSP, e o Next recebe os dois", async () => {
+    simularSupabase({ renovarSessao: true });
+    const requisicao = new NextRequest("http://localhost:3000/catalogo", {
+      headers: { cookie: "preferencia=1" },
+    });
+
+    const resposta = await atualizarSessaoNaRaiz(requisicao);
+
+    expect(cookieDaResposta(resposta)).toMatch(/;\s*HttpOnly/i);
+    expect(resposta.headers.get("Content-Security-Policy")).toBe(SEGURANCA.csp);
+    expect(resposta.headers.get("Cache-Control")).toBe("private, no-store");
+    expect(repassadoAoNext(resposta, "content-security-policy")).toBe(SEGURANCA.csp);
+    expect(repassadoAoNext(resposta, "x-nonce")).toBe(SEGURANCA.nonce);
+    const cookieRepassado = repassadoAoNext(resposta, "cookie") ?? "";
+    expect(cookieRepassado).toContain(`${COOKIE_RENOVADO.name}=${COOKIE_RENOVADO.value}`);
+    expect(cookieRepassado).toContain("preferencia=1");
   });
 });

@@ -9,6 +9,7 @@ import {
   TelaCadastro,
 } from "@/components/operacoes/tela-cadastro";
 import { ProvedorSessao, type SessaoAplicacao } from "@/components/shell/sessao";
+import { MENSAGENS_LIMITE } from "@/lib/mensagens-limite";
 import { erroTRPC, renderizarComTRPC, type ManipuladoresTRPC } from "@/test/trpc";
 import type { SaidasRouter } from "@/trpc/tipos";
 
@@ -125,6 +126,25 @@ describe("T-OPER-07 — cadastro de equipamento", () => {
     expect(screen.getByLabelText("Nome")).toHaveValue("Notebook 14 polegadas");
   });
 
+  it.each([
+    ["TOO_MANY_REQUESTS", MENSAGENS_LIMITE.excedido],
+    ["SERVICE_UNAVAILABLE", MENSAGENS_LIMITE.indisponivel],
+  ] as const)("CA-SEG-17 — cadastrar com %s mostra a mensagem própria e mantém o formulário", async (codigo, mensagem) => {
+    renderizarCadastro({
+      "equipamentos.cadastrar": () => {
+        throw erroTRPC(codigo, "mensagem do servidor");
+      },
+    });
+
+    preencher({ Nome: "Notebook 14 polegadas", Patrimônio: "TI-0001" });
+    escolherCategoria("notebook");
+    fireEvent.click(screen.getByRole("button", { name: "Cadastrar" }));
+
+    expect(await screen.findByText(mensagem)).toBeInTheDocument();
+    expect(screen.getByLabelText("Nome")).toHaveValue("Notebook 14 polegadas");
+    expect(navegacao.empurrar).not.toHaveBeenCalled();
+  });
+
   it("RF-OPER-06 — a prévia acompanha o formulário e não tem ação", async () => {
     renderizarCadastro();
 
@@ -207,6 +227,23 @@ describe("T-OPER-07 — alteração de situação", () => {
 
     expect(await controle.findByText(MENSAGEM_EMPRESTIMO_EM_ABERTO)).toBeInTheDocument();
     expect(controle.getByRole("radio", { name: "Em manutenção" })).toBeChecked();
+  });
+
+  it.each([
+    ["TOO_MANY_REQUESTS", MENSAGENS_LIMITE.excedido],
+    ["SERVICE_UNAVAILABLE", MENSAGENS_LIMITE.indisponivel],
+  ] as const)("CA-SEG-17 — alterar situação com %s mostra a mensagem própria", async (codigo, mensagem) => {
+    renderizarDetalhe(OPERACOES, {
+      "equipamentos.alterarSituacao": () => {
+        throw erroTRPC(codigo, "mensagem do servidor");
+      },
+    });
+
+    const controle = within(await screen.findByRole("region", { name: "Situação do equipamento" }));
+    fireEvent.click(controle.getByRole("radio", { name: "Fora de uso" }));
+    fireEvent.click(controle.getByRole("button", { name: "Salvar situação" }));
+
+    expect(await controle.findByRole("alert")).toHaveTextContent(mensagem);
   });
 
   it("RN-SESSAO-02 — colaborador não vê o controle de situação", async () => {

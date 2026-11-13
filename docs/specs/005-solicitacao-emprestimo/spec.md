@@ -65,6 +65,8 @@ Limite de itens e bloqueio por atraso (Spec 006). Devolução (Spec 007). Reserv
 
 Tabela de empréstimos, colunas em `equipamentos`, `equipamentos.detalhar`, `emprestimos.solicitar`.
 
+Spec 009 (segurança HTTP e limite de requisições): `emprestimos.solicitar` pode responder `TOO_MANY_REQUESTS` (429, com `Retry-After`) e `SERVICE_UNAVAILABLE` (503). Nenhum CA desta spec muda.
+
 **Supera:** CA-DADOS-01, CA-DADOS-06 e CA-DADOS-18 da Spec 002 fixam a lista de tabelas, as colunas
 de equipamento e a ausência de empréstimos. A primeira tarefa desta spec delimita essas provas à
 Spec 002, sem removê-las.
