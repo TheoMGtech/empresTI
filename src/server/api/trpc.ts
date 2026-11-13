@@ -190,3 +190,24 @@ export const adminProcedure = tenantProcedure.use(async ({ ctx, next }) => {
 
   return next();
 });
+
+/**
+ * Spec 009 (RF-SEG-10, RN-SEG-06): limite das cinco mutações cobertas, encaixado logo depois de
+ * `.input()` em `tenantProcedure` ou `adminProcedure`. Roda depois da autenticação, da autorização
+ * e da validação de entrada, e antes da regra de negócio. `mutacao_usuario` (30/60 s) e
+ * `mutacao_ip` (120/60 s) são consumidos juntos; excedido vira 429 e indisponível vira 503, sem
+ * gravar nada.
+ */
+export const limitarMutacao = t.middleware(async ({ ctx, next }) => {
+  // O tipo do middleware raiz não vê o tenant; em tempo de execução ele já está no contexto. Sem
+  // ele, o encaixe está errado: falha, nunca segue sem limite.
+  const { tenantId, usuarioId } = ctx as Partial<Record<"tenantId" | "usuarioId", string>>;
+  if (!tenantId || !usuarioId) {
+    throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: MENSAGENS_ERRO.interno });
+  }
+
+  await aplicarLimite(() =>
+    limitadorDoContexto(ctx).reservarMutacao({ tenantId, usuarioId, ip: ctx.ipConfiavel ?? null }),
+  );
+  return next();
+});

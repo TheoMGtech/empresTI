@@ -8,7 +8,7 @@ import {
   esquemaSaidaUltimosCadastros,
 } from "@/lib/esquemas/operacoes";
 import { traduzirErroEncerramento } from "@/server/api/routers/emprestimos";
-import { adminProcedure, criarRouterTRPC } from "@/server/api/trpc";
+import { adminProcedure, criarRouterTRPC, limitarMutacao } from "@/server/api/trpc";
 import { encerrarEmprestimo } from "@/server/services/encerramento-emprestimo";
 import {
   consultarResumoOperacoes,
@@ -41,6 +41,7 @@ export const routerOperacoes = criarRouterTRPC({
   // da Spec 007 (RN-DEVOL-03), com Operações como ator (RS-OPER-03).
   registrarDevolucao: adminProcedure
     .input(esquemaEntradaRegistrarDevolucao)
+    .use(limitarMutacao)
     .output(esquemaSaidaRegistrarDevolucao)
     .mutation(async ({ ctx, input }) => {
       try {
