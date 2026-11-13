@@ -82,8 +82,7 @@ vale também para chamadas diretas à API.
 
 As senhas **não estão no Git**, no README, em issues nem em PRs: o responsável as entrega ao
 avaliador por canal privado. Os endereços `.test` são fictícios (não recebem e-mail nem recuperam
-senha). As contas ainda não têm nome de exibição; por isso o painel de Operações mostra "Sem nome
-cadastrado" na coluna Pessoa.
+senha). Por decisão do responsável em 2026-11-13, as contas permanecem sem nome de exibição, campo opcional; por isso o painel de Operações mostra "Sem nome cadastrado" na coluna Pessoa.
 
 ### Roteiro de avaliação (10 minutos)
 
@@ -188,7 +187,7 @@ Detalhes e pendências do responsável em [`docs/DEVOPS.md`](docs/DEVOPS.md).
 | Concluir a Spec 009 (T-SEG-11 a 13), verificar formalmente e publicar em `main` | obrigatória (exigência de segurança do projeto) | sessão backend + responsável |
 | Validação final do responsável nas Specs 003–008; nova verificação formal da Spec 001 | governança | responsável (autoriza) + agente |
 | Confirmar `disable_signup` no Supabase Auth e a exposição de `public` na Data API | segurança | responsável |
-| Preencher o nome de exibição das contas de demonstração | apresentação | responsável |
+| Nomes de exibição vazios nas contas demo | escolha de apresentação aceita pelo responsável em 2026-11-13; não bloqueia a V1 | sem ação |
 | Cadastrar `CHAVE_HMAC_LIMITES` na Vercel antes do release da Spec 009 | infraestrutura | responsável |
 | Indicador do PRD: Operações abandonar a planilha após duas semanas de uso | acompanhamento futuro | não verificável antes de duas semanas de uso real |
 

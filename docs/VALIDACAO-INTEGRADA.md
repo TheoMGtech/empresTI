@@ -27,10 +27,12 @@ PostgreSQL 17.6 em container da suíte do projeto, usado para o que não deve ro
 - [x] Carga inicial executada no banco de produção (12 equipamentos do tenant `suporte_ti`).
 - [x] Fotografias presentes no bucket público `equipamentos`, com os caminhos do manifesto.
       — 12 objetos; as 12 fotos carregam no catálogo.
-- [ ] Conta `colaborador` real vinculada com `vincular-professor.ts` (papel e nome).
-      — papel vinculado; `nome_exibicao` vazio.
-- [ ] Conta `operacoes` real criada no Supabase Auth e vinculada com `--papel operacoes --nome`.
-      — papel vinculado; `nome_exibicao` vazio (o painel mostra "Sem nome cadastrado").
+- [x] Conta `colaborador` real vinculada com `vincular-professor.ts` (papel confirmado).
+      — `nome_exibicao` é opcional na Spec 003 e permanece vazio por decisão do responsável
+      em 2026-11-13; as telas usam o fallback existente.
+- [x] Conta `operacoes` real criada no Supabase Auth e vinculada ao papel `operacoes`.
+      — `nome_exibicao` é opcional e permanece vazio por decisão do responsável
+      em 2026-11-13 (o painel mostra "Sem nome cadastrado").
 - [x] Variáveis públicas e de servidor configuradas na Vercel para o ambiente de validação.
       — inferido do funcionamento (login, banco e catálogo); o painel não foi lido pelo agente.
 - [x] Build da Vercel do commit candidato concluído, com a URL anotada.
@@ -142,7 +144,7 @@ validação será acrescentado pela T-SEG-12 e executado depois do release dela.
 
 | Item | Data | Conta | Resultado | Evidência |
 |---|---|---|---|---|
-| 0 | 2026-11-12 | — (GitHub, SQL somente leitura) | Concluído, exceto nomes de exibição | [README](evidencias/README.md#banco-de-produção-consultas-somente-leitura) |
+| 0 | 2026-11-12 | — (GitHub, SQL somente leitura) | Concluído; nomes de exibição opcionais não definidos (aceito pelo responsável) | [README](evidencias/README.md#banco-de-produção-consultas-somente-leitura) |
 | 1 | 2026-11-12/13 | anônimo, colaborador, operacoes | PASSOU | [autenticação](evidencias/README.md#1-autenticação-e-sessão) |
 | 2 | 2026-11-13 | colaborador | PASSOU | [catálogo](evidencias/README.md#2-catálogo) |
 | 3 | 2026-11-13 | colaborador | PASSOU; concorrência só no banco descartável | [solicitação](evidencias/README.md#3-detalhe-e-solicitação) |
