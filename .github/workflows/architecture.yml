@@ -61,9 +61,12 @@ jobs:
   # definido, o Playwright sempre sobe o próprio `npm run dev` e nunca reutiliza outro servidor.
   # Sem retries e com os timeouts e o paralelismo da configuração versionada. O tRPC é simulado no
   # navegador; a chave pública é o mesmo valor fictício de `src/test/setup.ts`, sem credencial real.
+  # Runner fixado em 24.04: o `ubuntu-latest` passou a ser o 26.04, em que o Playwright 1.56.1 não
+  # instala o Chromium ("Playwright does not support chromium on ubuntu26.04-x64"). Voltar para
+  # `ubuntu-latest` quando a versão do Playwright suportar o sistema novo.
   e2e:
     name: E2E (desenvolvimento)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: chave-publica-de-teste-sem-credencial-real
