@@ -1,0 +1,268 @@
+
+ RUN  v5.0.5 C:/dev/empresti-entrega
+
+ ✓ src/test/auditoria.test.ts > migrations > CA-DADOS-01 — existe a migration gerada da auditoria, depois da estrutura 
+ ✓ src/test/auditoria.test.ts > migrations > CA-DADOS-01 — não altera as demais tabelas 
+ ✓ src/test/auditoria.test.ts > estrutura da auditoria > CA-DADOS-20 — tem tenant, ator, ação, recurso e data, todos obrigatórios 
+ ✓ src/test/auditoria.test.ts > estrutura da auditoria > CA-DADOS-20 — tem chave primária, FK restritiva e índice por tenant e data 
+ ✓ src/test/auditoria.test.ts > estrutura da auditoria > CA-DADOS-20 — preenche identificador e data automaticamente 
+ ✓ src/test/auditoria.test.ts > estrutura da auditoria > CA-DADOS-20 — rejeita tenant_id ausente 
+ ✓ src/test/auditoria.test.ts > estrutura da auditoria > CA-DADOS-20 — rejeita ator ausente 
+ ✓ src/test/auditoria.test.ts > estrutura da auditoria > CA-DADOS-20 — rejeita acao ausente 
+ ✓ src/test/auditoria.test.ts > estrutura da auditoria > CA-DADOS-20 — rejeita recurso ausente 
+ ✓ src/test/auditoria.test.ts > estrutura da auditoria > CA-DADOS-20 — rejeita ator vazio 
+ ✓ src/test/auditoria.test.ts > estrutura da auditoria > CA-DADOS-20 — rejeita acao vazio 
+ ✓ src/test/auditoria.test.ts > estrutura da auditoria > CA-DADOS-20 — rejeita recurso vazio 
+ ✓ src/test/auditoria.test.ts > estrutura da auditoria > CA-DADOS-03 — auditoria não referencia tenant inexistente 
+ ✓ src/test/auditoria.test.ts > estrutura da auditoria > CA-DADOS-03 — tenant com auditoria não pode ser excluído 
+ ✓ src/test/auditoria.test.ts > append-only para o papel dono > CA-DADOS-21 — os testes rodam como dono da tabela, sem superusuário 
+ ✓ src/test/auditoria.test.ts > append-only para o papel dono > CA-DADOS-21 — INSERT funciona e soma uma linha 
+ ✓ src/test/auditoria.test.ts > append-only para o papel dono > CA-DADOS-21 — UPDATE é bloqueado e os registros ficam intactos 
+ ✓ src/test/auditoria.test.ts > append-only para o papel dono > CA-DADOS-21 — DELETE é bloqueado e os registros ficam intactos 
+ ✓ src/test/auditoria.test.ts > append-only para o papel dono > CA-DADOS-21 — TRUNCATE é bloqueado e os registros ficam intactos 
+ ✓ src/test/auditoria.test.ts > append-only para o papel dono > CA-DADOS-21 — TRUNCATE com CASCADE é bloqueado e os registros ficam intactos 
+ ✓ src/test/auditoria.test.ts > append-only para o papel dono > CA-DADOS-21 — TRUNCATE em cascata a partir de tenants não apaga a auditoria 
+ ✓ src/test/auditoria.test.ts > append-only para o papel dono > CA-DADOS-21 — os triggers disparam sempre, em qualquer modo de replicação 
+ ✓ src/test/auditoria.test.ts > append-only para o papel dono > CA-DADOS-21 — a função do trigger não eleva privilégios nem é executável por anon 
+ ✓ src/test/auditoria.test.ts > RLS da auditoria > CA-DADOS-02 — RLS habilitada e policies de negação 
+ ✓ src/test/auditoria.test.ts > RLS da auditoria > CA-DADOS-02 — anon tem os privilégios SQL na auditoria 
+ ✓ src/test/auditoria.test.ts > RLS da auditoria > CA-DADOS-02 — authenticated tem os privilégios SQL na auditoria 
+ ✓ src/test/auditoria.test.ts > RLS da auditoria > CA-DADOS-02 — SELECT como anon devolve zero linhas 
+ ✓ src/test/auditoria.test.ts > RLS da auditoria > CA-DADOS-02 — SELECT como authenticated devolve zero linhas 
+ ✓ src/test/auditoria.test.ts > RLS da auditoria > CA-DADOS-02 — INSERT como anon é rejeitado pela policy 
+ ✓ src/test/auditoria.test.ts > RLS da auditoria > CA-DADOS-02 — INSERT como authenticated é rejeitado pela policy 
+ ✓ src/test/auditoria.test.ts > RLS da auditoria > CA-DADOS-02 — UPDATE como anon afeta zero linhas 
+ ✓ src/test/auditoria.test.ts > RLS da auditoria > CA-DADOS-02 — DELETE como anon afeta zero linhas 
+ ✓ src/test/auditoria.test.ts > RLS da auditoria > CA-DADOS-02 — UPDATE como authenticated afeta zero linhas 
+ ✓ src/test/auditoria.test.ts > RLS da auditoria > CA-DADOS-02 — DELETE como authenticated afeta zero linhas 
+ ✓ src/test/auditoria.test.ts > controles: RLS e trigger são barreiras independentes > CA-DADOS-21 — com policy permissiva, anon lê e insere, mas o trigger barra as mutações 
+ ✓ src/test/auditoria.test.ts > controles: RLS e trigger são barreiras independentes > CA-DADOS-21 — com policy permissiva, authenticated lê e insere, mas o trigger barra as mutações 
+ ✓ src/test/auditoria.test.ts > controles: RLS e trigger são barreiras independentes > CA-DADOS-21 — TRUNCATE como anon, que a RLS não cobre, é barrado pelo trigger 
+ ✓ src/test/auditoria.test.ts > controles: RLS e trigger são barreiras independentes > CA-DADOS-21 — TRUNCATE como authenticated, que a RLS não cobre, é barrado pelo trigger 
+ ✓ src/test/auditoria.test.ts > controles: RLS e trigger são barreiras independentes > CA-DADOS-02 — sem GRANT, anon recebe outro erro 
+ ✓ src/test/auditoria.test.ts > controles: RLS e trigger são barreiras independentes > CA-DADOS-02 — sem GRANT, authenticated recebe outro erro 
+ ✓ src/server/api/routers/emprestimos-solicitar.test.ts > solicitação válida > CA-SOLIC-01 / CA-REGRAS-03 — cria o empréstimo com prazo de 14 dias corridos, com data fixa 
+ ✓ src/server/api/routers/emprestimos-solicitar.test.ts > solicitação válida > CA-SOLIC-01 / CA-REGRAS-03 — retirada à noite em São Paulo conta o prazo da data local 
+ ✓ src/server/api/routers/emprestimos-solicitar.test.ts > solicitação válida > CA-SOLIC-10 — o prazo gravado coincide com o devolverAtePrevisto do detalhe 
+ ✓ src/server/api/routers/emprestimos-solicitar.test.ts > solicitação válida > RF-SOLIC-02 — pelo procedimento, usuário e tenant vêm da sessão 
+ ✓ src/server/api/routers/emprestimos-solicitar.test.ts > solicitação válida > RN-SOLIC-06 — Operações também pode solicitar 
+ ✓ src/server/api/routers/emprestimos-solicitar.test.ts > solicitação válida > RF-SOLIC-04 — após confirmar, o detalhe mostra o item emprestado 
+ ✓ src/server/api/routers/emprestimos-solicitar.test.ts > recusas > CA-SOLIC-02 / CA-REGRAS-06 — item em manutenção é recusado com EQUIPAMENTO_EM_MANUTENCAO 
+ ✓ src/server/api/routers/emprestimos-solicitar.test.ts > recusas > RN-SOLIC-02 — item já emprestado é recusado com EQUIPAMENTO_INDISPONIVEL 
+ ✓ src/server/api/routers/emprestimos-solicitar.test.ts > recusas > CA-SOLIC-04 — usuário do tenant B não solicita item do tenant A 
+ ✓ src/server/api/routers/emprestimos-solicitar.test.ts > recusas > CA-SOLIC-04 — usuário do tenant A não solicita item do tenant B 
+ ✓ src/server/api/routers/emprestimos-solicitar.test.ts > recusas > CA-SOLIC-04 — equipamento inexistente não é encontrado 
+ ✓ src/server/api/routers/emprestimos-solicitar.test.ts > recusas > RN-SOLIC-07 — fora_de_uso não existe para colaborador e é indisponível para Operações 
+ ✓ src/server/api/routers/emprestimos-solicitar.test.ts > recusas > RS-SOLIC-01 — sem sessão o procedimento recusa sem gravar 
+ ✓ src/server/api/routers/emprestimos-solicitar.test.ts > recusas > RS-SOLIC-01 — sem membership o procedimento recusa sem gravar 
+ ✓ src/server/api/routers/emprestimos-solicitar.test.ts > concorrência > CA-SOLIC-03 — duas solicitações simultâneas do mesmo item resultam em um único empréstimo 
+ ✓ src/server/api/routers/emprestimos-solicitar.test.ts > concorrência > CA-SOLIC-03 — conflito no índice parcial vira EQUIPAMENTO_INDISPONIVEL 
+ ✓ src/server/api/routers/emprestimos-solicitar.test.ts > auditoria > CA-SOLIC-07 — a solicitação grava auditoria com o UUID como ator 
+ ✓ src/server/api/routers/emprestimos-solicitar.test.ts > auditoria > CA-SOLIC-07 — falha na auditoria desfaz o empréstimo 
+ ✓ src/server/api/routers/emprestimos-solicitar.test.ts > auditoria > CA-SOLIC-07 — recusa não grava auditoria 
+ ✓ src/test/rls-dominio.test.ts > catálogo do PostgreSQL > CA-DADOS-02 — tenants tem RLS habilitada 
+ ✓ src/test/rls-dominio.test.ts > catálogo do PostgreSQL > CA-DADOS-02 — memberships tem RLS habilitada 
+ ✓ src/test/rls-dominio.test.ts > catálogo do PostgreSQL > CA-DADOS-02 — equipamentos tem RLS habilitada 
+ ✓ src/test/rls-dominio.test.ts > catálogo do PostgreSQL > CA-DADOS-02 — tenants tem as policies de negação 
+ ✓ src/test/rls-dominio.test.ts > catálogo do PostgreSQL > CA-DADOS-02 — memberships tem as policies de negação 
+ ✓ src/test/rls-dominio.test.ts > catálogo do PostgreSQL > CA-DADOS-02 — equipamentos tem as policies de negação 
+ ✓ src/test/rls-dominio.test.ts > catálogo do PostgreSQL > CA-DADOS-02 — tenants: anon tem os privilégios SQL, logo o bloqueio não é falta de GRANT 
+ ✓ src/test/rls-dominio.test.ts > catálogo do PostgreSQL > CA-DADOS-02 — tenants: authenticated tem os privilégios SQL, logo o bloqueio não é falta de GRANT 
+ ✓ src/test/rls-dominio.test.ts > catálogo do PostgreSQL > CA-DADOS-02 — memberships: anon tem os privilégios SQL, logo o bloqueio não é falta de GRANT 
+ ✓ src/test/rls-dominio.test.ts > catálogo do PostgreSQL > CA-DADOS-02 — memberships: authenticated tem os privilégios SQL, logo o bloqueio não é falta de GRANT 
+ ✓ src/test/rls-dominio.test.ts > catálogo do PostgreSQL > CA-DADOS-02 — equipamentos: anon tem os privilégios SQL, logo o bloqueio não é falta de GRANT 
+ ✓ src/test/rls-dominio.test.ts > catálogo do PostgreSQL > CA-DADOS-02 — equipamentos: authenticated tem os privilégios SQL, logo o bloqueio não é falta de GRANT 
+ ✓ src/test/rls-dominio.test.ts > catálogo do PostgreSQL > CA-DADOS-02 — anon não ignora RLS 
+ ✓ src/test/rls-dominio.test.ts > catálogo do PostgreSQL > CA-DADOS-02 — authenticated não ignora RLS 
+ ✓ src/test/rls-dominio.test.ts > anon e authenticated sob RLS > CA-DADOS-02 — tenants: SELECT como anon devolve zero linhas, embora existam registros 
+ ✓ src/test/rls-dominio.test.ts > anon e authenticated sob RLS > CA-DADOS-02 — tenants: SELECT como authenticated devolve zero linhas, embora existam registros 
+ ✓ src/test/rls-dominio.test.ts > anon e authenticated sob RLS > CA-DADOS-02 — memberships: SELECT como anon devolve zero linhas, embora existam registros 
+ ✓ src/test/rls-dominio.test.ts > anon e authenticated sob RLS > CA-DADOS-02 — memberships: SELECT como authenticated devolve zero linhas, embora existam registros 
+ ✓ src/test/rls-dominio.test.ts > anon e authenticated sob RLS > CA-DADOS-02 — equipamentos: SELECT como anon devolve zero linhas, embora existam registros 
+ ✓ src/test/rls-dominio.test.ts > anon e authenticated sob RLS > CA-DADOS-02 — equipamentos: SELECT como authenticated devolve zero linhas, embora existam registros 
+ ✓ src/test/rls-dominio.test.ts > anon e authenticated sob RLS > CA-DADOS-02 — tenants: INSERT como anon é rejeitado pela policy 
+ ✓ src/test/rls-dominio.test.ts > anon e authenticated sob RLS > CA-DADOS-02 — tenants: INSERT como authenticated é rejeitado pela policy 
+ ✓ src/test/rls-dominio.test.ts > anon e authenticated sob RLS > CA-DADOS-02 — memberships: INSERT como anon é rejeitado pela policy 
+ ✓ src/test/rls-dominio.test.ts > anon e authenticated sob RLS > CA-DADOS-02 — memberships: INSERT como authenticated é rejeitado pela policy 
+ ✓ src/test/rls-dominio.test.ts > anon e authenticated sob RLS > CA-DADOS-02 — equipamentos: INSERT como anon é rejeitado pela policy 
+ ✓ src/test/rls-dominio.test.ts > anon e authenticated sob RLS > CA-DADOS-02 — equipamentos: INSERT como authenticated é rejeitado pela policy 
+ ✓ src/test/rls-dominio.test.ts > anon e authenticated sob RLS > CA-DADOS-02 — tenants: UPDATE como anon afeta zero linhas e nada muda 
+ ✓ src/test/rls-dominio.test.ts > anon e authenticated sob RLS > CA-DADOS-02 — tenants: UPDATE como authenticated afeta zero linhas e nada muda 
+ ✓ src/test/rls-dominio.test.ts > anon e authenticated sob RLS > CA-DADOS-02 — memberships: UPDATE como anon afeta zero linhas e nada muda 
+ ✓ src/test/rls-dominio.test.ts > anon e authenticated sob RLS > CA-DADOS-02 — memberships: UPDATE como authenticated afeta zero linhas e nada muda 
+ ✓ src/test/rls-dominio.test.ts > anon e authenticated sob RLS > CA-DADOS-02 — equipamentos: UPDATE como anon afeta zero linhas e nada muda 
+ ✓ src/test/rls-dominio.test.ts > anon e authenticated sob RLS > CA-DADOS-02 — equipamentos: UPDATE como authenticated afeta zero linhas e nada muda 
+ ✓ src/test/rls-dominio.test.ts > anon e authenticated sob RLS > CA-DADOS-02 — tenants: DELETE como anon afeta zero linhas e nada some 
+ ✓ src/test/rls-dominio.test.ts > anon e authenticated sob RLS > CA-DADOS-02 — tenants: DELETE como authenticated afeta zero linhas e nada some 
+ ✓ src/test/rls-dominio.test.ts > anon e authenticated sob RLS > CA-DADOS-02 — memberships: DELETE como anon afeta zero linhas e nada some 
+ ✓ src/test/rls-dominio.test.ts > anon e authenticated sob RLS > CA-DADOS-02 — memberships: DELETE como authenticated afeta zero linhas e nada some 
+ ✓ src/test/rls-dominio.test.ts > anon e authenticated sob RLS > CA-DADOS-02 — equipamentos: DELETE como anon afeta zero linhas e nada some 
+ ✓ src/test/rls-dominio.test.ts > anon e authenticated sob RLS > CA-DADOS-02 — equipamentos: DELETE como authenticated afeta zero linhas e nada some 
+ ✓ src/test/rls-dominio.test.ts > controles: a causa do bloqueio é a RLS > CA-DADOS-02 — tenants: com policy permissiva temporária, anon consegue operar 
+ ✓ src/test/rls-dominio.test.ts > controles: a causa do bloqueio é a RLS > CA-DADOS-02 — tenants: com policy permissiva temporária, authenticated consegue operar 
+ ✓ src/test/rls-dominio.test.ts > controles: a causa do bloqueio é a RLS > CA-DADOS-02 — memberships: com policy permissiva temporária, anon consegue operar 
+ ✓ src/test/rls-dominio.test.ts > controles: a causa do bloqueio é a RLS > CA-DADOS-02 — memberships: com policy permissiva temporária, authenticated consegue operar 
+ ✓ src/test/rls-dominio.test.ts > controles: a causa do bloqueio é a RLS > CA-DADOS-02 — equipamentos: com policy permissiva temporária, anon consegue operar 
+ ✓ src/test/rls-dominio.test.ts > controles: a causa do bloqueio é a RLS > CA-DADOS-02 — equipamentos: com policy permissiva temporária, authenticated consegue operar 
+ ✓ src/test/rls-dominio.test.ts > controles: a causa do bloqueio é a RLS > CA-DADOS-02 — tenants: sem GRANT, anon recebe outro erro, diferente do bloqueio por RLS 
+ ✓ src/test/rls-dominio.test.ts > controles: a causa do bloqueio é a RLS > CA-DADOS-02 — tenants: sem GRANT, authenticated recebe outro erro, diferente do bloqueio por RLS 
+ ✓ src/test/rls-dominio.test.ts > controles: a causa do bloqueio é a RLS > CA-DADOS-02 — memberships: sem GRANT, anon recebe outro erro, diferente do bloqueio por RLS 
+ ✓ src/test/rls-dominio.test.ts > controles: a causa do bloqueio é a RLS > CA-DADOS-02 — memberships: sem GRANT, authenticated recebe outro erro, diferente do bloqueio por RLS 
+ ✓ src/test/rls-dominio.test.ts > controles: a causa do bloqueio é a RLS > CA-DADOS-02 — equipamentos: sem GRANT, anon recebe outro erro, diferente do bloqueio por RLS 
+ ✓ src/test/rls-dominio.test.ts > controles: a causa do bloqueio é a RLS > CA-DADOS-02 — equipamentos: sem GRANT, authenticated recebe outro erro, diferente do bloqueio por RLS 
+ ✓ src/test/rls-dominio.test.ts > bloqueio de TRUNCATE, que a RLS não cobre > CA-DADOS-02 — tenants: anon não tem o privilégio TRUNCATE 
+ ✓ src/test/rls-dominio.test.ts > bloqueio de TRUNCATE, que a RLS não cobre > CA-DADOS-02 — tenants: authenticated não tem o privilégio TRUNCATE 
+ ✓ src/test/rls-dominio.test.ts > bloqueio de TRUNCATE, que a RLS não cobre > CA-DADOS-02 — memberships: anon não tem o privilégio TRUNCATE 
+ ✓ src/test/rls-dominio.test.ts > bloqueio de TRUNCATE, que a RLS não cobre > CA-DADOS-02 — memberships: authenticated não tem o privilégio TRUNCATE 
+ ✓ src/test/rls-dominio.test.ts > bloqueio de TRUNCATE, que a RLS não cobre > CA-DADOS-02 — equipamentos: anon não tem o privilégio TRUNCATE 
+ ✓ src/test/rls-dominio.test.ts > bloqueio de TRUNCATE, que a RLS não cobre > CA-DADOS-02 — equipamentos: authenticated não tem o privilégio TRUNCATE 
+ ✓ src/test/rls-dominio.test.ts > bloqueio de TRUNCATE, que a RLS não cobre > CA-DADOS-02 — tenants: PUBLIC não tem o privilégio TRUNCATE 
+ ✓ src/test/rls-dominio.test.ts > bloqueio de TRUNCATE, que a RLS não cobre > CA-DADOS-02 — memberships: PUBLIC não tem o privilégio TRUNCATE 
+(node:23480) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ ✓ src/test/rls-dominio.test.ts > bloqueio de TRUNCATE, que a RLS não cobre > CA-DADOS-02 — equipamentos: PUBLIC não tem o privilégio TRUNCATE 
+ ✓ src/test/rls-dominio.test.ts > bloqueio de TRUNCATE, que a RLS não cobre > CA-DADOS-02 — tenants: TRUNCATE como anon é negado e os registros ficam intactos 
+ ✓ src/test/rls-dominio.test.ts > bloqueio de TRUNCATE, que a RLS não cobre > CA-DADOS-02 — tenants: TRUNCATE como authenticated é negado e os registros ficam intactos 
+ ✓ src/test/rls-dominio.test.ts > bloqueio de TRUNCATE, que a RLS não cobre > CA-DADOS-02 — memberships: TRUNCATE como anon é negado e os registros ficam intactos 
+ ✓ src/test/rls-dominio.test.ts > bloqueio de TRUNCATE, que a RLS não cobre > CA-DADOS-02 — memberships: TRUNCATE como authenticated é negado e os registros ficam intactos 
+ ✓ src/test/rls-dominio.test.ts > bloqueio de TRUNCATE, que a RLS não cobre > CA-DADOS-02 — equipamentos: TRUNCATE como anon é negado e os registros ficam intactos 
+ ✓ src/test/rls-dominio.test.ts > bloqueio de TRUNCATE, que a RLS não cobre > CA-DADOS-02 — equipamentos: TRUNCATE como authenticated é negado e os registros ficam intactos 
+ ✓ src/test/rls-dominio.test.ts > bloqueio de TRUNCATE, que a RLS não cobre > CA-DADOS-02 — tenants: mesmo com GRANT temporário, o trigger barra anon 
+ ✓ src/test/rls-dominio.test.ts > bloqueio de TRUNCATE, que a RLS não cobre > CA-DADOS-02 — tenants: mesmo com GRANT temporário, o trigger barra authenticated 
+ ✓ src/test/rls-dominio.test.ts > bloqueio de TRUNCATE, que a RLS não cobre > CA-DADOS-02 — memberships: mesmo com GRANT temporário, o trigger barra anon 
+ ✓ src/test/rls-dominio.test.ts > bloqueio de TRUNCATE, que a RLS não cobre > CA-DADOS-02 — memberships: mesmo com GRANT temporário, o trigger barra authenticated 
+ ✓ src/test/rls-dominio.test.ts > bloqueio de TRUNCATE, que a RLS não cobre > CA-DADOS-02 — equipamentos: mesmo com GRANT temporário, o trigger barra anon 
+ ✓ src/test/rls-dominio.test.ts > bloqueio de TRUNCATE, que a RLS não cobre > CA-DADOS-02 — equipamentos: mesmo com GRANT temporário, o trigger barra authenticated 
+ ✓ src/test/rls-dominio.test.ts > bloqueio de TRUNCATE, que a RLS não cobre > CA-DADOS-02 — tenants: o papel dono também é barrado 
+ ✓ src/test/rls-dominio.test.ts > bloqueio de TRUNCATE, que a RLS não cobre > CA-DADOS-02 — memberships: o papel dono também é barrado 
+ ✓ src/test/rls-dominio.test.ts > bloqueio de TRUNCATE, que a RLS não cobre > CA-DADOS-02 — equipamentos: o papel dono também é barrado 
+ ✓ src/test/rls-dominio.test.ts > bloqueio de TRUNCATE, que a RLS não cobre > CA-DADOS-02 — tenants: o trigger dispara sempre, antes do TRUNCATE 
+ ✓ src/test/rls-dominio.test.ts > bloqueio de TRUNCATE, que a RLS não cobre > CA-DADOS-02 — memberships: o trigger dispara sempre, antes do TRUNCATE 
+ ✓ src/test/rls-dominio.test.ts > bloqueio de TRUNCATE, que a RLS não cobre > CA-DADOS-02 — equipamentos: o trigger dispara sempre, antes do TRUNCATE 
+ ✓ src/test/rls-dominio.test.ts > bloqueio de TRUNCATE, que a RLS não cobre > CA-DADOS-02 — a função do bloqueio não eleva privilégios 
+ ✓ src/test/rls-dominio.test.ts > papel dono: limite da RLS > CA-DADOS-02 — tenants: o papel dono lê, insere, altera e exclui 
+ ✓ src/test/rls-dominio.test.ts > papel dono: limite da RLS > CA-DADOS-02 — memberships: o papel dono lê, insere, altera e exclui 
+ ✓ src/test/rls-dominio.test.ts > papel dono: limite da RLS > CA-DADOS-02 — equipamentos: o papel dono lê, insere, altera e exclui 
+ ✓ src/test/rls-dominio.test.ts > papel dono: limite da RLS > CA-DADOS-02 — o dono ignora a RLS por ser dono, sem superusuário nem BYPASSRLS 
+ ✓ src/test/rls-dominio.test.ts > papel dono: limite da RLS > CA-DADOS-02 — sem filtro, o dono vê todos os tenants: o servidor precisa filtrar 
+ ✓ src/server/api/routers/emprestimos-atraso.test.ts > bloqueio por atraso > CA-REGRAS-04 — quem tem item em atraso é recusado com ITEM_EM_ATRASO, mesmo abaixo do limite 
+ ✓ src/server/api/routers/emprestimos-atraso.test.ts > bloqueio por atraso > CA-REGRAS-05 — empréstimo vencido com devolvido_em preenchido não bloqueia 
+ ✓ src/server/api/routers/emprestimos-atraso.test.ts > bloqueio por atraso > CA-REGRAS-04 — o atraso vem antes do limite (ordem da Spec 006) 
+ ✓ src/server/api/routers/emprestimos-atraso.test.ts > bloqueio por atraso > CA-REGRAS-04 — o atraso vem antes das recusas de equipamento 
+ ✓ src/server/api/routers/emprestimos-atraso.test.ts > bloqueio por atraso > RS-REGRAS-02 — o atraso de uma pessoa não bloqueia outra 
+ ✓ src/server/api/routers/emprestimos-atraso.test.ts > bloqueio por atraso > RN-REGRAS-05 — com três itens, um deles vencido, a recusa é por atraso e nada passa de 3 
+ ✓ src/server/api/routers/emprestimos-atraso.test.ts > bloqueio por atraso > CA-REGRAS-08 — a chamada direta ao procedimento também é recusada 
+ ✓ src/server/api/routers/emprestimos-atraso.test.ts > vencimento no fuso de São Paulo > CA-REGRAS-09 — no próprio dia do vencimento, à tarde: emAtraso = 2026 
+ ✓ src/server/api/routers/emprestimos-atraso.test.ts > vencimento no fuso de São Paulo > CA-REGRAS-09 — no último segundo do dia em São Paulo: emAtraso = 2026 
+ ✓ src/server/api/routers/emprestimos-atraso.test.ts > vencimento no fuso de São Paulo > CA-REGRAS-09 — no primeiro segundo do dia seguinte em São Paulo: emAtraso = 2026 
+ ✓ src/server/api/routers/emprestimos-atraso.test.ts > vencimento no fuso de São Paulo > CA-REGRAS-09 — no dia seguinte, à tarde: emAtraso = 2026 
+ ✓ src/server/api/routers/emprestimos-atraso.test.ts > vencimento no fuso de São Paulo > CA-REGRAS-09 — solicitar no último segundo do dia de vencimento 
+ ✓ src/server/api/routers/emprestimos-atraso.test.ts > vencimento no fuso de São Paulo > CA-REGRAS-09 — solicitar no primeiro segundo do dia seguinte 
+ ✓ src/server/api/routers/emprestimos-atraso.test.ts > emprestimos.meuResumo > RF-REGRAS-01 — sem empréstimos, devolve zero itens, limite 3 e prazo de 14 dias 
+ ✓ src/server/api/routers/emprestimos-atraso.test.ts > emprestimos.meuResumo > RN-REGRAS-05 — conta abertos com os atrasados e ignora os devolvidos 
+ ✓ src/server/api/routers/emprestimos-atraso.test.ts > emprestimos.meuResumo > RS-REGRAS-02 — o resumo é da própria pessoa 
+ ✓ src/server/api/routers/emprestimos-atraso.test.ts > emprestimos.meuResumo > RF-REGRAS-01 — o resumo acompanha a solicitação feita pelo procedimento 
+ ✓ src/server/api/routers/emprestimos-atraso.test.ts > emprestimos.meuResumo > RS-REGRAS-02 — sem sessão, meuResumo recusa 
+ ✓ src/server/api/routers/emprestimos-atraso.test.ts > emprestimos.meuResumo > RS-REGRAS-02 — sem membership, meuResumo recusa 
+ ✓ src/server/api/routers/operacoes-painel.test.ts > operacoes.emprestimosEmAberto > CA-OPER-01 — traz todos os empréstimos em aberto do tenant, e nenhum de outro 
+ ✓ src/server/api/routers/operacoes-painel.test.ts > operacoes.emprestimosEmAberto > RF-OPER-01 — traz o nome de exibição de quem está com o item, ou nulo 
+ ✓ src/server/api/routers/operacoes-painel.test.ts > operacoes.emprestimosEmAberto > RF-OPER-03 — linhas em atraso vêm marcadas 
+ ✓ src/server/api/routers/operacoes-painel.test.ts > operacoes.emprestimosEmAberto > RF-OPER-03 — o chip Em atraso traz só os atrasados 
+ ✓ src/server/api/routers/operacoes-painel.test.ts > operacoes.emprestimosEmAberto > CA-OPER-11 — Vencem esta semana vai de hoje até hoje + 7, inclusive, sem atrasados 
+ ✓ src/server/api/routers/operacoes-painel.test.ts > operacoes.emprestimosEmAberto > CA-OPER-11 — a janela de 7 dias se move no último segundo de hoje, em São Paulo 
+ ✓ src/server/api/routers/operacoes-painel.test.ts > operacoes.emprestimosEmAberto > CA-OPER-11 — a janela de 7 dias se move no primeiro segundo de amanhã, em São Paulo 
+ ✓ src/server/api/routers/operacoes-painel.test.ts > operacoes.emprestimosEmAberto > RF-OPER-03 — o chip de categoria filtra pelo equipamento, e combina com o filtro 
+ ✓ src/server/api/routers/operacoes-painel.test.ts > operacoes.emprestimosEmAberto > RF-OPER-01 — a paginação por cursor não duplica nem perde itens 
+ ✓ src/server/api/routers/operacoes-painel.test.ts > operacoes.emprestimosEmAberto > RS-OPER-01 — cursor fora do recorte devolve página vazia 
+ ✓ src/server/api/routers/operacoes-painel.test.ts > operacoes.emprestimosEmAberto > CA-OPER-01 — pelo procedimento, Operações do tenant B vê só o próprio tenant 
+ ✓ src/server/api/routers/operacoes-painel.test.ts > operacoes.resumo > CA-OPER-02 — os cards batem com os dados, com data fixa 
+ ✓ src/server/api/routers/operacoes-painel.test.ts > operacoes.resumo > CA-OPER-02 — as janelas do resumo se movem no último segundo de hoje, em São Paulo 
+ ✓ src/server/api/routers/operacoes-painel.test.ts > operacoes.resumo > CA-OPER-02 — as janelas do resumo se movem no primeiro segundo de amanhã, em São Paulo 
+ ✓ src/server/api/routers/operacoes-painel.test.ts > operacoes.resumo > CA-OPER-02 — Vencendo em 3 dias inclui hoje e hoje + 3, e exclui hoje + 4 
+ ✓ src/server/api/routers/operacoes-painel.test.ts > operacoes.resumo > CA-OPER-02 — o resumo do tenant B não soma dados do tenant A 
+ ✓ src/server/api/routers/operacoes-painel.test.ts > operacoes.ultimosCadastros > CA-OPER-10 — traz os 3 cadastros mais recentes do tenant 
+ ✓ src/server/api/routers/operacoes-painel.test.ts > autorização > CA-OPER-04 — colaborador recebe FORBIDDEN em operacoes.emprestimosEmAberto 
+ ✓ src/server/api/routers/operacoes-painel.test.ts > autorização > CA-OPER-04 — colaborador recebe FORBIDDEN em operacoes.resumo 
+ ✓ src/server/api/routers/operacoes-painel.test.ts > autorização > CA-OPER-04 — colaborador recebe FORBIDDEN em operacoes.ultimosCadastros 
+ ✓ src/server/api/routers/emprestimos-devolver.test.ts > emprestimos.devolver > CA-DEVOL-02 — devolver encerra o empréstimo e libera o item 
+ ✓ src/server/api/routers/emprestimos-devolver.test.ts > emprestimos.devolver > CA-DEVOL-03 — devolver duas vezes é recusado com EMPRESTIMO_JA_ENCERRADO 
+ ✓ src/server/api/routers/emprestimos-devolver.test.ts > emprestimos.devolver > RN-DEVOL-02 — devoluções simultâneas encerram uma única vez 
+ ✓ src/server/api/routers/emprestimos-devolver.test.ts > emprestimos.devolver > CA-DEVOL-04 — colaborador não devolve empréstimo de outra pessoa 
+ ✓ src/server/api/routers/emprestimos-devolver.test.ts > emprestimos.devolver > RS-DEVOL-02 — também Operações só devolve, por aqui, o próprio empréstimo 
+ ✓ src/server/api/routers/emprestimos-devolver.test.ts > emprestimos.devolver > CA-DEVOL-05 — usuário do tenant B não devolve empréstimo do tenant A 
+ ✓ src/server/api/routers/emprestimos-devolver.test.ts > emprestimos.devolver > CA-DEVOL-05 — empréstimo inexistente não é encontrado 
+ ✓ src/server/api/routers/emprestimos-devolver.test.ts > emprestimos.devolver > RS-DEVOL-01 — sem sessão, devolver recusa 
+ ✓ src/server/api/routers/emprestimos-devolver.test.ts > emprestimos.devolver > RS-DEVOL-01 — sem membership, devolver recusa 
+ ✓ src/server/api/routers/emprestimos-devolver.test.ts > emprestimos.devolver > CA-DEVOL-08 — devolver o item atrasado libera novas solicitações 
+ ✓ src/server/api/routers/emprestimos-devolver.test.ts > auditoria do encerramento > CA-DEVOL-07 — a devolução grava auditoria com o UUID como ator 
+ ✓ src/server/api/routers/emprestimos-devolver.test.ts > auditoria do encerramento > CA-DEVOL-07 — falha na auditoria desfaz a devolução 
+ ✓ src/server/api/routers/emprestimos-devolver.test.ts > serviço único de encerramento > RN-DEVOL-03 — sem restrição de tomador, encerra empréstimo de outra pessoa do tenant 
+ ✓ src/server/api/routers/emprestimos-devolver.test.ts > serviço único de encerramento > RN-DEVOL-03 — sem restrição de tomador, continua preso ao tenant 
+ ✓ src/server/api/routers/equipamentos-situacao.test.ts > equipamentos.alterarSituacao > CA-OPER-07 — colocado em manutenção, o item deixa de ser disponível e não pode ser solicitado 
+ ✓ src/server/api/routers/equipamentos-situacao.test.ts > equipamentos.alterarSituacao > RN-OPER-03 — de volta a ativo, o item volta a ser disponível 
+ ✓ src/server/api/routers/equipamentos-situacao.test.ts > equipamentos.alterarSituacao > RN-CATALOGO-03 — fora de uso deixa de aparecer para colaborador 
+ ✓ src/server/api/routers/equipamentos-situacao.test.ts > equipamentos.alterarSituacao > CA-OPER-09 — com empréstimo em aberto responde EMPRESTIMO_EM_ABERTO e nada muda 
+ ✓ src/server/api/routers/equipamentos-situacao.test.ts > equipamentos.alterarSituacao > CA-OPER-09 — depois da devolução, a situação pode ser alterada 
+ ✓ src/server/api/routers/equipamentos-situacao.test.ts > equipamentos.alterarSituacao > CA-OPER-09 — solicitação e alteração simultâneas nunca deixam item em manutenção emprestado 
+ ✓ src/server/api/routers/equipamentos-situacao.test.ts > equipamentos.alterarSituacao > RF-OPER-07 — a mesma situação não muda nada e não é auditada 
+ ✓ src/server/api/routers/equipamentos-situacao.test.ts > equipamentos.alterarSituacao > RS-OPER-01 — Operações do tenant B não altera equipamento do tenant A 
+ ✓ src/server/api/routers/equipamentos-situacao.test.ts > equipamentos.alterarSituacao > CA-OPER-04 — colaborador recebe FORBIDDEN e nada muda 
+ ✓ src/server/api/routers/equipamentos-situacao.test.ts > auditoria da alteração > CA-OPER-08 — a alteração grava auditoria com Operações como ator 
+ ✓ src/server/api/routers/equipamentos-situacao.test.ts > auditoria da alteração > CA-OPER-08 — falha na auditoria desfaz a alteração 
+ ✓ src/server/api/routers/equipamentos-cadastrar.test.ts > equipamentos.cadastrar > CA-OPER-05 — cadastrar cria o equipamento no tenant da sessão, com os opcionais 
+ ✓ src/server/api/routers/equipamentos-cadastrar.test.ts > equipamentos.cadastrar > CA-OPER-05 — opcionais vazios ficam nulos, e o item aparece disponível no catálogo 
+ ✓ src/server/api/routers/equipamentos-cadastrar.test.ts > equipamentos.cadastrar > CA-OPER-07 — cadastrado em manutenção não aparece como disponível 
+ ✓ src/server/api/routers/equipamentos-cadastrar.test.ts > equipamentos.cadastrar > RN-OPER-03 — cadastrado fora de uso fica oculto para colaborador 
+ ✓ src/server/api/routers/equipamentos-cadastrar.test.ts > equipamentos.cadastrar > CA-OPER-06 — patrimônio repetido no tenant responde PATRIMONIO_DUPLICADO 
+ ✓ src/server/api/routers/equipamentos-cadastrar.test.ts > equipamentos.cadastrar > RN-OPER-02 — o mesmo patrimônio é aceito em outro tenant 
+ ✓ src/server/api/routers/equipamentos-cadastrar.test.ts > equipamentos.cadastrar > CA-OPER-06 — patrimônio sem o prefixo é recusado sem gravar 
+ ✓ src/server/api/routers/equipamentos-cadastrar.test.ts > equipamentos.cadastrar > CA-OPER-06 — patrimônio com três dígitos é recusado sem gravar 
+ ✓ src/server/api/routers/equipamentos-cadastrar.test.ts > equipamentos.cadastrar > CA-OPER-06 — patrimônio em minúsculas é recusado sem gravar 
+ ✓ src/server/api/routers/equipamentos-cadastrar.test.ts > equipamentos.cadastrar > CA-OPER-06 — patrimônio com sufixo é recusado sem gravar 
+ ✓ src/server/api/routers/equipamentos-cadastrar.test.ts > equipamentos.cadastrar > CA-OPER-04 — colaborador recebe FORBIDDEN e nada é gravado 
+ ✓ src/server/api/routers/equipamentos-cadastrar.test.ts > auditoria do cadastro > CA-OPER-08 — o cadastro grava auditoria com Operações como ator 
+ ✓ src/server/api/routers/equipamentos-cadastrar.test.ts > auditoria do cadastro > CA-OPER-08 — falha na auditoria desfaz o cadastro 
+ ✓ src/server/api/routers/operacoes-devolucao.test.ts > operacoes.registrarDevolucao > CA-OPER-03 — Operações registra a devolução de empréstimo de outra pessoa, e o item é liberado 
+ ✓ src/server/api/routers/operacoes-devolucao.test.ts > operacoes.registrarDevolucao > CA-OPER-03 — a devolução de item atrasado no balcão libera novas solicitações da pessoa 
+ ✓ src/server/api/routers/operacoes-devolucao.test.ts > operacoes.registrarDevolucao > RN-DEVOL-02 — empréstimo já encerrado é recusado com EMPRESTIMO_JA_ENCERRADO 
+ ✓ src/server/api/routers/operacoes-devolucao.test.ts > operacoes.registrarDevolucao > RN-DEVOL-02 — devolução simultânea pela pessoa e pelo balcão encerra uma vez 
+ ✓ src/server/api/routers/operacoes-devolucao.test.ts > operacoes.registrarDevolucao > CA-OPER-04 — colaborador recebe FORBIDDEN e nada é encerrado 
+ ✓ src/server/api/routers/operacoes-devolucao.test.ts > operacoes.registrarDevolucao > RS-OPER-01 — Operações do tenant B não encerra empréstimo do tenant A 
+ ✓ src/server/api/routers/operacoes-devolucao.test.ts > auditoria da devolução no balcão > CA-OPER-08 — a devolução grava auditoria com Operações como ator 
+ ✓ src/server/api/routers/operacoes-devolucao.test.ts > auditoria da devolução no balcão > CA-OPER-08 — falha na auditoria desfaz a devolução no balcão 
+ ✓ src/server/api/routers/emprestimos-limite.test.ts > limite de itens por pessoa > CA-REGRAS-01 — o terceiro item é aceito, e o quarto é recusado com LIMITE_ATINGIDO 
+ ✓ src/server/api/routers/emprestimos-limite.test.ts > limite de itens por pessoa > CA-REGRAS-01 — a recusa por limite não grava empréstimo nem auditoria 
+ ✓ src/server/api/routers/emprestimos-limite.test.ts > limite de itens por pessoa > CA-REGRAS-01 — o limite vale antes das recusas de equipamento (ordem da Spec 006) 
+ ✓ src/server/api/routers/emprestimos-limite.test.ts > limite de itens por pessoa > RS-REGRAS-02 — o limite é por pessoa: outra pessoa continua podendo pedir 
+ ✓ src/server/api/routers/emprestimos-limite.test.ts > limite de itens por pessoa > RN-SOLIC-06 — Operações também respeita o limite de 3 
+ ✓ src/server/api/routers/emprestimos-limite.test.ts > limite de itens por pessoa > CA-REGRAS-01 — empréstimo devolvido libera uma vaga 
+ ✓ src/server/api/routers/emprestimos-limite.test.ts > limite de itens por pessoa > RN-REGRAS-05 — empréstimo vencido e ainda aberto continua contando no limite 
+ ✓ src/server/api/routers/emprestimos-limite.test.ts > concorrência > CA-REGRAS-02 — solicitações simultâneas da mesma pessoa não ultrapassam o limite de 3 
+ ✓ src/server/api/routers/emprestimos-limite.test.ts > concorrência > CA-REGRAS-02 — pedidos simultâneos de pessoas diferentes não se bloqueiam no limite 
+ ✓ src/server/api/routers/emprestimos-limite.test.ts > chamada direta ao servidor > CA-REGRAS-08 — a chamada ao procedimento, sem a interface, também é recusada 
+ ✓ src/server/api/trpc.test.ts > protectedProcedure > CA-SESSAO-01 — sem usuário responde UNAUTHORIZED 
+ ✓ src/server/api/trpc.test.ts > protectedProcedure > CA-SESSAO-01 — sem sessão no cookie responde UNAUTHORIZED 
+ ✓ src/server/api/trpc.test.ts > protectedProcedure > CA-SESSAO-01 — token inválido ou expirado responde UNAUTHORIZED 
+ ✓ src/server/api/trpc.test.ts > protectedProcedure > RF-SESSAO-01 — Auth indisponível não vira sessão encerrada 
+ ✓ src/server/api/trpc.test.ts > protectedProcedure > RF-SESSAO-01 — falha de rede não vira sessão encerrada 
+ ✓ src/server/api/trpc.test.ts > protectedProcedure > RF-SESSAO-01 — sessão válida passa e injeta só o id do usuário 
+ ✓ src/server/api/trpc.test.ts > tenantProcedure > CA-SESSAO-02 — sessão sem membership responde FORBIDDEN sem motivo 
+ ✓ src/server/api/trpc.test.ts > tenantProcedure > CA-SESSAO-08 — mais de um membership é recusado com MULTIPLOS_MEMBERSHIPS 
+ ✓ src/server/api/trpc.test.ts > tenantProcedure > CA-SESSAO-08 — múltiplos memberships também são recusados em adminProcedure 
+ ✓ src/server/api/trpc.test.ts > tenantProcedure > RF-SESSAO-04 — injeta tenant e papel do membership 
+ ✓ src/server/api/trpc.test.ts > tenantProcedure > CA-SESSAO-04 — um tenantId enviado no input é ignorado 
+ ✓ src/server/api/trpc.test.ts > tenantProcedure > RS-SESSAO-03 — claims editáveis pelo usuário não mudam tenant nem papel 
+ ✓ src/server/api/trpc.test.ts > tenantProcedure > RS-SESSAO-01 — cada usuário recebe só o próprio tenant 
+ ✓ src/server/api/trpc.test.ts > adminProcedure > CA-SESSAO-03 — colaborador recebe FORBIDDEN 
+ ✓ src/server/api/trpc.test.ts > adminProcedure > CA-SESSAO-03 — operacoes passa 
+ ✓ src/server/api/trpc.test.ts > adminProcedure > CA-SESSAO-02 — sessão sem membership recebe FORBIDDEN 
+
+ Test Files  11 passed (11)
+      Tests  253 passed (253)
+   Start at  22:03:56
+   Duration  95.62s (tests 68%, import 26%, setup 5%, transform 1%)
+
+     Import  52 modules were evaluated 282 times · 23.72s total, 26% of tracked time
+             ~19.35s faster with isolate: false — shared modules are evaluated once per worker instead of once per file
+             learn more: https://vitest.dev/guide/improving-performance#test-isolation
+
