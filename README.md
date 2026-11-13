@@ -33,7 +33,7 @@ de uso — depende de uso real e é acompanhado à parte (ver [ENTREGA.md](ENTRE
 | Limite de 3 itens e bloqueio por atraso, também na API | colaborador | [006](docs/specs/006-regras-emprestimo/spec.md) |
 | Meus empréstimos, barra de prazo, devolução e histórico | colaborador | [007](docs/specs/007-meus-emprestimos-devolucao/spec.md) |
 | Painel de empréstimos em aberto, indicadores, filtros, devolução no balcão, cadastro e situação | Operações | [008](docs/specs/008-operacoes/spec.md) |
-| Cabeçalhos HTTP, CSP com nonce e limite de requisições | todos | [009](https://github.com/TheoMGtech/empresTI/blob/develop/docs/specs/009-seguranca-http-rate-limit/spec.md) — em desenvolvimento |
+| Cabeçalhos HTTP, CSP com nonce e limite de requisições | todos | [009](docs/specs/009-seguranca-http-rate-limit/spec.md) |
 
 Os dados iniciais (tenant `suporte_ti`, 12 equipamentos com fotografia, TI-0004 e TI-0007 em
 manutenção) são da [Spec 002](docs/specs/002-dados-iniciais/spec.md).
@@ -118,6 +118,7 @@ Nesta pasta, não use `npx` (o `&` do caminho quebra o comando): use os scripts 
 | `npm run lint` · `npm run typecheck` | ESLint e TypeScript |
 | `npm test` | Vitest: unidades, componentes, procedimentos tRPC e testes com PostgreSQL real em container (exigem Docker) |
 | `npm run test:e2e` | Playwright contra `npm run dev`, com tRPC simulado |
+| `npm run test:e2e:producao` | Playwright contra `next build` + `next start` (CSP de produção) |
 | `npm run build` | Build de produção |
 
 Todo teste cita no nome o critério de aceitação que prova (`CA-<FEATURE>-xx`), conforme

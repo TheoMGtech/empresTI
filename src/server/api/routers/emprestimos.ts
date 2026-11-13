@@ -13,7 +13,12 @@ import {
   esquemaSaidaSolicitarEmprestimo,
   type MotivoSolicitacao,
 } from "@/lib/esquemas/emprestimos";
-import { ErroComMotivo, criarRouterTRPC, tenantProcedure } from "@/server/api/trpc";
+import {
+  ErroComMotivo,
+  criarRouterTRPC,
+  limitarMutacao,
+  tenantProcedure,
+} from "@/server/api/trpc";
 import {
   ErroSolicitacao,
   consultarMeuResumo,
@@ -84,6 +89,7 @@ export const routerEmprestimos = criarRouterTRPC({
   // RF-DEVOL-03: a própria pessoa encerra um empréstimo dela, em aberto (RS-DEVOL-02).
   devolver: tenantProcedure
     .input(esquemaEntradaDevolver)
+    .use(limitarMutacao)
     .output(esquemaSaidaDevolver)
     .mutation(async ({ ctx, input }) => {
       try {
@@ -113,6 +119,7 @@ export const routerEmprestimos = criarRouterTRPC({
   // RN-SOLIC-06: colaborador e Operações podem solicitar.
   solicitar: tenantProcedure
     .input(esquemaEntradaSolicitarEmprestimo)
+    .use(limitarMutacao)
     .output(esquemaSaidaSolicitarEmprestimo)
     .mutation(async ({ ctx, input }) => {
       try {

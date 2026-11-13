@@ -30,8 +30,8 @@ Regras de processo já definidas para este projeto:
   produção desde o PR #98 (`main` `8e08040`). A validação integrada registrou
   testes reais e evidências em `docs/evidencias/` e `docs/VALIDACAO-INTEGRADA.md`.
   O registro formal da Spec 001 ainda requer nova verificação. A Spec 009 (CSP,
-  cabeçalhos e rate limiting) está em desenvolvimento em `develop`, fora da versão
-  publicada. O estado detalhado fica em `ENTREGA.md`.
+  cabeçalhos e rate limiting) está PRONTA em `develop` (V-02, 2026-11-13) e entra
+  em produção pelo PR de release para `main`. O estado detalhado fica em `ENTREGA.md`.
 - **Banco e testes**: o Supabase de produção tem as migrations aplicadas, tenant
   `suporte_ti`, 12 equipamentos e duas contas de demonstração. Os testes com
   PostgreSQL real usam um container descartável (Testcontainers/Docker); nunca

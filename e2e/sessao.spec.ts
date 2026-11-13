@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./apoio/teste";
 
 import { simularTRPC } from "./apoio/trpc";
 

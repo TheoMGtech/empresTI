@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 // Categorias da Spec 002. Espelham o enum `CategoriaEquipamento` do Prisma; o teste do contrato
 // falha se os dois divergirem.

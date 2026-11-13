@@ -11,6 +11,7 @@ import {
 } from "@/components/operacoes/situacoes";
 import { Botao } from "@/components/ui/botao";
 import { ControleSegmentado } from "@/components/ui/controle-segmentado";
+import { mensagemDeLimite } from "@/lib/mensagens-limite";
 import { trpc } from "@/trpc/cliente";
 import type { SaidasRouter } from "@/trpc/tipos";
 
@@ -37,7 +38,11 @@ export function ControleSituacao({ detalhe }: { detalhe: DetalheEquipamento }) {
       await alterar.mutateAsync({ equipamentoId: detalhe.id, situacao: escolhida });
       setMensagem({ texto: "Situação atualizada.", erro: false });
     } catch (erro) {
-      if (!(erro instanceof TRPCClientError) || !erro.data) {
+      // RF-SEG-13: limite excedido (429) e contador indisponível (503) têm mensagem própria.
+      const limite = mensagemDeLimite(erro);
+      if (limite) {
+        setMensagem({ texto: limite, erro: true });
+      } else if (!(erro instanceof TRPCClientError) || !erro.data) {
         setMensagem({ texto: MENSAGEM_FALHA_INCERTA, erro: true });
       } else if (erro.data.motivo === "EMPRESTIMO_EM_ABERTO") {
         setMensagem({ texto: MENSAGEM_EMPRESTIMO_EM_ABERTO, erro: true });
