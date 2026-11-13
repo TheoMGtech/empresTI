@@ -9,6 +9,7 @@ import {
   TelaMeusEmprestimos,
 } from "@/components/emprestimos/tela-meus-emprestimos";
 import { MENSAGEM_FALHA_INCERTA } from "@/components/catalogo/card-solicitacao";
+import { MENSAGENS_LIMITE } from "@/lib/mensagens-limite";
 import { erroTRPC, renderizarComTRPC, type ManipuladoresTRPC } from "@/test/trpc";
 import type { SaidasRouter } from "@/trpc/tipos";
 
@@ -193,6 +194,24 @@ describe("T-DEVOL-04 — Meus empréstimos", () => {
 
     expect(await dialogo.findByText(MENSAGEM_JA_ENCERRADO)).toBeInTheDocument();
     expect(dialogo.getByRole("button", { name: "Devolver" })).toBeDisabled();
+  });
+
+  it.each([
+    ["TOO_MANY_REQUESTS", MENSAGENS_LIMITE.excedido],
+    ["SERVICE_UNAVAILABLE", MENSAGENS_LIMITE.indisponivel],
+  ] as const)("CA-SEG-17 — devolver com %s mostra a mensagem própria e deixa tentar de novo", async (codigo, mensagem) => {
+    renderizar({
+      "emprestimos.devolver": () => {
+        throw erroTRPC(codigo, "mensagem do servidor");
+      },
+    });
+
+    const dialogo = await abrirDevolucao("Notebook 14 polegadas");
+    fireEvent.click(dialogo.getByRole("button", { name: "Devolver" }));
+
+    expect(await dialogo.findByText(mensagem)).toBeInTheDocument();
+    expect(dialogo.queryByText(MENSAGEM_FALHA_INCERTA)).not.toBeInTheDocument();
+    expect(dialogo.getByRole("button", { name: "Devolver" })).toBeEnabled();
   });
 
   it("RF-DEVOL-06 — falha sem resposta avisa que o resultado é incerto", async () => {

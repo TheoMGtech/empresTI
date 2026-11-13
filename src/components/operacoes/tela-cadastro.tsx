@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/campo";
 import { ControleSegmentado } from "@/components/ui/controle-segmentado";
 import { formatarInstanteCurto } from "@/lib/datas";
+import { mensagemDeLimite } from "@/lib/mensagens-limite";
 import {
   esquemaCadastroEquipamento,
   type CadastroEquipamento,
@@ -145,6 +146,12 @@ export function TelaCadastro() {
       setAviso(`Equipamento ${criado.patrimonio} cadastrado.`);
       setFocus("nome");
     } catch (erro) {
+      // RF-SEG-13: limite excedido (429) e contador indisponível (503) têm mensagem própria.
+      const limite = mensagemDeLimite(erro);
+      if (limite) {
+        setErroGeral(limite);
+        return;
+      }
       if (!(erro instanceof TRPCClientError) || !erro.data) {
         setErroGeral(MENSAGEM_FALHA_INCERTA);
         return;

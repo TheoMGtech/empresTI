@@ -11,11 +11,19 @@ const CODIGOS_JSON_RPC = {
   CONFLICT: [-32009, 409],
   PRECONDITION_FAILED: [-32012, 412],
   INTERNAL_SERVER_ERROR: [-32603, 500],
+  SERVICE_UNAVAILABLE: [-32603, 503],
+  TOO_MANY_REQUESTS: [-32029, 429],
 } as const;
 
 export type RespostaSimulada =
   | { dados: unknown }
-  | { erro: keyof typeof CODIGOS_JSON_RPC; mensagem: string; motivo?: string };
+  | {
+      erro: keyof typeof CODIGOS_JSON_RPC;
+      mensagem: string;
+      motivo?: string;
+      /** Spec 009: responde com o status HTTP do erro e este `Retry-After`, como o servidor. */
+      retryAfter?: number;
+    };
 
 export type RespostasSimuladas = Record<
   string,
@@ -41,6 +49,7 @@ export async function simularTRPC(page: Page, respostas: RespostasSimuladas) {
     const caminhos = decodeURIComponent(url.pathname.replace(/^\/api\/trpc\//, "")).split(",");
     const lote = entradas(url, rota.request().postData());
 
+    let http: { status: number; headers: Record<string, string> } = { status: 200, headers: {} };
     const corpo = caminhos.map((caminho, indice) => {
       const definida = respostas[caminho];
       const resposta = typeof definida === "function" ? definida(lote[indice]) : definida;
@@ -54,6 +63,9 @@ export async function simularTRPC(page: Page, respostas: RespostasSimuladas) {
       }
 
       const [codigoJson, status] = CODIGOS_JSON_RPC[resposta.erro];
+      if (resposta.retryAfter !== undefined) {
+        http = { status, headers: { "Retry-After": String(resposta.retryAfter) } };
+      }
       return {
         error: superjson.serialize({
           code: codigoJson,
@@ -70,7 +82,8 @@ export async function simularTRPC(page: Page, respostas: RespostasSimuladas) {
     });
 
     await rota.fulfill({
-      status: 200,
+      status: http.status,
+      headers: http.headers,
       contentType: "application/json",
       body: JSON.stringify(corpo),
     });
