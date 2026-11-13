@@ -56,3 +56,35 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+
+  # E2E com o servidor de desenvolvimento (`playwright.config.ts`), em runner limpo: com `CI`
+  # definido, o Playwright sempre sobe o próprio `npm run dev` e nunca reutiliza outro servidor.
+  # Sem retries e com os timeouts e o paralelismo da configuração versionada. O tRPC é simulado no
+  # navegador; a chave pública é o mesmo valor fictício de `src/test/setup.ts`, sem credencial real.
+  e2e:
+    name: E2E (desenvolvimento)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: chave-publica-de-teste-sem-credencial-real
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run prisma:generate
+      - name: Instalar o Chromium do Playwright e as dependências do sistema
+        run: node ./node_modules/@playwright/test/cli.js install --with-deps chromium
+      - name: E2E (servidor de desenvolvimento)
+        run: npm run test:e2e -- --reporter=line --retries=0
+      - name: Guardar relatório e evidências da falha
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-desenvolvimento-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
