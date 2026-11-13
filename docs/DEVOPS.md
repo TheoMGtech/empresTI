@@ -22,7 +22,7 @@ O release de 2026-11-12 (PR #98) levou as Specs 003 a 008 e excluiu de propósit
 | Ambiente | Origem | Endereço | Estado em 2026-11-12 |
 |---|---|---|---|
 | Produção | `main` | `empresti-self.vercel.app` e `empresti-theo-escola.vercel.app` (mesmo deploy) | `8e08040` (PR #98, árvore `3aa331e`); status Vercel `success`; as duas URLs respondem 200; `tecnico.status` com `bancoOperacional: true` |
-| Integração | `develop` | `empresti-git-develop-theo-escola.vercel.app` | `f02d7ca` em 2026-11-13 (T-SEG-11 da Spec 009); CI verde. Login e as cinco mutações cobertas exigem `CHAVE_HMAC_LIMITES` em Preview (ver "Spec 009") |
+| Integração | `develop` | `empresti-git-develop-theo-escola.vercel.app` | `b6692ce` em 2026-11-13 (Spec 009 PRONTA, V-02); CI verde. Login e as cinco mutações cobertas exigem `CHAVE_HMAC_LIMITES` em Preview (ver "Spec 009") |
 | Preview | cada branch e PR | URL gerada pela Vercel | Automático |
 | Local | máquina do desenvolvedor | `http://localhost:3000` | `npm run dev`; testes de banco usam PostgreSQL em container (Docker) |
 
@@ -129,11 +129,12 @@ Regras de isolamento da validação no preview: `docs/VALIDACAO-INTEGRADA.md`, i
    (`disable_signup`), conforme RS-LOGIN-04 da Spec 001. Não é verificável pelo MCP somente leitura.
 2. Confirmar se a Data API expõe o schema `public`. As policies negam o acesso, mas retirar `public`
    dos schemas expostos reduz a superfície.
-3. Cadastrar `CHAVE_HMAC_LIMITES` na Vercel (Preview e Production, valores diferentes) antes do
-   release da Spec 009. Enquanto faltar em Preview, o login e as cinco mutações do preview de
-   `develop` respondem 503. Decidir também o banco do Preview, o tenant e as contas de validação
-   (seção "Spec 009 — limite de requisições").
-4. Decidir os PRs abertos do Dependabot (#37, #38, #39, #101, #102), todos com CI verde em 2026-11-12.
+3. `CHAVE_HMAC_LIMITES` cadastrada na Vercel pelo responsável em 2026-11-13 (informado pelo
+   responsável; o agente não lê o painel). A confirmação é o login funcionar no preview (item 9.2
+   de `docs/VALIDACAO-INTEGRADA.md`). Falta decidir o banco do Preview, o tenant e as contas de
+   validação (seção "Spec 009 — limite de requisições").
+4. Decidir os PRs abertos do Dependabot (#37, #38, #39, #101, #102). Tinham CI verde em
+   2026-11-12, mas em 2026-11-13 estão atrás de `develop` e ainda não rodaram o job de E2E.
 5. Tornar `Application quality` e `E2E (desenvolvimento)` checks obrigatórios na proteção de `main`
    e `develop`; hoje só `Documentation and secret guard` é exigido. O job de E2E roda em todo PR e
    push desde 2026-11-13 (decisão do responsável), mas exigir o check é configuração do GitHub, do

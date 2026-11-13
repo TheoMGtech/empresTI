@@ -25,14 +25,17 @@ Regras de processo já definidas para este projeto:
 - **Regras de negócio já aprovadas** (PRD): máximo de 3 itens por pessoa; prazo padrão de devolução de 14 dias; quem tem item em atraso não pode pegar outro emprestado; equipamento em manutenção não aparece como disponível.
 - **Fora de escopo v1** (PRD): reserva com data futura, notificação por e-mail e importação da planilha atual.
 - **Front-end** (docs/layout.md): design system Nocturne, somente modo escuro, tom de copy seco e operacional, sempre em PT-BR.
-- **Estado atual**: o passo 0 documental e o andar zero executável estão
-  concluídos. A primeira feature, o login (`docs/specs/001-login/`), está em produção
-  desde 2026-10-23 (PR #13 em `develop`, PR #14 em `main`) e substituiu a tela
-  técnica em `/`. O banco de produção ainda não tem a migration do andar zero
-  aplicada. Nenhuma funcionalidade de catálogo ou empréstimo foi implementada.
-- **Ainda não existe banco local** para desenvolvimento e testes (não há
-  `DATABASE_URL` local nem teste com Testcontainers). Como subir esse banco é
-  decisão pendente do responsável: tarefa que precise de banco para e avisa.
+- **Estado atual (2026-11-13)**: a versão 1, com login, catálogo, solicitação,
+  devolução, regras de empréstimo e painel de Operações (Specs 001–008), está em
+  produção desde o PR #98 (`main` `8e08040`). A validação integrada registrou
+  testes reais e evidências em `docs/evidencias/` e `docs/VALIDACAO-INTEGRADA.md`.
+  O registro formal da Spec 001 ainda requer nova verificação. A Spec 009 (CSP,
+  cabeçalhos e rate limiting) está PRONTA em `develop` (V-02, 2026-11-13) e entra
+  em produção pelo PR de release para `main`. O estado detalhado fica em `ENTREGA.md`.
+- **Banco e testes**: o Supabase de produção tem as migrations aplicadas, tenant
+  `suporte_ti`, 12 equipamentos e duas contas de demonstração. Os testes com
+  PostgreSQL real usam um container descartável (Testcontainers/Docker); nunca
+  apontar testes ou `prisma:reset` para o banco de produção.
 
 ## Stack e arquitetura (ADR-001)
 

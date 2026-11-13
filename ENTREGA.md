@@ -54,7 +54,7 @@ de toda mutação. Detalhes no [README](README.md#tecnologias-e-arquitetura).
 | Limite de 3 itens e bloqueio por atraso | [006](docs/specs/006-regras-emprestimo/spec.md) | sim |
 | Meus empréstimos, devolução e histórico | [007](docs/specs/007-meus-emprestimos-devolucao/spec.md) | sim |
 | Painel de Operações, balcão, cadastro e situação | [008](docs/specs/008-operacoes/spec.md) | sim |
-| Cabeçalhos HTTP, CSP com nonce e limite de requisições | [009](docs/specs/009-seguranca-http-rate-limit/spec.md) | não (em `develop`) |
+| Cabeçalhos HTTP, CSP com nonce e limite de requisições | [009](docs/specs/009-seguranca-http-rate-limit/spec.md) | release em PR para `main` (2026-11-13) |
 
 ## 7. Regras de negócio
 
@@ -82,8 +82,7 @@ vale também para chamadas diretas à API.
 
 As senhas **não estão no Git**, no README, em issues nem em PRs: o responsável as entrega ao
 avaliador por canal privado. Os endereços `.test` são fictícios (não recebem e-mail nem recuperam
-senha). As contas ainda não têm nome de exibição; por isso o painel de Operações mostra "Sem nome
-cadastrado" na coluna Pessoa.
+senha). Por decisão do responsável em 2026-11-13, as contas permanecem sem nome de exibição, campo opcional; por isso o painel de Operações mostra "Sem nome cadastrado" na coluna Pessoa.
 
 ### Roteiro de avaliação (10 minutos)
 
@@ -155,7 +154,7 @@ Cada teste cita no nome o critério de aceitação que prova (`CA-<FEATURE>-xx`)
 | 001 Login | Implementada | V-03 NÃO PRONTA (2026-11-09): CA-LOGIN-01, 04, 08 e 09 sem teste naquela data. Hoje há testes citando CA-LOGIN-01, 04 e 09, e o login real em produção foi comprovado; falta nova verificação formal |
 | 002 Dados iniciais | **PRONTA** | V-03 PRONTA + validação do responsável (2026-11-11) |
 | 003 a 008 | Implementadas | `Veredito: PRONTA` registrado em cada `verificacao.md`; falta a validação final do responsável para mudar o estado |
-| 009 Segurança HTTP e limite | Em desenvolvimento | T-SEG-01 a 09 integradas em `develop` (PRs #91–#107); faltam T-SEG-10 a 13 e a verificação formal |
+| 009 Segurança HTTP e limite | **PRONTA** | T-SEG-01 a 16 em `develop` (PRs #91–#117); V-01 NÃO PRONTA e V-02 PRONTA sobre `05b549f` + validação do responsável (2026-11-13). Falta a validação integrada no preview e na URL de produção (`docs/VALIDACAO-INTEGRADA.md`, seção 9) |
 
 ## 16. Infraestrutura
 
@@ -179,18 +178,19 @@ Detalhes e pendências do responsável em [`docs/DEVOPS.md`](docs/DEVOPS.md).
 
 ## 18. Commit em produção
 
-`8e08040fb86419783dd373411b8ed63991a2a2b7` — release das Specs 003–008. O release da Spec 009 e
-desta documentação será um PR posterior para `main`, com merge exclusivo do responsável.
+`8e08040fb86419783dd373411b8ed63991a2a2b7` — release das Specs 003–008; a documentação de entrega
+entrou depois pelo PR #109. O release da Spec 009 é o PR para `main` aberto em 2026-11-13, com merge
+exclusivo do responsável.
 
 ## 19. Pendências
 
 | Pendência | Tipo | Quem |
 |---|---|---|
-| Concluir a Spec 009 (T-SEG-10 a 13), verificar formalmente e publicar em `main` | obrigatória (exigência de segurança do projeto) | sessão backend + responsável |
+| Publicar a Spec 009 em `main` (PR de release aberto) e executar a validação integrada da seção 9 de `docs/VALIDACAO-INTEGRADA.md` | obrigatória (exigência de segurança do projeto) | responsável (merge) + agente |
 | Validação final do responsável nas Specs 003–008; nova verificação formal da Spec 001 | governança | responsável (autoriza) + agente |
 | Confirmar `disable_signup` no Supabase Auth e a exposição de `public` na Data API | segurança | responsável |
-| Preencher o nome de exibição das contas de demonstração | apresentação | responsável |
-| Cadastrar `CHAVE_HMAC_LIMITES` na Vercel antes do release da Spec 009 | infraestrutura | responsável |
+| Nomes de exibição vazios nas contas demo | escolha de apresentação aceita pelo responsável em 2026-11-13; não bloqueia a V1 | sem ação |
+| `CHAVE_HMAC_LIMITES` na Vercel: cadastrada pelo responsável em 2026-11-13; confirmar pelo login no preview | infraestrutura | responsável |
 | Indicador do PRD: Operações abandonar a planilha após duas semanas de uso | acompanhamento futuro | não verificável antes de duas semanas de uso real |
 
 ## 20. Conclusão e aceite
