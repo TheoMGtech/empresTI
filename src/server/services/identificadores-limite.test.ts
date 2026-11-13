@@ -94,7 +94,7 @@ describe("normalizarEmail", () => {
     ["  Pessoa@Exemplo.COM  ", "pessoa@exemplo.com"],
     ["pessoa@exemplo.com", "pessoa@exemplo.com"],
     ["\tPESSOA@EXEMPLO.COM\n", "pessoa@exemplo.com"],
-  ])("RN-SEG-05 — %j vira %j", (entrada, esperado) => {
+  ])("CA-SEG-08/RN-SEG-05 — %j vira %j", (entrada, esperado) => {
     expect(normalizarEmail(entrada)).toBe(esperado);
   });
 });
@@ -109,7 +109,7 @@ describe("identificadoresLogin", () => {
     });
   });
 
-  it("RN-SEG-05 — variações de caixa e espaço do mesmo e-mail dividem o contador", () => {
+  it("CA-SEG-08/RN-SEG-05 — variações de caixa e espaço do mesmo e-mail geram o mesmo identificador", () => {
     vi.stubEnv("CHAVE_HMAC_LIMITES", CHAVE);
 
     const a = identificadoresLogin({ email: "Pessoa@Exemplo.com", ip: null });

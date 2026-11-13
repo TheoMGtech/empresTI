@@ -156,7 +156,7 @@ describe("limitadorDoContexto", () => {
 describe("criarLimitador", () => {
   const limitador = () => criarLimitador(() => prismaSimulado, () => AGORA);
 
-  it("CA-SEG-13 — reservarLogin grava só o HMAC do IP e do e-mail normalizado, e devolve as duas reservas", async () => {
+  it("CA-SEG-08/CA-SEG-13 — reservarLogin grava só o HMAC do IP e do e-mail normalizado, e devolve as duas reservas", async () => {
     const reservas = await limitador().reservarLogin({ email: "  Pessoa@Empresa.COM ", ip: null });
 
     const ids = identificadoresLogin({ email: "pessoa@empresa.com", ip: null });
