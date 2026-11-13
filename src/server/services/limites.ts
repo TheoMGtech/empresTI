@@ -1,7 +1,11 @@
 import type { PrismaClient } from "@prisma/client";
 
 import { ErroLimiteExcedido, ErroLimiteIndisponivel } from "@/server/services/erros-limite";
-import type { EscopoLimite } from "@/server/services/identificadores-limite";
+import {
+  identificadoresLogin,
+  identificadoresMutacao,
+  type EscopoLimite,
+} from "@/server/services/identificadores-limite";
 
 // Spec 009 (T-SEG-07): contador atômico em `limites_requisicao`.
 // - Janela fixa (RN-SEG-02, P6): começa no múltiplo da duração que contém `agora`.
@@ -128,6 +132,66 @@ async function executar<T>(prisma: Prisma, acao: (transacao: Transacao) => Promi
     return await prisma.$transaction(acao);
   } catch (erro) {
     if (erro instanceof ErroLimiteExcedido) throw erro;
+    throw new ErroLimiteIndisponivel();
+  }
+}
+
+/**
+ * Limitador usado pelos procedimentos (T-SEG-08). Recebe e-mail, IP e usuário em claro e só grava
+ * o HMAC deles. Lança `ErroLimiteExcedido` ou `ErroLimiteIndisponivel`, e nada mais.
+ */
+export type Limitador = {
+  /** Login: `login_ip` e `login_email` juntos (ajuste obrigatório 1). */
+  reservarLogin(dados: { email: string; ip: string | null }): Promise<{ ip: Reserva; email: Reserva }>;
+  /** Mutações cobertas: `mutacao_usuario` e `mutacao_ip` juntos. */
+  reservarMutacao(dados: { tenantId: string; usuarioId: string; ip: string | null }): Promise<void>;
+  devolver(reserva: Reserva): Promise<void>;
+};
+
+/**
+ * Limitador real sobre `limites_requisicao`. A chave e o cliente Prisma só são lidos no uso: sem
+ * `CHAVE_HMAC_LIMITES`, sem banco configurado ou com o banco fora, a operação falha fechada
+ * (`ErroLimiteIndisponivel`, RF-SEG-12).
+ */
+export function criarLimitador(
+  obterPrisma: () => Prisma,
+  relogio: () => Date = () => new Date(),
+): Limitador {
+  return {
+    reservarLogin: (dados) =>
+      falharFechado(async () => {
+        const ids = identificadoresLogin(dados);
+        const [ip, email] = await consumirJuntos(
+          obterPrisma(),
+          [
+            { escopo: "login_ip", identificador: ids.login_ip },
+            { escopo: "login_email", identificador: ids.login_email },
+          ],
+          { agora: relogio() },
+        );
+        return { ip: ip as Reserva, email: email as Reserva };
+      }),
+    reservarMutacao: (dados) =>
+      falharFechado(async () => {
+        const ids = identificadoresMutacao(dados);
+        await consumirJuntos(
+          obterPrisma(),
+          [
+            { escopo: "mutacao_usuario", identificador: ids.mutacao_usuario },
+            { escopo: "mutacao_ip", identificador: ids.mutacao_ip },
+          ],
+          { agora: relogio() },
+        );
+      }),
+    devolver: (reserva) => falharFechado(() => devolver(obterPrisma(), reserva, { agora: relogio() })),
+  };
+}
+
+async function falharFechado<T>(acao: () => Promise<T>) {
+  try {
+    return await acao();
+  } catch (erro) {
+    if (erro instanceof ErroLimiteExcedido || erro instanceof ErroLimiteIndisponivel) throw erro;
     throw new ErroLimiteIndisponivel();
   }
 }
