@@ -1,85 +1,205 @@
 # Entrega — EmpresTI
 
-> Atualização inicial: 12/11/2026. Documento de entrega **em preparação**, ainda não representa aceite final do projeto.
->
-> Fonte dos critérios: [PRD](docs/PRD.md), [validação integrada](docs/VALIDACAO-INTEGRADA.md), [specs](docs/specs/) e regras de operação. A rubrica externa de avaliação escolar não foi fornecida neste registro.
+> Atualizado em 2026-11-13. **Estado: versão 1 (Specs 001–008) publicada e validada em produção;
+> entrega final ainda não concluída** — a Spec 009 (segurança HTTP e limite de requisições) está em
+> desenvolvimento e há pendências listadas na seção 19. Nada aqui é declarado concluído sem
+> evidência.
 
-## Acesso à demonstração
+## 1. Identificação
 
-- **Aplicação:** https://empresti-self.vercel.app/
-- **Domínio alternativo:** https://empresti-theo-escola.vercel.app/
-- **Repositório:** https://github.com/TheoMGtech/empresTI
-- **Tenant da demonstração:** `suporte_ti`
+| Item | Valor |
+|---|---|
+| Projeto | EmpresTI — empréstimo de equipamentos de TI |
+| Repositório | <https://github.com/TheoMGtech/empresTI> |
+| Aplicação | <https://empresti-self.vercel.app/> (alternativa, mesmo deploy: <https://empresti-theo-escola.vercel.app/>) |
+| Tenant de demonstração | `suporte_ti` |
+| Responsável | o responsável único do repositório (aprova specs, planos, PRs e o merge em `main`) |
+| Rubrica escolar | não fornecida no repositório; os critérios abaixo vêm do PRD, das specs, do ADR-001 e das regras |
 
-| Perfil de demonstração | Identificador de login | Funcionalidades |
+## 2. Objetivo
+
+Substituir a planilha compartilhada de controle de empréstimos por um sistema com catálogo,
+regras de empréstimo aplicadas no servidor, devolução registrada e visão de Operações sobre quem
+está com cada item ([PRD](docs/PRD.md)).
+
+## 3. Escopo entregue
+
+As cinco capacidades da versão 1 do PRD estão em produção: login com cada pessoa vendo os próprios
+empréstimos; catálogo com a situação de cada item; solicitação de item disponível; devolução; tela
+de Operações com todos os empréstimos em aberto. Fora da versão 1, conforme o PRD: reserva futura,
+notificação por e-mail e importação da planilha.
+
+## 4. Stack
+
+Next.js 16 (App Router) e React 19 com TypeScript `strict`; tRPC 11; Prisma 7 e PostgreSQL no
+Supabase; Supabase Auth com cookies `httpOnly`; Tailwind CSS 4, shadcn/ui (Radix), React Hook Form e
+Zod; Vitest, Testing Library, PostgreSQL em container e Playwright; GitHub Actions e Vercel.
+Decisão vinculante: [ADR-001](docs/adr/001-stack.md).
+
+## 5. Arquitetura
+
+Monólito Next.js na Vercel. O navegador fala só com o Route Handler tRPC; o contexto deriva usuário,
+papel e tenant da sessão (nunca do cliente); os routers chamam services, que usam Prisma. O banco tem
+RLS deny-by-default para `anon` e `authenticated`, `tenant_id` em toda tabela de domínio e auditoria
+de toda mutação. Detalhes no [README](README.md#tecnologias-e-arquitetura).
+
+## 6. Funcionalidades
+
+| Funcionalidade | Spec | Em produção |
 |---|---|---|
-| Colaborador | `colaborador@empresti.test` | Catálogo, solicitação, devolução e histórico próprios |
-| Operações | `operacoes@empresti.test` | Gestão de empréstimos e equipamentos, devolução no balcão |
+| Login, sessão, Sair e proteção de rotas | [001](docs/specs/001-login/spec.md), [003](docs/specs/003-sessao-autorizacao/spec.md) | sim |
+| Dados iniciais: tenant, 12 equipamentos e fotografias | [002](docs/specs/002-dados-iniciais/spec.md) | sim |
+| Catálogo com filtros | [004](docs/specs/004-catalogo/spec.md) | sim |
+| Detalhe e solicitação | [005](docs/specs/005-solicitacao-emprestimo/spec.md) | sim |
+| Limite de 3 itens e bloqueio por atraso | [006](docs/specs/006-regras-emprestimo/spec.md) | sim |
+| Meus empréstimos, devolução e histórico | [007](docs/specs/007-meus-emprestimos-devolucao/spec.md) | sim |
+| Painel de Operações, balcão, cadastro e situação | [008](docs/specs/008-operacoes/spec.md) | sim |
+| Cabeçalhos HTTP, CSP com nonce e limite de requisições | [009](docs/specs/009-seguranca-http-rate-limit/spec.md) | não (em `develop`) |
 
-**Distribuição de senhas:** as senhas são fornecidas diretamente ao avaliador, por canal privado, pelo responsável pelo projeto. **Não há senhas no Git, no README, em issues nem nos PRs.** Os endereços `.test` são contas fictícias para demonstração, sem recebimento de e-mail e sem recuperação de senha por e-mail. O simples registro de uma senha neste documento não a configuraria no Supabase Auth.
+## 7. Regras de negócio
 
-**Nomes de exibição:** os dois vínculos foram criados com `nome_exibicao` vazio; o papel é suficiente para o acesso, mas a apresentação dos nomes pode ser ajustada antes da avaliação, mediante procedimento autorizado.
+Máximo de 3 itens por pessoa; prazo de 14 dias corridos (data de São Paulo); quem tem item em
+atraso não pega outro; equipamento em manutenção não aparece como disponível; solicitações
+simultâneas do mesmo item geram um único empréstimo. Todas são verificadas no servidor — a recusa
+vale também para chamadas diretas à API.
 
-## Versão publicada e infraestrutura
+## 8. Perfis de acesso
 
-| Item | Estado | Evidência / observação |
+- **Colaborador:** catálogo, solicitação, "Meus empréstimos", devolução e histórico próprios. Não vê
+  quem está com cada item nem dados internos do equipamento; rotas e procedimentos de Operações são
+  recusados (tela "Acesso restrito a Operações." e HTTP 403).
+- **Operações:** tudo o que o colaborador vê, mais painel de empréstimos em aberto do tenant,
+  indicadores, devolução no balcão, cadastro de equipamento e alteração de situação.
+
+## 9 e 10. Demonstração e contas
+
+| Perfil | Login | Senha |
 |---|---|---|
-| Release de Specs 003–008 | Concluído | [PR #98](https://github.com/TheoMGtech/empresTI/pull/98), merge na `main` `8e08040fb86419783dd373411b8ed63991a2a2b7`, árvore `3aa331e38f8b53b28176e7c72ce2d444890da80f` |
-| Build e controles da `main` | Concluído | Checks GitHub `Application quality`, `Documentation and secret guard` e `Supabase Preview` concluídos com sucesso no commit de release |
-| Vercel Production | Concluído para release intermediário | Deploy reportado concluído; duas URLs responderam 200; `tecnico.status` reportou `bancoOperacional: true` |
-| Supabase PostgreSQL | Concluído para release intermediário | 7 migrations com `finished_at`; a sétima (`criar_limites_requisicao`) pertence à Spec 009 e foi aplicada antecipadamente |
-| Carga inicial | Concluída | Tenant `suporte_ti`, 12 equipamentos, TI-0004 e TI-0007 em manutenção; Storage com 12 fotografias informado pelo responsável |
-| Perfis de acesso | Concluído | 2 usuários do Supabase Auth vinculados ao tenant com papéis `colaborador` e `operacoes` |
-| Rotas sem sessão | Concluído | Testes HTTP reportados: procedimentos protegidos retornam 401; navegação protegida redireciona ao login |
-| Testes funcionais autenticados | Informados como concluídos | Responsável informou conclusão; falta anexar resultados por cenário, evidências e eventuais ajustes do roteiro abaixo |
-| Spec 009 — segurança HTTP e rate limiting | **Pendente** | Desenvolvimento parcial em `develop`; a entrega definitiva exige implementação, verificação e promoção autorizada para `main` |
+| Colaborador | `colaborador@empresti.test` | entregue em particular |
+| Operações | `operacoes@empresti.test` | entregue em particular |
 
-## Checklist restante para o aceite final
+## 11. Senhas
 
-Usar `[x]` somente com resultado e evidência verificáveis; não presumir aprovação de cenários apenas pelo deploy.
+As senhas **não estão no Git**, no README, em issues nem em PRs: o responsável as entrega ao
+avaliador por canal privado. Os endereços `.test` são fictícios (não recebem e-mail nem recuperam
+senha). As contas ainda não têm nome de exibição; por isso o painel de Operações mostra "Sem nome
+cadastrado" na coluna Pessoa.
 
-### Funcionalidades e regras do PRD
+### Roteiro de avaliação (10 minutos)
 
-- [ ] Registrar evidência de login/logout e separação de permissões dos dois perfis.
-- [ ] Registrar evidência do catálogo com 12 equipamentos, imagens, filtros e indisponibilidade de TI-0004 e TI-0007.
-- [ ] Registrar evidência do ciclo completo: solicitação, prazo de 14 dias, Meus empréstimos, devolução e histórico.
-- [ ] Registrar evidência do limite de 3 empréstimos, recusa do quarto e bloqueio por atraso.
-- [ ] Registrar evidência dos fluxos de Operações: empréstimos abertos, indicadores, devolução de terceiro, cadastro e manutenção.
-- [ ] Registrar evidência de concorrência (duas solicitações para o mesmo item) e das recusas em chamadas diretas à API.
-- [ ] Demonstrar o critério de resultado do PRD: Operações poder abandonar a planilha depois de duas semanas de uso; se o prazo de uso real ainda não ocorreu, registrar como **não verificado**, sem inventar resultado.
+1. Abra a aplicação e entre como **Colaborador**. Você cai no Catálogo: 12 equipamentos, "10
+   disponíveis agora"; TI-0004 e TI-0007 estão em manutenção, sem ação.
+2. Use os chips (Notebooks, Monitores, Cabos, Câmeras) e "Só disponíveis".
+3. Abra um item disponível e clique em **Solicitar empréstimo**: o diálogo mostra "Devolver até"
+   hoje + 14 dias. Confirme. O catálogo passa a mostrar "Emprestado · devolve …".
+4. Solicite mais dois itens. No terceiro, o diálogo avisa "3 de 3"; no quarto, o botão fica
+   desabilitado com "Limite de 3 itens atingido.".
+5. Vá a **Meus empréstimos**: itens com a barra de prazo. Tente abrir `/operacoes/emprestimos`
+   pela barra de endereço: "Acesso restrito a Operações.".
+6. Clique em **Sair** e entre como **Operações**. O menu ganha o grupo Operações.
+7. Em **Empréstimos em aberto**: os itens do colaborador, os cards (em aberto, vencem em 3 dias, em
+   atraso, em manutenção) e os filtros. Registre uma **devolução no balcão**.
+8. Abra um item ainda emprestado e tente colocá-lo **Em manutenção**: a alteração é recusada.
+9. Em **Cadastrar equipamento**, tente o patrimônio `TI-0001`: "Já existe equipamento com este
+   patrimônio.".
+10. Volte como Colaborador e devolva os itens restantes: o histórico mostra "No prazo" e o catálogo
+    volta a 10 disponíveis.
 
-### Segurança e validação integrada
+Os passos 3 a 10 criam empréstimos e auditoria reais em produção; devolver tudo no fim deixa o
+catálogo como estava. Cadastrar um equipamento novo cria um item permanente (não há exclusão).
 
-- [ ] Consolidar em [`docs/VALIDACAO-INTEGRADA.md`](docs/VALIDACAO-INTEGRADA.md) as provas, data, conta, resultado e evidência de cada CA testado.
-- [ ] Confirmar e registrar cadastro público desabilitado no Supabase Auth e `public` removido dos schemas expostos na Data API (ou Data API desativada).
-- [ ] Registrar teste de RLS, isolamento por tenant, proteção de endpoints, ausência de dados sensíveis nos erros e trilha de auditoria das mutações.
-- [ ] Concluir a **Spec 009**: serviço de limite, respostas 429/503, integração com login e cinco mutações, interface, CSP/cabeçalhos, testes e verificação formal em `verificacao.md`.
-- [ ] Revisar o risco de concorrência/pool do rate limiter e comprovar em testes que erros 503 por indisponibilidade são distinguidos de 429 por limite.
-- [ ] Publicar a Spec 009 na `main` em PR separado, autorizado pelo responsável, sem reaplicar ou apagar migrations já aplicadas.
-- [ ] Reexecutar testes de regressão e smoke tests autenticados nas duas URLs após o release final.
+## 12. Evidências funcionais
 
-### Documentação e governança
+Pacote completo, com índice por critério: [`docs/evidencias/`](docs/evidencias/README.md) — 32
+capturas reais de produção e os resultados dos testes. Registro item a item:
+[`docs/VALIDACAO-INTEGRADA.md`](docs/VALIDACAO-INTEGRADA.md).
 
-- [x] As Specs 003–008 possuem registros formais `Veredito: PRONTA` em seus arquivos `verificacao.md`.
-- [x] Release intermediário #98 com CI verde e implantação de produção concluída.
-- [ ] Atualizar [`docs/DEVOPS.md`](docs/DEVOPS.md) e [`README.md`](README.md), que ainda descrevem o estado anterior do sistema.
-- [ ] Registrar evidências do workflow protegido de migrations, da configuração do Environment `production` e da separação de segredos.
-- [ ] Encerrar pendências de apresentação relevantes à avaliação (por exemplo, nomes de exibição, se desejado).
-- [ ] Validar o checklist completo de `docs/VALIDACAO-INTEGRADA.md`, incluindo cenários não cobertos pelos testes rápidos de produção.
-- [ ] Publicar este `ENTREGA.md` na `main` após revisão e autorização do responsável.
-- [ ] Anotar o SHA do release final, URL, data, resultados e aceite do responsável; declarar **100% concluído** somente quando os bloqueadores obrigatórios estiverem resolvidos.
+| Rodada (produção, `main` `8e08040`) | Passou | Falhou | Não executado |
+|---|---|---|---|
+| Sem login | 6 | 0 | 0 |
+| Logado, somente leitura (colaborador e Operações) | 20 | 0 | 0 |
+| Ciclo com mutações, autorizado pelo responsável (13/11) | 11 passos | 0 | 0 |
 
-## Evidências a completar
+O ciclo criou e encerrou 3 empréstimos (TI-0012, TI-0011 e TI-0010) e 6 registros de auditoria em
+13/11/2026. **São registros de prova, não de uso real.** O estado final é igual ao inicial.
 
-| Critério / cenário | Data | Conta | Resultado | Evidência (link, print ou consulta) |
-|---|---|---|---|---|
-| Login, catálogo, solicitação e devolução do colaborador | a registrar | colaborador | testes informados como concluídos | a anexar |
-| Operações e recusa de acesso ao colaborador | a registrar | operacoes e colaborador | testes informados como concluídos | a anexar |
-| Regras: 3 itens, atraso, concorrência | a registrar | colaborador | a comprovar item a item | a anexar |
-| RLS, isolamento e auditoria | a registrar | contas autorizadas | a comprovar | a anexar |
-| Spec 009 em produção | a registrar | contas autorizadas | pendente | a anexar |
-| Aceite final do responsável | a registrar | responsável | pendente | a anexar |
+## 13. Evidências de segurança
 
-## Fora de escopo da primeira versão
+- Cookie de sessão `httpOnly`, `secure`, SameSite=Lax; `document.cookie` não expõe a sessão; a
+  resposta de login não traz token.
+- Sem sessão: rotas protegidas voltam ao login e 9 procedimentos respondem 401 sem dados.
+- Colaborador chamando 6 procedimentos de Operações direto: 403. `tenantId` forjado pelo cliente não
+  muda o escopo. Erros sem pilha nem detalhe interno.
+- Banco de produção: RLS em todas as tabelas de `public`, policies `USING false` para `anon` e
+  `authenticated` (SQL somente leitura).
+- Auditoria com o ator em cada solicitação e devolução do ciclo.
+- Banco descartável: RLS, bloqueio de `TRUNCATE`, isolamento entre dois tenants e concorrência.
+- Segredos: Gitleaks no CI; `.env*` ignorados; nenhuma senha em código, documentos ou prints.
+- Pendente: Spec 009 (CSP, cabeçalhos e limite de tentativas) ainda não publicada.
 
-Conforme o PRD, reserva futura, notificações por e-mail e importação da planilha não fazem parte desta versão. Sentry e atualizações do Dependabot permanecem questões de evolução/operabilidade, salvo se surgir vulnerabilidade crítica ou exigência expressa da rubrica escolar.
+## 14. Resultados de testes
+
+| Onde | Resultado |
+|---|---|
+| CI de `main` (`8e08040`) | 57 arquivos, 1.356 testes Vitest aprovados; lint, typecheck e build verdes |
+| CI de `develop` (com Spec 009 parcial) | verde em cada PR integrado |
+| Banco descartável — regras, Operações, RLS e auditoria (13/11) | 253/253 |
+| Produção — Playwright | 26 provas e 11 passos de ciclo, todos aprovados |
+
+Cada teste cita no nome o critério de aceitação que prova (`CA-<FEATURE>-xx`).
+
+## 15. Status das specs
+
+| Spec | Estado | Verificação independente |
+|---|---|---|
+| 001 Login | Implementada | V-03 NÃO PRONTA (2026-11-09): CA-LOGIN-01, 04, 08 e 09 sem teste naquela data. Hoje há testes citando CA-LOGIN-01, 04 e 09, e o login real em produção foi comprovado; falta nova verificação formal |
+| 002 Dados iniciais | **PRONTA** | V-03 PRONTA + validação do responsável (2026-11-11) |
+| 003 a 008 | Implementadas | `Veredito: PRONTA` registrado em cada `verificacao.md`; falta a validação final do responsável para mudar o estado |
+| 009 Segurança HTTP e limite | Em desenvolvimento | T-SEG-01 a 09 integradas em `develop` (PRs #91–#107); faltam T-SEG-10 a 13 e a verificação formal |
+
+## 16. Infraestrutura
+
+| Item | Estado em 2026-11-13 |
+|---|---|
+| Vercel Production | `main` `8e08040`, status success; as duas URLs respondem 200 |
+| Supabase | 7 migrations, checksums iguais aos arquivos; 12 equipamentos e 12 fotos; 2 contas vinculadas |
+| GitHub | `main` e `develop` protegidas (PR, histórico linear, check obrigatório); Environment `production` com revisor obrigatório |
+| CI | `Architecture checks`: guarda documental, Gitleaks, lint, typecheck, testes e build |
+
+Detalhes e pendências do responsável em [`docs/DEVOPS.md`](docs/DEVOPS.md).
+
+## 17. Histórico de publicação
+
+| Data | PR | Conteúdo |
+|---|---|---|
+| 2026-10-23 | #7 | Andar zero |
+| 2026-10-23 | #14 | Login (Spec 001) |
+| 2026-11-03 | #25 | Promoção de `develop` |
+| 2026-11-12 | #98 | Specs 003–008, sem a Spec 009 (`8e08040`, árvore `3aa331e`) |
+
+## 18. Commit em produção
+
+`8e08040fb86419783dd373411b8ed63991a2a2b7` — release das Specs 003–008. O release da Spec 009 e
+desta documentação será um PR posterior para `main`, com merge exclusivo do responsável.
+
+## 19. Pendências
+
+| Pendência | Tipo | Quem |
+|---|---|---|
+| Concluir a Spec 009 (T-SEG-10 a 13), verificar formalmente e publicar em `main` | obrigatória (exigência de segurança do projeto) | sessão backend + responsável |
+| Validação final do responsável nas Specs 003–008; nova verificação formal da Spec 001 | governança | responsável (autoriza) + agente |
+| Confirmar `disable_signup` no Supabase Auth e a exposição de `public` na Data API | segurança | responsável |
+| Preencher o nome de exibição das contas de demonstração | apresentação | responsável |
+| Cadastrar `CHAVE_HMAC_LIMITES` na Vercel antes do release da Spec 009 | infraestrutura | responsável |
+| Indicador do PRD: Operações abandonar a planilha após duas semanas de uso | acompanhamento futuro | não verificável antes de duas semanas de uso real |
+
+## 20. Conclusão e aceite
+
+A versão 1 funciona em produção com as regras do PRD comprovadas por testes automatizados, por
+validação real com as duas contas e por consultas ao banco. A entrega **não** é declarada 100%
+concluída: a Spec 009 é obrigatória e ainda não foi publicada, e as pendências de governança da
+seção 19 dependem do responsável.
+
+| Aceite | Data | Responsável |
+|---|---|---|
+| a registrar após o release da Spec 009 | — | — |
