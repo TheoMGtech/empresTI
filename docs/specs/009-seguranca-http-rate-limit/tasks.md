@@ -4,9 +4,9 @@
 
 **Status:** APROVADAS — pelo responsável em 2026-11-12, com `plan.md` (sobre o commit `3841cfc`) e o
 DDL de `limites_requisicao`. Cada tarefa depende de autorização específica. Concluídas e integradas
-em `develop`: T-SEG-01 a 12 (2026-11-12 e 2026-11-13). A V-01 da T-SEG-13 deu NÃO PRONTA
-(2026-11-13); o responsável decidiu D-01 e D-02 (`spec.md`) e autorizou T-SEG-14 a 16. Depois
-delas, a T-SEG-13 roda a V-02.
+em `develop`: T-SEG-01 a 16 (2026-11-12 e 2026-11-13). A V-01 da T-SEG-13 deu NÃO PRONTA; depois
+das decisões D-01 e D-02 e das T-SEG-14 a 16, a V-02 devolveu `Veredito: PRONTA` sobre
+`05b549f277b6f5856851057848177248a536404c` (2026-11-13). Falta a validação final do responsável.
 
 Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
 `rules/checks.md` ao concluir; todo teste cita no nome o CA que evidencia; código e documentação
@@ -106,7 +106,7 @@ dependem da T-SEG-05. O Bloco E fecha.
     responsável.
   - Atende: rastreabilidade de CA-SEG-18. Depende de: T-SEG-01 a 11.
   - Commit: `docs(seguranca): referenciar a spec 009 e o roteiro de validação`.
-- [ ] **T-SEG-13 (verificação) — Provas finais e verificação formal**
+- [x] **T-SEG-13 (verificação) — Provas finais e verificação formal** — V-01 (PR #112) e V-02.
   - Checks completos, incluindo `npm run test:e2e:producao`, `prisma:reset` pelo responsável e
     V-01 pelo `verificador-spec`, conforme `rules/spec-flow.md`.
   - Atende: CA-SEG-18. Depende de: T-SEG-12.
@@ -116,16 +116,16 @@ dependem da T-SEG-05. O Bloco E fecha.
 
 ## Bloco F — ajustes depois da V-01 (responsável, 2026-11-13)
 
-- [ ] **T-SEG-14 (CI, manutenção) — E2E de desenvolvimento no CI** — PR #113.
+- [x] **T-SEG-14 (CI, manutenção) — E2E de desenvolvimento no CI** — PR #113.
   - Job `E2E (desenvolvimento)` no `Architecture checks`: Chromium e dependências do sistema,
     runner limpo, sem retries, timeouts e paralelismo da configuração versionada (D-02).
   - Atende: CA-SEG-18 (reprodutibilidade). Depende de: nada.
   - Commit: `ci: rodar o E2E de desenvolvimento no CI`.
-- [ ] **T-SEG-15 (docs) — Redação do CA-SEG-08 e registro das decisões**
+- [x] **T-SEG-15 (docs) — Redação do CA-SEG-08 e registro das decisões** — PR #114.
   - Texto do CA-SEG-08 esclarecido e D-01/D-02 registradas, sem mudar comportamento.
   - Atende: CA-SEG-08 (redação). Depende de: decisão do responsável.
   - Commit: `docs(specs): esclarecer o CA-SEG-08 da spec 009`.
-- [ ] **T-SEG-16 (testes) — Provas do CA-SEG-08 esclarecido**
+- [x] **T-SEG-16 (testes) — Provas do CA-SEG-08 esclarecido** — PR #115.
   - Login: e-mail com espaços nas pontas recusado na validação, sem consumir vaga; testes do
     limitador (normalização e identificadores) citando o CA-SEG-08. Sem mudança de código de produto.
   - Atende: CA-SEG-08. Depende de: T-SEG-15.

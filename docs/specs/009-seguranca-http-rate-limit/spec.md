@@ -5,10 +5,12 @@
 **Status:** APROVADA — pelo responsável em 2026-11-12, sobre o commit `d01f077`, com P1 a P8 e o
 ajuste de redação da retenção (RN-SEG-10). `plan.md`, `tasks.md` e o DDL de `limites_requisicao`
 foram aprovados em 2026-11-12 (sobre `3841cfc`, com os ajustes de login atômico e ordem de
-deploy). Em implementação: T-SEG-01 a 12 integradas em `develop` (2026-11-13). A V-01 (2026-11-13)
-deu NÃO PRONTA (`verificacao.md`); a redação do CA-SEG-08 foi esclarecida pelo responsável em
-2026-11-13 (D-01), sem mudar comportamento. Faltam as tarefas T-SEG-14 a 16 e a nova verificação
-formal (T-SEG-13). Não está PRONTA.
+deploy). **Implementada** em `develop` (T-SEG-01 a 16, 2026-11-13). A V-01 deu NÃO PRONTA; depois
+das decisões D-01 e D-02 do responsável, a **V-02 (2026-11-13) devolveu `Veredito: PRONTA`** sobre o
+commit `05b549f277b6f5856851057848177248a536404c` (`verificacao.md`). Aguarda a validação final do
+responsável para ser declarada PRONTA (`rules/spec-flow.md`). A validação integrada no preview e a
+verificação na URL de produção (`docs/VALIDACAO-INTEGRADA.md`, seção 9) continuam obrigatórias antes
+da entrega final.
 
 ## Objetivo
 
