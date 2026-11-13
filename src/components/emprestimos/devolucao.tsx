@@ -14,6 +14,7 @@ import {
   FecharDialogo,
   TituloDialogo,
 } from "@/components/ui/dialogo";
+import { mensagemDeLimite } from "@/lib/mensagens-limite";
 import { trpc } from "@/trpc/cliente";
 
 export type AlvoDevolucao = { id: string; nome: string; patrimonio: string };
@@ -23,6 +24,10 @@ type Recusa = { mensagem: string; definitiva: boolean };
 export const MENSAGEM_JA_ENCERRADO = "Este empréstimo já foi encerrado.";
 
 function recusaDe(erro: unknown): Recusa {
+  // RF-SEG-13: com 429 ou 503 nada foi gravado, e dá para tentar de novo depois.
+  const limite = mensagemDeLimite(erro);
+  if (limite) return { mensagem: limite, definitiva: false };
+
   if (!(erro instanceof TRPCClientError) || !erro.data) {
     return { mensagem: MENSAGEM_FALHA_INCERTA, definitiva: false };
   }

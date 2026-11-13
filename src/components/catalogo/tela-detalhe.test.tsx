@@ -7,6 +7,7 @@ import {
   MENSAGEM_NAO_ENCONTRADO,
   TelaDetalhe,
 } from "@/components/catalogo/tela-detalhe";
+import { MENSAGENS_LIMITE } from "@/lib/mensagens-limite";
 import { erroTRPC, renderizarComTRPC, type ManipuladoresTRPC } from "@/test/trpc";
 import type { SaidasRouter } from "@/trpc/tipos";
 
@@ -179,6 +180,25 @@ describe("T-SOLIC-07 — detalhe e diálogo", () => {
 
     expect(await dialogo.findByText(MENSAGEM_FALHA_INCERTA)).toBeInTheDocument();
     await waitFor(() => expect(detalhar).toHaveBeenCalledTimes(2));
+  });
+
+  it.each([
+    ["TOO_MANY_REQUESTS", MENSAGENS_LIMITE.excedido],
+    ["SERVICE_UNAVAILABLE", MENSAGENS_LIMITE.indisponivel],
+  ] as const)("CA-SEG-17 — solicitar com %s mostra a mensagem própria e deixa tentar de novo", async (codigo, mensagem) => {
+    renderizar({
+      "equipamentos.detalhar": () => DETALHE,
+      "emprestimos.solicitar": () => {
+        throw erroTRPC(codigo, "mensagem do servidor");
+      },
+    });
+
+    const dialogo = await abrirDialogo();
+    fireEvent.click(dialogo.getByRole("button", { name: "Confirmar" }));
+
+    expect(await dialogo.findByText(mensagem)).toBeInTheDocument();
+    expect(dialogo.queryByText(MENSAGEM_FALHA_INCERTA)).not.toBeInTheDocument();
+    expect(dialogo.getByRole("button", { name: "Confirmar" })).toBeEnabled();
   });
 
   it("RN-SOLIC-04 — item em manutenção não pode ser solicitado", async () => {

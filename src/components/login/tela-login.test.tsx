@@ -6,6 +6,7 @@ import {
   MENSAGEM_CREDENCIAIS_INVALIDAS,
   MENSAGEM_FALHA_INESPERADA,
 } from "@/components/login/formulario-login";
+import { MENSAGENS_LIMITE } from "@/lib/mensagens-limite";
 import { erroTRPC, renderizarComTRPC } from "@/test/trpc";
 
 const { substituir } = vi.hoisted(() => ({ substituir: vi.fn() }));
@@ -129,6 +130,23 @@ describe("CA-LOGIN-07 — tela de login", () => {
       expect(screen.getByRole("alert")).toHaveTextContent(MENSAGEM_FALHA_INESPERADA),
     );
     expect(screen.queryByText(/detalhe interno|postgresql/)).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ["TOO_MANY_REQUESTS", MENSAGENS_LIMITE.excedido],
+    ["SERVICE_UNAVAILABLE", MENSAGENS_LIMITE.indisponivel],
+  ] as const)("CA-SEG-17 — %s mostra a mensagem própria e mantém o envio liberado", async (codigo, mensagem) => {
+    renderizarSemSessao({
+      "autenticacao.entrar": () => {
+        throw erroTRPC(codigo, "mensagem do servidor");
+      },
+    });
+
+    preencherEEnviar(CREDENCIAIS);
+
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent(mensagem));
+    expect(screen.queryByText(MENSAGEM_FALHA_INESPERADA)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Entrar" })).toBeEnabled();
   });
 
   it("CA-LOGIN-05 — sessão válida ao carregar / redireciona para /catalogo", async () => {

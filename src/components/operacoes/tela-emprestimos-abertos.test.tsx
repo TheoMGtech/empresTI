@@ -8,6 +8,7 @@ import {
   TelaEmprestimosAbertos,
 } from "@/components/operacoes/tela-emprestimos-abertos";
 import { MENSAGEM_JA_ENCERRADO } from "@/components/emprestimos/devolucao";
+import { MENSAGENS_LIMITE } from "@/lib/mensagens-limite";
 import { erroTRPC, renderizarComTRPC, type ManipuladoresTRPC } from "@/test/trpc";
 import type { SaidasRouter } from "@/trpc/tipos";
 
@@ -159,6 +160,25 @@ describe("T-OPER-06 — painel de empréstimos em aberto", () => {
 
     expect(await dialogo.findByText(MENSAGEM_JA_ENCERRADO)).toBeInTheDocument();
     expect(dialogo.getByRole("button", { name: "Devolver" })).toBeDisabled();
+  });
+
+  it.each([
+    ["TOO_MANY_REQUESTS", MENSAGENS_LIMITE.excedido],
+    ["SERVICE_UNAVAILABLE", MENSAGENS_LIMITE.indisponivel],
+  ] as const)("CA-SEG-17 — registrar devolução com %s mostra a mensagem própria", async (codigo, mensagem) => {
+    renderizar({
+      "operacoes.registrarDevolucao": () => {
+        throw erroTRPC(codigo, "mensagem do servidor");
+      },
+    });
+    await linhas();
+
+    fireEvent.click(screen.getByRole("button", { name: "Devolver Equipamento 2 de Pessoa 2" }));
+    const dialogo = within(await screen.findByRole("dialog"));
+    fireEvent.click(dialogo.getByRole("button", { name: "Devolver" }));
+
+    expect(await dialogo.findByText(mensagem)).toBeInTheDocument();
+    expect(dialogo.getByRole("button", { name: "Devolver" })).toBeEnabled();
   });
 
   it("RF-OPER-01 — pagina por cursor com Anterior e Próximo", async () => {

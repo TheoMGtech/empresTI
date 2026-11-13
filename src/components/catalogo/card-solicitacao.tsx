@@ -17,6 +17,7 @@ import {
   TituloDialogo,
 } from "@/components/ui/dialogo";
 import { formatarDataCurta } from "@/lib/datas";
+import { mensagemDeLimite } from "@/lib/mensagens-limite";
 import { trpc } from "@/trpc/cliente";
 import type { SaidasRouter } from "@/trpc/tipos";
 
@@ -37,6 +38,10 @@ const RECUSAS: Record<string, string> = {
 type Recusa = { mensagem: string; definitiva: boolean };
 
 function recusaDe(erro: unknown): Recusa {
+  // RF-SEG-13: com 429 ou 503 nada foi gravado, e dá para tentar de novo depois.
+  const limite = mensagemDeLimite(erro);
+  if (limite) return { mensagem: limite, definitiva: false };
+
   if (!(erro instanceof TRPCClientError) || !erro.data) {
     // Sem resposta do servidor: o empréstimo pode ter sido criado.
     return { mensagem: MENSAGEM_FALHA_INCERTA, definitiva: false };

@@ -6,12 +6,17 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { esquemaEntrada, type DadosEntrada } from "@/lib/esquemas/autenticacao";
+import { mensagemDeLimite } from "@/lib/mensagens-limite";
 import { trpc } from "@/trpc/cliente";
 
 export const MENSAGEM_CREDENCIAIS_INVALIDAS = "Não foi possível entrar. Confira e-mail e senha.";
 export const MENSAGEM_FALHA_INESPERADA = "Não foi possível concluir o acesso. Tente novamente.";
 
 function mensagemDeErro(erro: unknown) {
+  // RF-SEG-13: limite excedido (429) e contador indisponível (503) têm mensagem própria.
+  const limite = mensagemDeLimite(erro);
+  if (limite) return limite;
+
   if (erro instanceof TRPCClientError && erro.data?.code === "UNAUTHORIZED") {
     return MENSAGEM_CREDENCIAIS_INVALIDAS;
   }
