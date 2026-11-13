@@ -11,7 +11,13 @@ import {
   esquemaSaidaCadastroEquipamento,
   esquemaSaidaListarEquipamentos,
 } from "@/lib/esquemas/equipamentos";
-import { ErroComMotivo, adminProcedure, criarRouterTRPC, tenantProcedure } from "@/server/api/trpc";
+import {
+  ErroComMotivo,
+  adminProcedure,
+  criarRouterTRPC,
+  limitarMutacao,
+  tenantProcedure,
+} from "@/server/api/trpc";
 import {
   ErroEmprestimoEmAberto,
   ErroEquipamentoNaoEncontrado,
@@ -68,6 +74,7 @@ export const routerEquipamentos = criarRouterTRPC({
   // Spec 008: só Operações (RS-OPER-01). RF-OPER-05: o mesmo esquema do formulário valida aqui.
   cadastrar: adminProcedure
     .input(esquemaCadastroEquipamento)
+    .use(limitarMutacao)
     .output(esquemaSaidaCadastroEquipamento)
     .mutation(async ({ ctx, input }) => {
       try {
@@ -90,6 +97,7 @@ export const routerEquipamentos = criarRouterTRPC({
   // RF-OPER-07: só Operações; recusa com empréstimo em aberto.
   alterarSituacao: adminProcedure
     .input(esquemaEntradaAlterarSituacao)
+    .use(limitarMutacao)
     .output(esquemaSaidaAlterarSituacao)
     .mutation(async ({ ctx, input }) => {
       try {
