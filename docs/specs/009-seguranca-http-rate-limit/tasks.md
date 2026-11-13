@@ -6,7 +6,8 @@
 DDL de `limites_requisicao`. Cada tarefa depende de autorização específica. Concluídas e integradas
 em `develop`: T-SEG-01 a 16 (2026-11-12 e 2026-11-13). A V-01 da T-SEG-13 deu NÃO PRONTA; depois
 das decisões D-01 e D-02 e das T-SEG-14 a 16, a V-02 devolveu `Veredito: PRONTA` sobre
-`05b549f277b6f5856851057848177248a536404c` (2026-11-13). Falta a validação final do responsável.
+`05b549f277b6f5856851057848177248a536404c` (2026-11-13), e o responsável fez a validação final no
+mesmo dia: spec PRONTA.
 
 Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
 `rules/checks.md` ao concluir; todo teste cita no nome o CA que evidencia; código e documentação
