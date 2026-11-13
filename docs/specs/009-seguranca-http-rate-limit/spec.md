@@ -5,8 +5,10 @@
 **Status:** APROVADA — pelo responsável em 2026-11-12, sobre o commit `d01f077`, com P1 a P8 e o
 ajuste de redação da retenção (RN-SEG-10). `plan.md`, `tasks.md` e o DDL de `limites_requisicao`
 foram aprovados em 2026-11-12 (sobre `3841cfc`, com os ajustes de login atômico e ordem de
-deploy). Em implementação: T-SEG-01 a 11 integradas em `develop` (2026-11-13); faltam a
-T-SEG-12 (documentação) e a T-SEG-13 (provas finais e verificação formal). Não está PRONTA.
+deploy). Em implementação: T-SEG-01 a 12 integradas em `develop` (2026-11-13). A V-01 (2026-11-13)
+deu NÃO PRONTA (`verificacao.md`); a redação do CA-SEG-08 foi esclarecida pelo responsável em
+2026-11-13 (D-01), sem mudar comportamento. Faltam as tarefas T-SEG-14 a 16 e a nova verificação
+formal (T-SEG-13). Não está PRONTA.
 
 ## Objetivo
 
@@ -262,10 +264,13 @@ declarado executado antes de existir o ambiente correspondente:
   para as mesmas datas.
 - **CA-SEG-07** — A 101ª tentativa de login do mesmo IP em 15 minutos responde 429 com a mensagem,
   `Retry-After` e sem chamar o Supabase Auth.
-- **CA-SEG-08** — Depois de 5 falhas de credencial do mesmo e-mail (variando maiúsculas e espaços),
-  a 6ª tentativa responde 429 sem chamar o Supabase Auth, mesmo com a senha certa. A resposta é
-  igual para e-mail cadastrado ou não. Login bem-sucedido e falha que não é de credencial não
-  consomem vaga.
+- **CA-SEG-08** — Depois de 5 falhas de credencial do mesmo e-mail (variando maiúsculas e
+  minúsculas), a 6ª tentativa responde 429 sem chamar o Supabase Auth, mesmo com a senha certa. A
+  resposta é igual para e-mail cadastrado ou não. Login bem-sucedido e falha que não é de credencial
+  não consomem vaga. E-mail com espaços nas pontas é recusado pela validação de entrada existente
+  (Spec 001), antes do limite e sem consumir vaga. A normalização de RN-SEG-05 (espaços nas pontas e
+  minúsculas) é provada pelos testes do próprio limitador: as variações do mesmo e-mail geram o mesmo
+  identificador (D-01).
 - **CA-SEG-09** — Com tentativas simultâneas, nunca mais de 5 tentativas do mesmo e-mail chegam ao
   Supabase Auth na janela, e nunca mais de 100 do mesmo IP.
 - **CA-SEG-10** — Somadas as cinco mutações, a 31ª do mesmo usuário em 60 segundos responde 429, e a
@@ -356,3 +361,21 @@ promoção.
 - **P7 (aprovada):** variável `CHAVE_HMAC_LIMITES`.
 - **P8 (aprovada):** as Specs 001, 005, 007 e 008 recebem só uma linha em "Contrato afetado"
   apontando para esta spec (`rules/spec-flow.md`, item 7). Nenhum CA delas muda.
+
+## Decisões posteriores à V-01 (responsável, 2026-11-13)
+
+- **D-01 — Redação do CA-SEG-08 (alternativa a).** A V-01 marcou o CA-SEG-08 como AMBÍGUO: o texto
+  pedia falhas "variando maiúsculas e espaços", mas a validação de entrada do login (`z.email()`,
+  Spec 001) recusa e-mail com espaços antes do limite. O responsável manteve o comportamento atual e
+  esclareceu a redação:
+  - o login continua recusando e-mail com espaços na entrada, pela validação existente;
+  - a normalização e a comparação de identificadores são provadas pelos testes do limitador;
+  - a variação de maiúsculas e minúsculas continua coberta no login.
+
+  Não muda o comportamento da Spec 001 nem flexibiliza a validação de e-mail. RN-SEG-05 fica como
+  está.
+- **D-02 — E2E de desenvolvimento no CI.** Depois da V-01, o `npm run test:e2e` passa a rodar no
+  workflow `Architecture checks` (job `E2E (desenvolvimento)`), em runner limpo e sem retries. A
+  reprodutibilidade exigida para CA-SEG-18 é comprovada por três execuções independentes no CI, no
+  commit verificado, além da execução local. Nenhum timeout ou paralelismo muda sem justificativa
+  técnica.

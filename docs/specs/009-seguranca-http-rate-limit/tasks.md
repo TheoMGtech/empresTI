@@ -4,8 +4,9 @@
 
 **Status:** APROVADAS — pelo responsável em 2026-11-12, com `plan.md` (sobre o commit `3841cfc`) e o
 DDL de `limites_requisicao`. Cada tarefa depende de autorização específica. Concluídas e integradas
-em `develop`: T-SEG-01 a 11 (2026-11-12 e 2026-11-13). Em execução: T-SEG-12, autorizada em
-2026-11-13. Falta: T-SEG-13.
+em `develop`: T-SEG-01 a 12 (2026-11-12 e 2026-11-13). A V-01 da T-SEG-13 deu NÃO PRONTA
+(2026-11-13); o responsável decidiu D-01 e D-02 (`spec.md`) e autorizou T-SEG-14 a 16. Depois
+delas, a T-SEG-13 roda a V-02.
 
 Condições: uma tarefa por vez, só com autorização específica; um commit por tarefa, com
 `rules/checks.md` ao concluir; todo teste cita no nome o CA que evidencia; código e documentação
@@ -97,7 +98,7 @@ dependem da T-SEG-05. O Bloco E fecha.
 
 ## Bloco E — fechamento
 
-- [ ] **T-SEG-12 (docs) — Referências e roteiro de validação**
+- [x] **T-SEG-12 (docs) — Referências e roteiro de validação** — PR #111.
   - Linha em "Contrato afetado" das Specs 001, 005, 007 e 008 (P8). Seção da Spec 009 em
     `docs/VALIDACAO-INTEGRADA.md`, com os níveis 2 (preview, com as regras de isolamento do
     plano) e 3 (URL de produção). Em `docs/DEVOPS.md`: `CHAVE_HMAC_LIMITES`, branches `main` e
@@ -110,6 +111,25 @@ dependem da T-SEG-05. O Bloco E fecha.
     V-01 pelo `verificador-spec`, conforme `rules/spec-flow.md`.
   - Atende: CA-SEG-18. Depende de: T-SEG-12.
   - Commit: `test(seguranca): provar critérios finais da spec 009`.
+  - Registro: V-01 (2026-11-13, PR #112) NÃO PRONTA. A V-02 roda depois das T-SEG-14 a 16, sobre o
+    commit em que elas estiverem integradas.
+
+## Bloco F — ajustes depois da V-01 (responsável, 2026-11-13)
+
+- [ ] **T-SEG-14 (CI, manutenção) — E2E de desenvolvimento no CI** — PR #113.
+  - Job `E2E (desenvolvimento)` no `Architecture checks`: Chromium e dependências do sistema,
+    runner limpo, sem retries, timeouts e paralelismo da configuração versionada (D-02).
+  - Atende: CA-SEG-18 (reprodutibilidade). Depende de: nada.
+  - Commit: `ci: rodar o E2E de desenvolvimento no CI`.
+- [ ] **T-SEG-15 (docs) — Redação do CA-SEG-08 e registro das decisões**
+  - Texto do CA-SEG-08 esclarecido e D-01/D-02 registradas, sem mudar comportamento.
+  - Atende: CA-SEG-08 (redação). Depende de: decisão do responsável.
+  - Commit: `docs(specs): esclarecer o CA-SEG-08 da spec 009`.
+- [ ] **T-SEG-16 (testes) — Provas do CA-SEG-08 esclarecido**
+  - Login: e-mail com espaços nas pontas recusado na validação, sem consumir vaga; testes do
+    limitador (normalização e identificadores) citando o CA-SEG-08. Sem mudança de código de produto.
+  - Atende: CA-SEG-08. Depende de: T-SEG-15.
+  - Commit: `test(seguranca): provar o CA-SEG-08 esclarecido`.
 
 ## Rastreabilidade
 
@@ -120,7 +140,8 @@ dependem da T-SEG-05. O Bloco E fecha.
 | CA-SEG-04 | 01, 04 |
 | CA-SEG-05 | 02 |
 | CA-SEG-06 | 03, 04 |
-| CA-SEG-07, 08 | 09 |
+| CA-SEG-07 | 09 |
+| CA-SEG-08 | 09, 15, 16 |
 | CA-SEG-09 | 07, 09 |
 | CA-SEG-10, 11 | 10 |
 | CA-SEG-12 | 07, 08, 09, 10 |
@@ -129,4 +150,4 @@ dependem da T-SEG-05. O Bloco E fecha.
 | CA-SEG-15 | 07 |
 | CA-SEG-16 | 06, 08, 09 |
 | CA-SEG-17 | 11 |
-| CA-SEG-18 | 12, 13 |
+| CA-SEG-18 | 12, 13, 14 |
