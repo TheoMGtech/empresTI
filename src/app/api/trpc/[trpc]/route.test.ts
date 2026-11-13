@@ -24,6 +24,15 @@ const { armazenamento, auth, criarClienteServidor } = vi.hoisted(() => ({
 
 vi.mock("next/headers", () => ({ cookies: async () => armazenamento }));
 vi.mock("@supabase/ssr", () => ({ createServerClient: criarClienteServidor }));
+// Sem banco neste teste: o limite do login (Spec 009) usa o limitador de teste, que permite. O
+// limite real pela rota é provado em `autenticacao-limite.test.ts`.
+vi.mock("@/server/services/limites", async (original) => {
+  const { criarLimitadorDeTeste } = await import("@/test/limitador");
+  return {
+    ...(await original<typeof import("@/server/services/limites")>()),
+    criarLimitador: () => criarLimitadorDeTeste().limitador,
+  };
+});
 
 import { POST } from "@/app/api/trpc/[trpc]/route";
 
