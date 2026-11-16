@@ -152,7 +152,9 @@ existir o ambiente correspondente. O nível 1 (local, build de produção) é a 
 - [ ] `CHAVE_HMAC_LIMITES` cadastrada na Vercel como variável sensível, com valores diferentes em
       Preview e em Production. O valor nunca é colado no chat, em arquivo versionado ou em log.
       — cadastrada pelo responsável em 2026-11-13 (informado por ele; o agente não lê o painel da
-      Vercel). Fica comprovada quando o login funcionar no preview (9.2).
+      Vercel). **Production comprovada:** login real com a conta `colaborador` funcionou na URL de
+      produção depois do release (informado pelo responsável em 2026-11-16); sem a chave, o login
+      responderia 503. Preview ainda a comprovar pelo login no preview (9.2).
 - [x] Migration `criar_limites_requisicao` aplicada pelo workflow `migrate-production`, com a
       confirmação `APPLY`, **antes** de a versão com o limite chegar a `main`. Sem a tabela, login e
       mutações respondem 503 (fail-closed).
@@ -201,10 +203,21 @@ produção.
 Só depois do merge de `develop` em `main` pelo responsável, com autorização explícita, e do deploy
 de produção da Vercel.
 
-- [ ] `curl -sI https://empresti-self.vercel.app/` traz a CSP com nonce, os cabeçalhos fixos e
+- [x] `curl -sI https://empresti-self.vercel.app/` traz a CSP com nonce, os cabeçalhos fixos e
       `Strict-Transport-Security: max-age=31536000`, sem `preload` nem `includeSubDomains`.
+      — conferido pelo agente em 2026-11-13, logo depois do deploy de `main` `c39fd82` (PR #119,
+      status `Vercel` = success), nas duas URLs de produção: HTTP 200; CSP com nonce e as diretivas
+      exatas de RF-SEG-02, sem `unsafe-inline`, `unsafe-eval` nem `Report-Only`; HSTS
+      `max-age=31536000`; `nosniff`, `strict-origin-when-cross-origin`, `Permissions-Policy` e
+      `X-Frame-Options: DENY`; nonces diferentes por requisição; os 17 `<script>` do HTML com o
+      nonce da própria resposta e nenhum atributo `style`. `/`, `/catalogo`, `/meus-emprestimos` e
+      `/operacoes/emprestimos` respondem 200; `/login` redireciona para `/`; `tecnico.status` com
+      `ambiente: production` e `bancoOperacional: true`.
 - [ ] Login real com a conta `colaborador` funciona, e as telas abrem sem violação de CSP.
-- [ ] `ENTREGA.md` atualizado com o resultado da Spec 009.
+      — login real funcionou (responsável, informado em 2026-11-16). A ausência de
+      `securitypolicyviolation` no console das telas autenticadas, no navegador real, ainda não foi
+      conferida; o E2E do build de produção (39/39, local, V-02) cobre as mesmas telas.
+- [x] `ENTREGA.md` atualizado com o resultado da Spec 009 (2026-11-16).
 
 ## Registro
 
@@ -219,3 +232,4 @@ de produção da Vercel.
 | 6 | 2026-11-13 | operacoes, colaborador | PASSOU; cadastro e mudança efetiva de situação só no banco descartável | [Operações](evidencias/README.md#6-operações) |
 | 7 | 2026-11-13 | colaborador; SQL somente leitura | PASSOU nos itens executados | [permissões](evidencias/README.md#7-permissões-e-isolamento) |
 | 8 | 2026-11-13 | — | Release 003–008 publicado; Spec 009 pendente | [ENTREGA.md](../ENTREGA.md) |
+| 9.3 | 2026-11-13/16 | colaborador (login pelo responsável); HTTP anônimo | PASSOU nos itens executados: cabeçalhos, CSP com nonce, HSTS, rotas, `tecnico.status` e login real. Não executados: CSP no console do navegador e o nível 2 (preview) | seção 9.3 deste arquivo |
