@@ -1,9 +1,9 @@
 # Entrega — EmpresTI
 
-> Atualizado em 2026-11-13. **Estado: versão 1 (Specs 001–008) publicada e validada em produção;
-> entrega final ainda não concluída** — a Spec 009 (segurança HTTP e limite de requisições) está em
-> desenvolvimento e há pendências listadas na seção 19. Nada aqui é declarado concluído sem
-> evidência.
+> Atualizado em 2026-11-16. **Estado: versão 1 (Specs 001–008) e Spec 009 (segurança HTTP e
+> limite de requisições) publicadas em produção; entrega final ainda não concluída** — falta parte
+> da validação integrada da Spec 009 e há pendências listadas na seção 19. Nada aqui é declarado
+> concluído sem evidência.
 
 ## 1. Identificação
 
@@ -54,7 +54,7 @@ de toda mutação. Detalhes no [README](README.md#tecnologias-e-arquitetura).
 | Limite de 3 itens e bloqueio por atraso | [006](docs/specs/006-regras-emprestimo/spec.md) | sim |
 | Meus empréstimos, devolução e histórico | [007](docs/specs/007-meus-emprestimos-devolucao/spec.md) | sim |
 | Painel de Operações, balcão, cadastro e situação | [008](docs/specs/008-operacoes/spec.md) | sim |
-| Cabeçalhos HTTP, CSP com nonce e limite de requisições | [009](docs/specs/009-seguranca-http-rate-limit/spec.md) | release em PR para `main` (2026-11-13) |
+| Cabeçalhos HTTP, CSP com nonce e limite de requisições | [009](docs/specs/009-seguranca-http-rate-limit/spec.md) | sim (desde 2026-11-13, PR #119) |
 
 ## 7. Regras de negócio
 
@@ -134,14 +134,20 @@ O ciclo criou e encerrou 3 empréstimos (TI-0012, TI-0011 e TI-0010) e 6 registr
 - Auditoria com o ator em cada solicitação e devolução do ciclo.
 - Banco descartável: RLS, bloqueio de `TRUNCATE`, isolamento entre dois tenants e concorrência.
 - Segredos: Gitleaks no CI; `.env*` ignorados; nenhuma senha em código, documentos ou prints.
-- Pendente: Spec 009 (CSP, cabeçalhos e limite de tentativas) ainda não publicada.
+- Spec 009 publicada em 2026-11-13 (PR #119): na URL de produção, CSP com nonce por requisição,
+  HSTS e cabeçalhos fixos conferidos; limite de tentativas de login e de mutações provado em testes
+  com banco real (V-02); login real confirmado pelo responsável, o que comprova
+  `CHAVE_HMAC_LIMITES` em Production.
 
 ## 14. Resultados de testes
 
 | Onde | Resultado |
 |---|---|
 | CI de `main` (`8e08040`) | 57 arquivos, 1.356 testes Vitest aprovados; lint, typecheck e build verdes |
-| CI de `develop` (com Spec 009 parcial) | verde em cada PR integrado |
+| CI de `develop` | verde em cada PR integrado; com o job `E2E (desenvolvimento)` desde 2026-11-13 |
+| Spec 009, V-02 (`05b549f`, local) | 72 arquivos, 1.582 testes Vitest; E2E de desenvolvimento 24/24; E2E de produção 39/39; `prisma:reset` com 7 migrations |
+| Spec 009, V-02 (`05b549f`, CI) | E2E de desenvolvimento em três runners novos, sem retries: 24/24 nas três |
+| CI de `main` (`c39fd82`, release da Spec 009) | Application quality, E2E (desenvolvimento) e guarda documental verdes |
 | Banco descartável — regras, Operações, RLS e auditoria (13/11) | 253/253 |
 | Produção — Playwright | 26 provas e 11 passos de ciclo, todos aprovados |
 
@@ -154,16 +160,16 @@ Cada teste cita no nome o critério de aceitação que prova (`CA-<FEATURE>-xx`)
 | 001 Login | Implementada | V-03 NÃO PRONTA (2026-11-09): CA-LOGIN-01, 04, 08 e 09 sem teste naquela data. Hoje há testes citando CA-LOGIN-01, 04 e 09, e o login real em produção foi comprovado; falta nova verificação formal |
 | 002 Dados iniciais | **PRONTA** | V-03 PRONTA + validação do responsável (2026-11-11) |
 | 003 a 008 | Implementadas | `Veredito: PRONTA` registrado em cada `verificacao.md`; falta a validação final do responsável para mudar o estado |
-| 009 Segurança HTTP e limite | **PRONTA** | T-SEG-01 a 16 em `develop` (PRs #91–#117); V-01 NÃO PRONTA e V-02 PRONTA sobre `05b549f` + validação do responsável (2026-11-13). Falta a validação integrada no preview e na URL de produção (`docs/VALIDACAO-INTEGRADA.md`, seção 9) |
+| 009 Segurança HTTP e limite | **PRONTA** | T-SEG-01 a 16 em `develop` (PRs #91–#117); V-01 NÃO PRONTA e V-02 PRONTA sobre `05b549f` + validação do responsável (2026-11-13). Publicada em `main` pelo PR #119; nível 3 da validação integrada executado nos itens de cabeçalhos e login; faltam o nível 2 (preview) e a conferência da CSP no console do navegador (`docs/VALIDACAO-INTEGRADA.md`, seção 9) |
 
 ## 16. Infraestrutura
 
-| Item | Estado em 2026-11-13 |
+| Item | Estado em 2026-11-16 |
 |---|---|
-| Vercel Production | `main` `8e08040`, status success; as duas URLs respondem 200 |
+| Vercel Production | `main` `c39fd82` (PR #119), status success; as duas URLs respondem 200 com CSP, HSTS e cabeçalhos fixos |
 | Supabase | 7 migrations, checksums iguais aos arquivos; 12 equipamentos e 12 fotos; 2 contas vinculadas |
 | GitHub | `main` e `develop` protegidas (PR, histórico linear, check obrigatório); Environment `production` com revisor obrigatório |
-| CI | `Architecture checks`: guarda documental, Gitleaks, lint, typecheck, testes e build |
+| CI | `Architecture checks`: guarda documental, Gitleaks, lint, typecheck, testes, build e E2E de desenvolvimento |
 
 Detalhes e pendências do responsável em [`docs/DEVOPS.md`](docs/DEVOPS.md).
 
@@ -175,31 +181,33 @@ Detalhes e pendências do responsável em [`docs/DEVOPS.md`](docs/DEVOPS.md).
 | 2026-10-23 | #14 | Login (Spec 001) |
 | 2026-11-03 | #25 | Promoção de `develop` |
 | 2026-11-12 | #98 | Specs 003–008, sem a Spec 009 (`8e08040`, árvore `3aa331e`) |
+| 2026-11-13 | #109 | Documentação de entrega da V1 (`83e1d02`) |
+| 2026-11-13 | #119 | Spec 009 (`c39fd82`, árvore `3dbd000`, igual à de `develop` em `87e4fbe`) |
 
 ## 18. Commit em produção
 
-`8e08040fb86419783dd373411b8ed63991a2a2b7` — release das Specs 003–008; a documentação de entrega
-entrou depois pelo PR #109. O release da Spec 009 é o PR para `main` aberto em 2026-11-13, com merge
-exclusivo do responsável.
+`c39fd82ae69d312c2cdb56c64d67ce1b9ebfe6db` — release da Spec 009 (PR #119, merge do responsável em
+2026-11-13), sobre o release das Specs 003–008 (`8e08040`) e a documentação de entrega (PR #109).
 
 ## 19. Pendências
 
 | Pendência | Tipo | Quem |
 |---|---|---|
-| Publicar a Spec 009 em `main` (PR de release aberto) e executar a validação integrada da seção 9 de `docs/VALIDACAO-INTEGRADA.md` | obrigatória (exigência de segurança do projeto) | responsável (merge) + agente |
+| Executar o nível 2 (preview) da seção 9 de `docs/VALIDACAO-INTEGRADA.md` e conferir no navegador as telas autenticadas sem violação de CSP | obrigatória (exigência de segurança do projeto) | responsável + agente |
 | Validação final do responsável nas Specs 003–008; nova verificação formal da Spec 001 | governança | responsável (autoriza) + agente |
 | Confirmar `disable_signup` no Supabase Auth e a exposição de `public` na Data API | segurança | responsável |
 | Nomes de exibição vazios nas contas demo | escolha de apresentação aceita pelo responsável em 2026-11-13; não bloqueia a V1 | sem ação |
-| `CHAVE_HMAC_LIMITES` na Vercel: cadastrada pelo responsável em 2026-11-13; confirmar pelo login no preview | infraestrutura | responsável |
+| `CHAVE_HMAC_LIMITES` na Vercel: Production comprovada pelo login real; Preview a confirmar no nível 2 | infraestrutura | responsável |
 | Indicador do PRD: Operações abandonar a planilha após duas semanas de uso | acompanhamento futuro | não verificável antes de duas semanas de uso real |
 
 ## 20. Conclusão e aceite
 
 A versão 1 funciona em produção com as regras do PRD comprovadas por testes automatizados, por
-validação real com as duas contas e por consultas ao banco. A entrega **não** é declarada 100%
-concluída: a Spec 009 é obrigatória e ainda não foi publicada, e as pendências de governança da
-seção 19 dependem do responsável.
+validação real com as duas contas e por consultas ao banco. A Spec 009 está PRONTA e publicada
+desde 2026-11-13, com cabeçalhos, CSP e HSTS conferidos na URL de produção e o login real
+funcionando. A entrega **não** é declarada 100% concluída: falta o nível 2 da validação integrada da
+Spec 009, e as pendências de governança da seção 19 dependem do responsável.
 
 | Aceite | Data | Responsável |
 |---|---|---|
-| a registrar após o release da Spec 009 | — | — |
+| a registrar pelo responsável, depois das pendências obrigatórias da seção 19 | — | — |
